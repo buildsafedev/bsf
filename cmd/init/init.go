@@ -5,7 +5,7 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/buildsafedev/bsf/pkg/instrumentation/logging"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
@@ -16,24 +16,31 @@ var InitCmd = &cobra.Command{
 	Long: `init setups package management for the project. It setups Nix files based on the language detected.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log := logging.SetupLogger()
-		log.Info("initialising")
-		ctx := logging.InjectLogger(context.Background(), log)
-		files, err := createBsfDirectory(ctx)
-		if err != nil {
-			log.Error(err)
+
+		// ctx := logging.InjectLogger(context.Background(), log)
+
+		m := model{}
+		m.resetSpinner()
+		if _, err := tea.NewProgram(m).Run(); err != nil {
 			os.Exit(1)
 		}
-		if len(files) != 0 {
-			log.Info("Project has already been initialised")
-			os.Exit(0)
-		}
+
+		// files, err := createBsfDirectory(ctx)
+		// if err != nil {
+		// 	log.Error(err)
+		// 	os.Exit(1)
+		// }
+		// if len(files) != 0 {
+		// 	log.Info("Project has already been initialised")
+		// 	os.Exit(0)
+		// }
 
 		// create the nix files
 	},
+	// RunE: ,
 }
 
-func createBsfDirectory(ctx context.Context) ([]fs.DirEntry, error) {
+func createBsfDirectory() ([]fs.DirEntry, error) {
 	// check if the directory exists
 	files, err := os.ReadDir("bsf")
 	if err != nil {
