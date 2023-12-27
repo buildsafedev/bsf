@@ -39,7 +39,7 @@ var SearchCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		m := model{packageOptionModel: packageOptionModel{},
+		m := versionListModel{packageOptionModel: packageOptionModel{},
 			versionList: list.New(convertPackagesToItems(sortPackagesWithTimestamp(packages)),
 				list.NewDefaultDelegate(), 0, 0)}
 		m.versionList.Title = args[0]
@@ -52,7 +52,7 @@ var SearchCmd = &cobra.Command{
 func convertPackagesToItems(packages []search.Package) []list.Item {
 	items := make([]list.Item, 0, len(packages))
 	for _, pkg := range packages {
-		items = append(items, item{pkg: pkg})
+		items = append(items, pkgVersionItem{pkg: pkg})
 	}
 
 	return items

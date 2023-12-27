@@ -1,13 +1,16 @@
 package search
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type packageOptionModel struct {
+	item     list.Item
 	cursor   int
 	selected map[string]bool // Track selected options
 }
@@ -57,7 +60,8 @@ func (m packageOptionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m packageOptionModel) View() string {
 	s := strings.Builder{}
 
-	s.WriteString(styles.TitleStyle.Render("Where would you like the package to be added?"))
+	pkg := m.item.(pkgVersionItem).pkg
+	s.WriteString(styles.TitleStyle.Render(fmt.Sprintf("Where would you like %s-%s to be added?", pkg.Name, pkg.Version)))
 	s.WriteString("\n\n")
 
 	for i := 0; i < len(choices); i++ {

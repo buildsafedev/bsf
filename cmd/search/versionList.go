@@ -9,27 +9,26 @@ import (
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
-type item struct {
+type pkgVersionItem struct {
 	pkg search.Package
 }
 
-func (i item) Title() string       { return i.pkg.Name }
-func (i item) Description() string { return i.pkg.Version }
-func (i item) FilterValue() string { return i.pkg.Version }
+func (i pkgVersionItem) Title() string       { return i.pkg.Name }
+func (i pkgVersionItem) Description() string { return i.pkg.Version }
+func (i pkgVersionItem) FilterValue() string { return i.pkg.Version }
 
-type model struct {
+type versionListModel struct {
 	// todo: maybe this should be a table?
 	versionList        list.Model
-	selected           bool
 	packageOptionModel packageOptionModel
 }
 
-func (m model) Init() tea.Cmd {
+func (m versionListModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if m.selected {
+func (m versionListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.packageOptionModel.item != nil {
 		nm, cmd := m.packageOptionModel.Update(msg)
 		return nm, cmd
 	}
@@ -41,8 +40,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if msg.String() == "enter" {
 			item := m.versionList.SelectedItem()
-			_ = item
-			m.selected = true
+			m.packageOptionModel.item = item
 		}
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
@@ -54,8 +52,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m model) View() string {
-	if m.selected {
+func (m versionListModel) View() string {
+	if m.packageOptionModel.item != nil {
 		return m.packageOptionModel.View()
 	}
 	return docStyle.Render(m.versionList.View())
