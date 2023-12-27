@@ -4,19 +4,19 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 var (
 	// ANSI codes reference- https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
-	textStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("254")).Render
-	sucessStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Render
-	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
-	helpStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render
-	errorStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render
+	textStyle    = styles.TextStyle.Render
+	sucessStyle  = styles.SucessStyle.Render
+	spinnerStyle = styles.SpinnerStyle
+	helpStyle    = styles.HelpStyle.Render
+	errorStyle   = styles.ErrorStyle.Render
 	stages       = 4
 )
 

@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	initCmd "github.com/buildsafedev/bsf/cmd/init"
+	"github.com/buildsafedev/bsf/cmd/search"
 	"github.com/elewis787/boa"
 )
 
@@ -32,6 +33,7 @@ func Execute() {
 	rootCmd.SetUsageFunc(boa.UsageFunc)
 
 	rootCmd.AddCommand(initCmd.InitCmd)
+	rootCmd.AddCommand(search.SearchCmd)
 
 	err := rootCmd.ExecuteContext(context.Background())
 	if err != nil {
@@ -39,7 +41,3 @@ func Execute() {
 	}
 
 }
-
-// func init() {
-// 	rootCmd.AddCommand(initCmd.InitCmd)
-// }

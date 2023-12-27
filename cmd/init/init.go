@@ -16,28 +16,12 @@ var InitCmd = &cobra.Command{
 	Long: `init setups package management for the project. It setups Nix files based on the language detected.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		// ctx := logging.InjectLogger(context.Background(), log)
-
 		m := model{}
 		m.resetSpinner()
 		if _, err := tea.NewProgram(m).Run(); err != nil {
 			os.Exit(1)
 		}
-
-		// files, err := createBsfDirectory(ctx)
-		// if err != nil {
-		// 	log.Error(err)
-		// 	os.Exit(1)
-		// }
-		// if len(files) != 0 {
-		// 	log.Info("Project has already been initialised")
-		// 	os.Exit(0)
-		// }
-
-		// create the nix files
 	},
-	// RunE: ,
 }
 
 func createBsfDirectory() ([]fs.DirEntry, error) {
