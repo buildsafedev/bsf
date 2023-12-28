@@ -33,6 +33,7 @@ type model struct {
 	permMsg  string
 	stage    int
 	pt       langdetect.ProjectType
+	pd       *langdetect.ProjectDetails
 }
 
 func (m model) Init() tea.Cmd {
@@ -87,18 +88,19 @@ func (m *model) processStages(stage int) error {
 		return nil
 	case 1:
 		// var err error
-		pt, err := langdetect.FindProjectType()
+		pt, pd, err := langdetect.FindProjectType()
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
 		}
 		m.stageMsg = textStyle("Detected language as " + string(pt))
-		m.pt = pt
-		return nil
-	case 2:
 		if m.pt == langdetect.Unknown {
 			m.permMsg = errorStyle("Project language isn't currently supported. Some features might not work.")
 		}
+		m.pt = pt
+		m.pd = pd
+		return nil
+	case 2:
 		m.stageMsg = textStyle("Resolving dependencies... ")
 		return nil
 
@@ -123,13 +125,19 @@ func (m *model) processStages(stage int) error {
 		}
 		defer lockFile.Close()
 
-		defFlakeFile, err := os.Create("bsf/flake.nix")
+		flakeFile, err := os.Create("bsf/flake.nix")
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
 		}
 
-		conf := generatehcl2NixConf(m.pt)
+		defFlakeFile, err := os.Create("bsf/default.nix")
+		if err != nil {
+			m.stageMsg = errorStyle(err.Error())
+			return err
+		}
+
+		conf := generatehcl2NixConf(m.pt, m.pd)
 		err = hcl2nix.WriteConfig(conf, modFile)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
@@ -152,12 +160,19 @@ func (m *model) processStages(stage int) error {
 		}
 
 		// todo: is there a better way to do all of this?
-		devPkgs, _, revisions := mapPackageCategory(conf.Packages, allPackages)
-		err = btemplate.GenerateDefaultFlake(btemplate.Flake{
-			Description:         "bsf flake",
+		devPkgs, rtPackages, revisions := mapPackageCategory(conf.Packages, allPackages)
+		err = btemplate.GenerateFlake(btemplate.Flake{
+			// Description:         "bsf flake",
 			NixPackageRevisions: revisions,
 			DevPackages:         devPkgs,
-		}, defFlakeFile)
+			RuntimePackages:     rtPackages,
+		}, flakeFile)
+		if err != nil {
+			m.stageMsg = errorStyle(err.Error())
+			return err
+		}
+
+		err = btemplate.GenerateGoModule(conf.GoModule, defFlakeFile)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err

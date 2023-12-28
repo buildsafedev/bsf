@@ -12,12 +12,12 @@ import (
 
 // Config for hcl2nix
 type Config struct {
-	Packages Packages `hcl:"packages,block"`
+	Packages Packages  `hcl:"packages,block"`
+	GoModule *GoModule `hcl:"gomodule,block"`
 }
 
 // Packages holds package parameters
 type Packages struct {
-
 	// Maybe these should be of type Set? https://github.com/deckarep/golang-set
 	Development []string `hcl:"development"`
 	Runtime     []string `hcl:"runtime"`

@@ -14,11 +14,6 @@ type Flake struct {
 	RuntimePackages     map[string]string
 }
 
-// Meta holds meta parameters
-type Meta struct {
-	Description string
-}
-
 const (
 	mainTmpl = `
 {
@@ -71,8 +66,8 @@ const (
 `
 )
 
-// GenerateDefaultFlake generates default flake
-func GenerateDefaultFlake(fl Flake, wr io.Writer) error {
+// GenerateFlake generates default flake
+func GenerateFlake(fl Flake, wr io.Writer) error {
 	t, err := template.New("main").Parse(mainTmpl)
 	if err != nil {
 		return err

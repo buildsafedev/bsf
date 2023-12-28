@@ -23,7 +23,7 @@ func TestTemplateMain(t *testing.T) {
 		},
 	}
 
-	err := GenerateDefaultFlake(flake, os.Stdout)
+	err := GenerateFlake(flake, os.Stdout)
 	if err != nil {
 		t.Error()
 		t.FailNow()
