@@ -6,6 +6,8 @@ import (
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+
+	bstrings "github.com/buildsafedev/bsf/pkg/strings"
 )
 
 // Config for hcl2nix
@@ -56,8 +58,8 @@ func AddPackages(config Config, src []byte, wr io.Writer) error {
 	}
 
 	// append new packages to existing packages
-	existingConfig.Packages.Development = addStringToSet(existingConfig.Packages.Development, config.Packages.Development)
-	existingConfig.Packages.Runtime = addStringToSet(existingConfig.Packages.Runtime, config.Packages.Runtime)
+	existingConfig.Packages.Development = bstrings.SliceToSet(append(existingConfig.Packages.Development, config.Packages.Development...))
+	existingConfig.Packages.Runtime = bstrings.SliceToSet(append(existingConfig.Packages.Runtime, config.Packages.Runtime...))
 
 	err = WriteConfig(*existingConfig, wr)
 	if err != nil {
@@ -65,18 +67,4 @@ func AddPackages(config Config, src []byte, wr io.Writer) error {
 	}
 
 	return nil
-}
-
-func addStringToSet(existingPackages []string, newPackages []string) []string {
-	foundPackages := make(map[string]bool)
-	for _, pkg := range existingPackages {
-		foundPackages[pkg] = true
-	}
-
-	for _, pkg := range newPackages {
-		if !foundPackages[pkg] {
-			existingPackages = append(existingPackages, pkg)
-		}
-	}
-	return existingPackages
 }

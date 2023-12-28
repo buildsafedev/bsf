@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 
+	"github.com/buildsafedev/bsf/pkg/clients/search"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,13 @@ var InitCmd = &cobra.Command{
 	Long: `init setups package management for the project. It setups Nix files based on the language detected.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		m := model{}
+
+		sc, err := search.NewClientWithURL("https://api.history.nix-packages.com/")
+		if err != nil {
+			os.Exit(1)
+		}
+
+		m := model{sc: sc}
 		m.resetSpinner()
 		if _, err := tea.NewProgram(m).Run(); err != nil {
 			os.Exit(1)

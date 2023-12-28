@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -57,9 +58,9 @@ func NewClientWithURL(apiurl string) (*Client, error) {
 }
 
 // SendGetRequest sends a correctly authenticated get request to the API server
-func (c *Client) SendGetRequest(requestURL string) ([]byte, error) {
+func (c *Client) SendGetRequest(ctx context.Context, requestURL string) ([]byte, error) {
 	u := c.prepareClientURL(requestURL)
-	req, err := http.NewRequest("GET", u.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, err
 	}

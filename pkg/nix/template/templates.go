@@ -2,16 +2,16 @@ package template
 
 import (
 	"html/template"
-	"os"
+	"io"
 )
 
 // Flake holds flake parameters
 type Flake struct {
-	Description      string
-	PackageInputUrls []string
-	PackageInputs    map[string]string
-	DevPackages      map[string]string
-	RuntimePackages  map[string]string
+	Description         string
+	NixPackageRevisions []string
+	PackageInputs       map[string]string
+	DevPackages         map[string]string
+	RuntimePackages     map[string]string
 }
 
 // Meta holds meta parameters
@@ -25,26 +25,26 @@ const (
 	description = "{{.Description }}";
 	
 	inputs = {
-		{{range .PackageInputUrls}} nixpkgs-{{ .}}.url = "github.com/nixos/nixpkgs/{{ . }}";
+		{{range .NixPackageRevisions}} nixpkgs-{{ .}}.url = "github.com/nixos/nixpkgs/{{ . }}";
 		{{ end }}	
 	};
 	
-	outputs = { self, {{range .PackageInputUrls}} nixpkgs-{{ .}}, 
+	outputs = { self, {{range .NixPackageRevisions}} nixpkgs-{{ .}}, 
 	{{end}} }: let
 	  supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
 	  forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
-		{{ range .PackageInputUrls }} nixpkgs-{{ .}}-pkgs = import nixpkgs-{{ .}} { inherit system; };
+		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs = import nixpkgs-{{ .}} { inherit system; };
 		{{ end }}
 	  });
 	in {
-	  packages = forEachSupportedSystem ({ {{ range .PackageInputUrls }} nixpkgs-{{ .}}-pkgs, 
+	  packages = forEachSupportedSystem ({ {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		default = pkgs.callPackage ./default.nix {
 		  {{range $key, $value :=.PackageInputs}} {{ $key }} = {{ $value }};{{ end }}
 		};
 	  });
 	
-	  devShells = forEachSupportedSystem ({ {{ range .PackageInputUrls }} nixpkgs-{{ .}}-pkgs, 
+	  devShells = forEachSupportedSystem ({ {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		devShell = pkgs.mkShell {
 		  # The Nix packages provided in the environment
@@ -55,7 +55,7 @@ const (
 		};
 	  });
 	
-	  runtimeEnvs = forEachSupportedSystem ({ {{ range .PackageInputUrls }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
+	  runtimeEnvs = forEachSupportedSystem ({ {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
 		runtime = pkgs.buildEnv {
 		  name = "runtimeenv";
 		  paths = [ 
@@ -69,16 +69,17 @@ const (
 `
 )
 
-func templateMain(fl Flake) (*string, error) {
+// GenerateDefaultFlake generates default flake
+func GenerateDefaultFlake(fl Flake, wr io.Writer) error {
 	t, err := template.New("main").Parse(mainTmpl)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	err = t.Execute(os.Stdout, fl)
+	err = t.Execute(wr, fl)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &t.Tree.Name, nil
+	return nil
 }

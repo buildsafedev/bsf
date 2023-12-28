@@ -3,7 +3,6 @@ package hcl2nix
 import (
 	"bytes"
 	"io"
-	"reflect"
 	"testing"
 )
 
@@ -45,36 +44,4 @@ func TestReadConfig(t *testing.T) {
 		t.Fail()
 	}
 
-}
-
-func TestAddStringToSet(t *testing.T) {
-	tests := []struct {
-		name             string
-		existingPackages []string
-		newPackages      []string
-		expected         []string
-	}{
-		{
-			name:             "no duplicates",
-			existingPackages: []string{"package1", "package2"},
-			newPackages:      []string{"package3", "package4"},
-			expected:         []string{"package1", "package2", "package3", "package4"},
-		},
-		{
-			name:             "with duplicates",
-			existingPackages: []string{"package1", "package2"},
-			newPackages:      []string{"package2", "package3"},
-			expected:         []string{"package1", "package2", "package3"},
-		},
-		// Add more test cases here
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.existingPackages = addStringToSet(tt.existingPackages, tt.newPackages)
-			if !reflect.DeepEqual(tt.existingPackages, tt.expected) {
-				t.Errorf("got %v, want %v", tt.existingPackages, tt.expected)
-			}
-		})
-	}
 }

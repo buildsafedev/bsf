@@ -3,7 +3,6 @@ package search
 import (
 	"fmt"
 	"os"
-	"sort"
 
 	"github.com/buildsafedev/bsf/pkg/clients/search"
 	"github.com/charmbracelet/bubbles/list"
@@ -33,14 +32,14 @@ var SearchCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		packages, err := sc.ListPackageVersions(args[0])
+		packages, err := sc.ListPackageVersions(cmd.Context(), args[0])
 		if err != nil {
 			fmt.Println(fmt.Errorf("error: %v", err))
 			os.Exit(1)
 		}
 
 		m := versionListModel{packageOptionModel: packageOptionModel{},
-			versionList: list.New(convertPackagesToItems(sortPackagesWithTimestamp(packages)),
+			versionList: list.New(convertPackagesToItems(search.SortPackagesWithTimestamp(packages)),
 				list.NewDefaultDelegate(), 0, 0)}
 		m.versionList.Title = args[0]
 		if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
@@ -56,11 +55,4 @@ func convertPackagesToItems(packages []search.Package) []list.Item {
 	}
 
 	return items
-}
-
-func sortPackagesWithTimestamp(packages []search.Package) []search.Package {
-	sort.Slice(packages, func(i, j int) bool {
-		return packages[i].DateTime.After(packages[j].DateTime)
-	})
-	return packages
 }
