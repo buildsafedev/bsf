@@ -25,26 +25,28 @@ const (
 	description = "{{.Description }}";
 	
 	inputs = {
-		{{range .NixPackageRevisions}} nixpkgs-{{ .}}.url = "github.com/nixos/nixpkgs/{{ . }}";
+		{{range .NixPackageRevisions}} nixpkgs-{{ .}}.url = "github:nixos/nixpkgs/{{ . }}";
 		{{ end }}	
+		nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
 	};
 	
-	outputs = { self, {{range .NixPackageRevisions}} nixpkgs-{{ .}}, 
+	outputs = { self, nixpkgs, {{range .NixPackageRevisions}} nixpkgs-{{ .}}, 
 	{{end}} }: let
 	  supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
 	  forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs = import nixpkgs-{{ .}} { inherit system; };
 		{{ end }}
+		pkgs = import nixpkgs { inherit system; };
 	  });
 	in {
-	  packages = forEachSupportedSystem ({ {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
+	  packages = forEachSupportedSystem ({ pkgs, {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		default = pkgs.callPackage ./default.nix {
 		  {{range $key, $value :=.PackageInputs}} {{ $key }} = {{ $value }};{{ end }}
 		};
 	  });
 	
-	  devShells = forEachSupportedSystem ({ {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
+	  devShells = forEachSupportedSystem ({ pkgs, {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		devShell = pkgs.mkShell {
 		  # The Nix packages provided in the environment
@@ -55,7 +57,7 @@ const (
 		};
 	  });
 	
-	  runtimeEnvs = forEachSupportedSystem ({ {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
+	  runtimeEnvs = forEachSupportedSystem ({ pkgs, {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
 		runtime = pkgs.buildEnv {
 		  name = "runtimeenv";
 		  paths = [ 
