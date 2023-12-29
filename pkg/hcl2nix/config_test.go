@@ -33,7 +33,7 @@ func TestReadConfig(t *testing.T) {
 		t.Fail()
 	}
 
-	config, err := ReadConfig(buf.Bytes())
+	config, err := ReadConfig(buf.Bytes(), io.Discard)
 	if err != nil {
 		t.Error(err)
 		t.Fail()

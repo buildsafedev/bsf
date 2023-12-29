@@ -18,7 +18,7 @@ const (
 	   name = "";
 	   src = ../.;  
 	   {{ if .VendorHash }}
-		vendorHash = "{{ .VendorHash }}";
+		vendorHash = "{{ .VendorHash  }}";
 		{{ else }}
 		vendorHash = lib.fakeHash;
 		{{ end }}
@@ -31,12 +31,19 @@ const (
 
 // GenerateGoModule generates default flake
 func GenerateGoModule(fl *hcl2nix.GoModule, wr io.Writer) error {
-	t, err := template.New("gomodule").Parse(golangTmpl)
+	nt := template.New("gomodule").Option("missingkey=zero")
+
+	t, err := nt.Parse(golangTmpl)
 	if err != nil {
 		return err
 	}
 
-	err = t.Execute(wr, fl)
+	err = t.Execute(wr, struct {
+		VendorHash template.HTML
+	}{
+		VendorHash: template.HTML(fl.VendorHash),
+	})
+
 	if err != nil {
 		return err
 	}

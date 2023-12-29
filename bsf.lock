@@ -1,20 +1,14 @@
 [
   {
-    "name": "gotools",
-    "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
-    "version": "0.7.0",
-    "datetime": "2023-12-14T12:27:10Z"
-  },
-  {
-    "name": "go",
-    "revision": "eeee184c00a7e542d2a837252a0ed4e74dd27dc5",
-    "version": "1.21.4",
-    "datetime": "2023-12-08T11:56:41Z"
-  },
-  {
     "name": "cacert",
     "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
     "version": "3.95",
+    "datetime": "2023-12-14T12:27:10Z"
+  },
+  {
+    "name": "gotools",
+    "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
+    "version": "0.7.0",
     "datetime": "2023-12-14T12:27:10Z"
   },
   {
@@ -22,5 +16,11 @@
     "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
     "version": "1.21.2",
     "datetime": "2023-12-14T12:27:10Z"
+  },
+  {
+    "name": "go",
+    "revision": "eeee184c00a7e542d2a837252a0ed4e74dd27dc5",
+    "version": "1.21.4",
+    "datetime": "2023-12-08T11:56:41Z"
   }
 ]

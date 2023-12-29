@@ -1,7 +1,9 @@
 package generate
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -17,7 +19,12 @@ func Generate(fh *hcl2nix.FileHandlers, sc *search.Client) error {
 		return err
 	}
 
-	conf, err := hcl2nix.ReadConfig(data)
+	var dstErr bytes.Buffer
+	conf, err := hcl2nix.ReadConfig(data, &dstErr)
+	if err != nil {
+		return fmt.Errorf("%v", &dstErr)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 

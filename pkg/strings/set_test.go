@@ -1,8 +1,10 @@
 package strings
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestSliceToSet(t *testing.T) {
@@ -27,8 +29,12 @@ func TestSliceToSet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := SliceToSet(tt.input)
-			if !reflect.DeepEqual(got, tt.expected) {
+			less := func(a, b string) bool { return a < b }
+
+			equalIgnoreOrder := cmp.Diff(got, tt.expected, cmpopts.SortSlices(less)) == ""
+			if !equalIgnoreOrder {
 				t.Errorf("got %v, want %v", got, tt.expected)
+				t.Fail()
 			}
 		})
 	}
