@@ -22,4 +22,6 @@ var (
 	OptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
 	// SelectedOptionStyle is the style for the selected option
 	SelectedOptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true)
+	// CursorOptionStyle is the style for the cursor
+	CursorOptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("220")).Italic(true)
 )

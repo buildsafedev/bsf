@@ -51,15 +51,15 @@ func ReadConfig(src []byte) (*Config, error) {
 }
 
 // AddPackages updates config with new packages. It appends new packages to existing packages
-func AddPackages(config Config, src []byte, wr io.Writer) error {
+func AddPackages(src []byte, packages Packages, wr io.Writer) error {
 	existingConfig, err := ReadConfig(src)
 	if err != nil {
 		return err
 	}
 
 	// append new packages to existing packages
-	existingConfig.Packages.Development = bstrings.SliceToSet(append(existingConfig.Packages.Development, config.Packages.Development...))
-	existingConfig.Packages.Runtime = bstrings.SliceToSet(append(existingConfig.Packages.Runtime, config.Packages.Runtime...))
+	existingConfig.Packages.Development = bstrings.SliceToSet(append(existingConfig.Packages.Development, packages.Development...))
+	existingConfig.Packages.Runtime = bstrings.SliceToSet(append(existingConfig.Packages.Runtime, packages.Runtime...))
 
 	err = WriteConfig(*existingConfig, wr)
 	if err != nil {

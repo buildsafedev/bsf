@@ -1,16 +1,13 @@
 package generate
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/clients/search"
+	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
-	"github.com/buildsafedev/bsf/pkg/langdetect"
-	btemplate "github.com/buildsafedev/bsf/pkg/nix/template"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -22,7 +19,7 @@ var (
 	spinnerStyle = styles.SpinnerStyle
 	helpStyle    = styles.HelpStyle.Render
 	errorStyle   = styles.ErrorStyle.Render
-	stages       = 4
+	stages       = 2
 )
 
 type model struct {
@@ -31,8 +28,6 @@ type model struct {
 	stageMsg string
 	permMsg  string
 	stage    int
-	pt       langdetect.ProjectType
-	pd       *langdetect.ProjectDetails
 }
 
 func (m model) Init() tea.Cmd {
@@ -89,7 +84,6 @@ func (m *model) processStages(stage int) error {
 	case 1:
 		fh, err := hcl2nix.NewFileHandlers(true)
 		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
 			return err
 		}
 		defer fh.ModFile.Close()
@@ -97,44 +91,9 @@ func (m *model) processStages(stage int) error {
 		defer fh.FlakeFile.Close()
 		defer fh.DefFlakeFile.Close()
 
-		data, err := os.ReadFile("bsf.hcl")
+		err = generate.Generate(fh, m.sc)
 		if err != nil {
-			m.stageMsg = errorStyle(fmt.Sprintf("Has the project been initialised yet?\n  %v", err.Error()))
-			return err
-		}
-
-		conf, err := hcl2nix.ReadConfig(data)
-		ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
-		defer cancel()
-
-		allPackages, err := hcl2nix.ResolvePackages(ctx, m.sc, conf.Packages)
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return err
-		}
-
-		err = hcl2nix.GenerateLockFile(allPackages, fh.LockFile)
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return err
-		}
-
-		cr := hcl2nix.ResolveCategoryRevisions(conf.Packages, allPackages)
-		err = btemplate.GenerateFlake(btemplate.Flake{
-			// Description:         "bsf flake",
-			NixPackageRevisions: cr.Revisions,
-			DevPackages:         cr.Development,
-			RuntimePackages:     cr.Runtime,
-		}, fh.FlakeFile)
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return err
-		}
-
-		// todo: there should be a generic method "GenerateApplicationModule" that can switch between different project types
-		err = btemplate.GenerateGoModule(conf.GoModule, fh.DefFlakeFile)
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
+			m.stageMsg = errorStyle("Failed to generate files: ", err.Error())
 			return err
 		}
 

@@ -1,7 +1,6 @@
 package init
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -9,9 +8,9 @@ import (
 
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/clients/search"
+	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/buildsafedev/bsf/pkg/langdetect"
-	btemplate "github.com/buildsafedev/bsf/pkg/nix/template"
 	"github.com/charmbracelet/bubbles/spinner"
 )
 
@@ -120,35 +119,8 @@ func (m *model) processStages(stage int) error {
 			m.stageMsg = errorStyle(err.Error())
 			return err
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
-		defer cancel()
 
-		allPackages, err := hcl2nix.ResolvePackages(ctx, m.sc, conf.Packages)
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return err
-		}
-
-		err = hcl2nix.GenerateLockFile(allPackages, fh.LockFile)
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return err
-		}
-
-		cr := hcl2nix.ResolveCategoryRevisions(conf.Packages, allPackages)
-		err = btemplate.GenerateFlake(btemplate.Flake{
-			// Description:         "bsf flake",
-			NixPackageRevisions: cr.Revisions,
-			DevPackages:         cr.Development,
-			RuntimePackages:     cr.Runtime,
-		}, fh.FlakeFile)
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return err
-		}
-
-		// todo: there should be a generic method "GenerateApplicationModule" that can switch between different project types
-		err = btemplate.GenerateGoModule(conf.GoModule, fh.DefFlakeFile)
+		err = generate.Generate(fh, m.sc)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err

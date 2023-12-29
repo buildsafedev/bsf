@@ -38,7 +38,7 @@ var SearchCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		m := versionListModel{packageOptionModel: packageOptionModel{},
+		m := versionListModel{packageOptionModel: packageOptionModel{sc: sc},
 			versionList: list.New(convertPackagesToItems(search.SortPackagesWithTimestamp(packages)),
 				list.NewDefaultDelegate(), 0, 0)}
 		m.versionList.Title = args[0]
