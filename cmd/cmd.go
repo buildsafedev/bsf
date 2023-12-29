@@ -15,6 +15,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/develop"
 	"github.com/buildsafedev/bsf/cmd/generate"
 	initCmd "github.com/buildsafedev/bsf/cmd/init"
+	"github.com/buildsafedev/bsf/cmd/run"
 	"github.com/buildsafedev/bsf/cmd/search"
 	"github.com/elewis787/boa"
 )
@@ -40,6 +41,7 @@ func Execute() {
 	rootCmd.AddCommand(generate.GenCmd)
 	rootCmd.AddCommand(develop.DevCmd)
 	rootCmd.AddCommand(build.BuildCmd)
+	rootCmd.AddCommand(run.RunCmd)
 
 	err := rootCmd.ExecuteContext(context.Background())
 	if err != nil {

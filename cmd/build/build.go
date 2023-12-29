@@ -18,10 +18,10 @@ var BuildCmd = &cobra.Command{
 	Short: "builds the project",
 	Long: `builds the project based on instructions defined in bsf.hcl.
 	Build occurs in a sandboxed environment where only current directory is available. 
-	It is recommended to check in the files before building.
+	It is recommended to check in the files in version control system(ex: Git) before building.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		stdOut, err := nixcmd.Build()
+		_, err := nixcmd.Build()
 		if err != nil {
 			gotHash := isHashMismatchError(err.Error())
 			if gotHash == "" {
@@ -32,7 +32,7 @@ var BuildCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Println(styles.SucessStyle.Render(stdOut))
+		fmt.Println(styles.SucessStyle.Render("Build completed successfully, please check the result directory"))
 
 	},
 }
