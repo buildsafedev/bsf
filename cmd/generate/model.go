@@ -1,11 +1,10 @@
-package init
+package generate
 
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
-
-	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/clients/search"
@@ -13,6 +12,7 @@ import (
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 	btemplate "github.com/buildsafedev/bsf/pkg/nix/template"
 	"github.com/charmbracelet/bubbles/spinner"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 var (
@@ -66,7 +66,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var err error
 	if m.stage >= stages {
-		m.stageMsg = sucessStyle("Initialised sucessfully!")
+		m.stageMsg = sucessStyle("Generated sucessfully!")
 		return m, tea.Quit
 	}
 	err = m.processStages(m.stage)
@@ -83,28 +83,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *model) processStages(stage int) error {
 	switch stage {
 	case 0:
-		m.stageMsg = textStyle("Initializing project, detecting project language..  ")
-		return nil
-	case 1:
-		// var err error
-		pt, pd, err := langdetect.FindProjectType()
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return err
-		}
-		m.stageMsg = textStyle("Detected language as " + string(pt))
-		if m.pt == langdetect.Unknown {
-			m.permMsg = errorStyle("Project language isn't currently supported. Some features might not work.")
-		}
-		m.pt = pt
-		m.pd = pd
-		return nil
-	case 2:
 		m.stageMsg = textStyle("Resolving dependencies... ")
 		return nil
 
-	case 3:
-		fh, err := hcl2nix.NewFileHandlers(false)
+	case 1:
+		fh, err := hcl2nix.NewFileHandlers(true)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
@@ -114,12 +97,13 @@ func (m *model) processStages(stage int) error {
 		defer fh.FlakeFile.Close()
 		defer fh.DefFlakeFile.Close()
 
-		conf := generatehcl2NixConf(m.pt, m.pd)
-		err = hcl2nix.WriteConfig(conf, fh.ModFile)
+		data, err := os.ReadFile("bsf.hcl")
 		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
+			m.stageMsg = errorStyle(fmt.Sprintf("Has the project been initialised yet?\n  %v", err.Error()))
 			return err
 		}
+
+		conf, err := hcl2nix.ReadConfig(data)
 		ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 		defer cancel()
 

@@ -1,6 +1,10 @@
 package generate
 
 import (
+	"os"
+
+	"github.com/buildsafedev/bsf/pkg/clients/search"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
@@ -12,15 +16,15 @@ var GenCmd = &cobra.Command{
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// sc, err := search.NewClientWithURL("https://api.history.nix-packages.com/")
-		// if err != nil {
-		// 	os.Exit(1)
-		// }
+		sc, err := search.NewClientWithURL("https://api.history.nix-packages.com/")
+		if err != nil {
+			os.Exit(1)
+		}
 
-		// m := model{sc: sc}
-		// m.resetSpinner()
-		// if _, err := tea.NewProgram(m).Run(); err != nil {
-		// 	os.Exit(1)
-		// }
+		m := model{sc: sc}
+		m.resetSpinner()
+		if _, err := tea.NewProgram(m).Run(); err != nil {
+			os.Exit(1)
+		}
 	},
 }

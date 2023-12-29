@@ -1,7 +1,6 @@
 package init
 
 import (
-	"io/fs"
 	"os"
 
 	"github.com/buildsafedev/bsf/pkg/clients/search"
@@ -28,20 +27,4 @@ var InitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 	},
-}
-
-func createBsfDirectory() ([]fs.DirEntry, error) {
-	// check if the directory exists
-	files, err := os.ReadDir("bsf")
-	if err != nil {
-		// check if the error is because the directory doesn't exist
-		if os.IsNotExist(err) {
-			err = os.Mkdir("bsf", 0755)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return files, nil
 }
