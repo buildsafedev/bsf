@@ -10,8 +10,9 @@ import (
 
 // GenCmd represents the generate command
 var GenCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "generate resolves dependencies and generates the Nix files",
+	Use:     "generate",
+	Short:   "generate resolves dependencies and generates the Nix files",
+	Aliases: []string{"gen"},
 	Long: `generate resolves dependencies and generates the Nix files. It is similiar to "go mod tidy"
 	`,
 	Run: func(cmd *cobra.Command, args []string) {

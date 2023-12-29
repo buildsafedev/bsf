@@ -11,6 +11,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/buildsafedev/bsf/cmd/build"
+	"github.com/buildsafedev/bsf/cmd/develop"
 	"github.com/buildsafedev/bsf/cmd/generate"
 	initCmd "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/search"
@@ -36,6 +38,8 @@ func Execute() {
 	rootCmd.AddCommand(initCmd.InitCmd)
 	rootCmd.AddCommand(search.SearchCmd)
 	rootCmd.AddCommand(generate.GenCmd)
+	rootCmd.AddCommand(develop.DevCmd)
+	rootCmd.AddCommand(build.BuildCmd)
 
 	err := rootCmd.ExecuteContext(context.Background())
 	if err != nil {
