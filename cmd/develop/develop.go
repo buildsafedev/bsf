@@ -19,7 +19,7 @@ var DevCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := nixcmd.Develop()
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error: %v", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
 	},

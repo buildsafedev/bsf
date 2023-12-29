@@ -22,7 +22,7 @@ var RunCmd = &cobra.Command{
 
 		err := nixcmd.Run()
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error: %v", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
 

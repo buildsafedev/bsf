@@ -17,7 +17,7 @@ func Build() (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("cmd.Run() failed with %s", cmd.Stderr)
+		return "", fmt.Errorf("failed with %s", cmd.Stderr)
 	}
 
 	return stdout.String(), nil

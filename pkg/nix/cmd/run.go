@@ -8,7 +8,7 @@ import (
 
 // Run runs the project after building it based on instructions defined in bsf.hcl.
 func Run() error {
-	cmd := exec.Command("nix", "develop", "bsf/.")
+	cmd := exec.Command("nix", "run", "bsf/.")
 
 	// Connect the command's stdin, stdout, and stderr to the terminal
 	cmd.Stdin = os.Stdin
@@ -17,7 +17,7 @@ func Run() error {
 
 	err := cmd.Start()
 	if err != nil {
-		return fmt.Errorf("cmd.Start() failed with %s", err)
+		return fmt.Errorf("failed with %s", err)
 	}
 
 	err = cmd.Wait()
@@ -27,7 +27,7 @@ func Run() error {
 				return nil
 			}
 		}
-		return fmt.Errorf("cmd.Wait() failed with %s", err)
+		return fmt.Errorf("failed with %s", err)
 	}
 
 	return nil

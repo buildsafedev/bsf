@@ -17,7 +17,7 @@ func Develop() error {
 
 	err := cmd.Start()
 	if err != nil {
-		return fmt.Errorf("cmd.Start() failed with %s", err)
+		return fmt.Errorf("failed with %s", err)
 	}
 
 	err = cmd.Wait()
@@ -27,7 +27,7 @@ func Develop() error {
 				return nil
 			}
 		}
-		return fmt.Errorf("cmd.Wait() failed with %s", err)
+		return fmt.Errorf("failed with %s", err)
 	}
 
 	return nil

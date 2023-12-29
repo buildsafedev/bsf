@@ -15,8 +15,8 @@ const (
 	   buildGoModule,
 	   ... 
 	 }: buildGoModule {
-	   name = "";
-	   src = ../.;  
+	   name = "{{ .Name }}";
+	   src = {{ .SourcePath }};  
 	   {{ if .VendorHash }}
 		vendorHash = "{{ .VendorHash  }}";
 		{{ else }}
@@ -29,21 +29,29 @@ const (
 	`
 )
 
+type goModule struct {
+	Name       string
+	SourcePath string
+	VendorHash template.HTML
+	Meta       *hcl2nix.Meta
+}
+
 // GenerateGoModule generates default flake
 func GenerateGoModule(fl *hcl2nix.GoModule, wr io.Writer) error {
-	nt := template.New("gomodule").Option("missingkey=zero")
+	data := goModule{
+		Name:       fl.Name,
+		SourcePath: fl.SourcePath,
 
-	t, err := nt.Parse(golangTmpl)
+		// Convert VendorHash to HTML to avoid escaping
+		VendorHash: template.HTML(fl.VendorHash),
+	}
+
+	t, err := template.New(golangTmpl).Parse(golangTmpl)
 	if err != nil {
 		return err
 	}
 
-	err = t.Execute(wr, struct {
-		VendorHash template.HTML
-	}{
-		VendorHash: template.HTML(fl.VendorHash),
-	})
-
+	err = t.Execute(wr, data)
 	if err != nil {
 		return err
 	}

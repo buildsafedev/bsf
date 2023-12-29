@@ -47,16 +47,17 @@ func FindProjectType() (ProjectType, *ProjectDetails, error) {
 			if err != nil {
 				return "", nil, err
 			}
-			var moduleName string
+			var binaryName string
 			lines := strings.Split(string(f), "\n")
 			for _, line := range lines {
 				if strings.HasPrefix(line, "module") {
-					moduleName = strings.TrimSpace(line[6:])
+					moduleName := strings.TrimSpace(line[6:])
+					binaryName = moduleName[strings.LastIndex(moduleName, "/")+1:]
 					break
 				}
 			}
 			return GoModule, &ProjectDetails{
-				Name: moduleName,
+				Name: binaryName,
 			}, nil
 		}
 	}
