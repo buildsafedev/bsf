@@ -111,40 +111,23 @@ func (m *model) processStages(stage int) error {
 			return err
 		}
 
-		modFile, err := os.Create("bsf.hcl")
+		fh, err := NewFileHandlers()
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
 		}
-		defer modFile.Close()
-
-		lockFile, err := os.Create("bsf.lock")
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return err
-		}
-		defer lockFile.Close()
-
-		flakeFile, err := os.Create("bsf/flake.nix")
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return err
-		}
-
-		defFlakeFile, err := os.Create("bsf/default.nix")
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return err
-		}
+		defer fh.ModFile.Close()
+		defer fh.LockFile.Close()
+		defer fh.FlakeFile.Close()
+		defer fh.DefFlakeFile.Close()
 
 		conf := generatehcl2NixConf(m.pt, m.pd)
-		err = hcl2nix.WriteConfig(conf, modFile)
+		err = hcl2nix.WriteConfig(conf, fh.ModFile)
 		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
+			m.stageMsg = errorStyle("Is the project already initialised? \n bsf.hcl found. \n", err.Error())
 			return err
 		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 		defer cancel()
 
 		allPackages, err := hcl2nix.ResolvePackages(ctx, m.sc, conf.Packages)
@@ -153,26 +136,26 @@ func (m *model) processStages(stage int) error {
 			return err
 		}
 
-		err = hcl2nix.GenerateLockFile(allPackages, lockFile)
+		err = hcl2nix.GenerateLockFile(allPackages, fh.LockFile)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
 		}
 
-		// todo: is there a better way to do all of this?
-		devPkgs, rtPackages, revisions := mapPackageCategory(conf.Packages, allPackages)
+		cr := hcl2nix.ResolveCategoryRevisions(conf.Packages, allPackages)
 		err = btemplate.GenerateFlake(btemplate.Flake{
 			// Description:         "bsf flake",
-			NixPackageRevisions: revisions,
-			DevPackages:         devPkgs,
-			RuntimePackages:     rtPackages,
-		}, flakeFile)
+			NixPackageRevisions: cr.Revisions,
+			DevPackages:         cr.Development,
+			RuntimePackages:     cr.Runtime,
+		}, fh.FlakeFile)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
 		}
 
-		err = btemplate.GenerateGoModule(conf.GoModule, defFlakeFile)
+		// todo: there should be a generic method "GenerateApplicationModule" that can switch between different project types
+		err = btemplate.GenerateGoModule(conf.GoModule, fh.DefFlakeFile)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
@@ -182,4 +165,51 @@ func (m *model) processStages(stage int) error {
 	}
 
 	return nil
+}
+
+// FileHandlers holds file handlers
+type FileHandlers struct {
+	ModFile      *os.File
+	LockFile     *os.File
+	FlakeFile    *os.File
+	DefFlakeFile *os.File
+}
+
+// NewFileHandlers creates new file handlers
+func NewFileHandlers() (*FileHandlers, error) {
+	modFile, err := GetOrCreateFile("bsf.hcl")
+	if err != nil {
+		return nil, err
+	}
+
+	lockFile, err := os.Create("bsf.lock")
+	if err != nil {
+		return nil, err
+	}
+
+	flakeFile, err := os.Create("bsf/flake.nix")
+	if err != nil {
+		return nil, err
+	}
+
+	defFlakeFile, err := os.Create("bsf/default.nix")
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileHandlers{
+		ModFile:      modFile,
+		LockFile:     lockFile,
+		FlakeFile:    flakeFile,
+		DefFlakeFile: defFlakeFile,
+	}, nil
+}
+
+// GetOrCreateFile gets or creates a file if it doesn't exist
+func GetOrCreateFile(path string) (*os.File, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return os.Create(path)
+	}
+
+	return os.Open(path)
 }

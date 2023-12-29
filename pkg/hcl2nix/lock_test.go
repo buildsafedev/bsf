@@ -1,19 +1,17 @@
-package init
+package hcl2nix
 
 import (
 	"testing"
 
+	"github.com/buildsafedev/bsf/pkg/clients/search"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-
-	"github.com/buildsafedev/bsf/pkg/clients/search"
-	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 )
 
 func TestMapPackageCategory(t *testing.T) {
 	tests := []struct {
 		name        string
-		pkgs        hcl2nix.Packages
+		pkgs        Packages
 		pkgVersions []search.Package
 		devExpected map[string]string
 		rtExpected  map[string]string
@@ -21,7 +19,7 @@ func TestMapPackageCategory(t *testing.T) {
 	}{
 		{
 			name: "test case 1",
-			pkgs: hcl2nix.Packages{
+			pkgs: Packages{
 				Development: []string{"pkg1", "pkg3", "pkg5"},
 				Runtime:     []string{"pkg2", "pkg4", "pkg5"},
 			},
@@ -48,17 +46,17 @@ func TestMapPackageCategory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			devGot, rtGot, revGot := mapPackageCategory(tt.pkgs, tt.pkgVersions)
-			if !cmp.Equal(devGot, tt.devExpected) {
-				t.Errorf("DevDeps got %v, want %v", devGot, tt.devExpected)
+			ct := ResolveCategoryRevisions(tt.pkgs, tt.pkgVersions)
+			if !cmp.Equal(ct.Development, tt.devExpected) {
+				t.Errorf("DevDeps got %v, want %v", ct.Development, tt.devExpected)
 			}
-			if !cmp.Equal(rtGot, tt.rtExpected) {
-				t.Errorf(" RTDeps got %v, want %v", rtGot, tt.rtExpected)
+			if !cmp.Equal(ct.Runtime, tt.rtExpected) {
+				t.Errorf(" RTDeps got %v, want %v", ct.Runtime, tt.rtExpected)
 			}
 			less := func(a, b string) bool { return a < b }
-			equalIgnoreOrder := cmp.Diff(revGot, tt.revExpected, cmpopts.SortSlices(less)) == ""
+			equalIgnoreOrder := cmp.Diff(ct.Revisions, tt.revExpected, cmpopts.SortSlices(less)) == ""
 			if !equalIgnoreOrder {
-				t.Errorf("Revisions got %v, want %v", revGot, tt.revExpected)
+				t.Errorf("Revisions got %v, want %v", ct.Revisions, tt.revExpected)
 			}
 		})
 	}

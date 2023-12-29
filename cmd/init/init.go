@@ -1,7 +1,6 @@
 package init
 
 import (
-	"context"
 	"io/fs"
 	"os"
 
@@ -45,10 +44,4 @@ func createBsfDirectory() ([]fs.DirEntry, error) {
 	}
 
 	return files, nil
-}
-
-func createNixFiles(ctx context.Context) error {
-	// create the nix files
-
-	return nil
 }

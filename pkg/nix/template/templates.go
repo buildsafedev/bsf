@@ -14,6 +14,7 @@ type Flake struct {
 	RuntimePackages     map[string]string
 }
 
+// todo: maybe we could let power users inject their own templates
 const (
 	mainTmpl = `
 {
