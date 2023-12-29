@@ -12,15 +12,15 @@
     "datetime": "2023-12-08T11:56:41Z"
   },
   {
-    "name": "delve",
-    "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
-    "version": "1.21.2",
-    "datetime": "2023-12-14T12:27:10Z"
-  },
-  {
     "name": "cacert",
     "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
     "version": "3.95",
+    "datetime": "2023-12-14T12:27:10Z"
+  },
+  {
+    "name": "delve",
+    "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
+    "version": "1.21.2",
     "datetime": "2023-12-14T12:27:10Z"
   }
 ]

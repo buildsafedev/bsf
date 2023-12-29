@@ -7,5 +7,5 @@ packages {
 gomodule {
   name       = "github.com/buildsafedev/bsf"
   src        = "../."
-  vendorHash = ""
+  vendorHash = "sha256-f29THF+FPQ4ORx2SJ2EJVOGbvoEvF4V+V0ZkmjUY35o="
 }

@@ -18,7 +18,7 @@ const (
 	   name = "";
 	   src = ../.;  
 	   {{ if .VendorHash }}
-		vendorSha256 = "{{ .VendorHash }}";
+		vendorHash = "{{ .VendorHash }}";
 		{{ else }}
 		vendorHash = lib.fakeHash;
 		{{ end }}
