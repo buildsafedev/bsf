@@ -1,6 +1,6 @@
 
 packages {
-  development = ["gotools@0.7.0", "delve@1.21.2", "go@1.21.4"]
+  development = ["go@1.21.4", "goreleaser@1.22.1", "gotools@0.7.0", "delve@1.21.2"]
   runtime     = ["cacert@3.95"]
 }
 
