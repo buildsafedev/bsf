@@ -24,11 +24,18 @@ var BuildCmd = &cobra.Command{
 		_, err := nixcmd.Build()
 		if err != nil {
 			gotHash := isHashMismatchError(err.Error())
-			if gotHash == "" {
-				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-			} else {
+			if gotHash != "" {
 				fmt.Println(fmt.Sprintf(styles.ErrorStyle.Render("Hash mismatch detected. Please insert the following hash in the build app/module section(ex: vendorHash, vendorSha256) of bsf.hcl and run `bsf generate` : ", gotHash)))
+				os.Exit(1)
 			}
+
+			if isNoFileError(err.Error()) {
+				fmt.Println(styles.ErrorStyle.Render(err.Error() + "\n Please ensure all necessary files are added/committed in your version control system (e.g., git add, git commit)."))
+				os.Exit(1)
+			}
+
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+
 			os.Exit(1)
 		}
 
@@ -46,4 +53,8 @@ func isHashMismatchError(err string) string {
 		}
 	}
 	return ""
+}
+
+func isNoFileError(err string) bool {
+	return strings.Contains(err, "No such file or directory")
 }
