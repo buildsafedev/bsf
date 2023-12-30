@@ -9,3 +9,17 @@ gomodule {
   src        = "../."
   vendorHash = "sha256-f29THF+FPQ4ORx2SJ2EJVOGbvoEvF4V+V0ZkmjUY35o="
 }
+
+
+export "dev"{
+  name = "ttl.sh/bsfdev/bsf:dev"
+  artifactType = "oci"
+  platform = ["linux/arm64"]
+}
+
+export "prod"{
+  name = "ttl.sh/bsfdev/bsf:prod"
+  artifactType = "oci"
+  platform = ["linux/arm64", "linux/amd64"]
+  publish = true
+}
