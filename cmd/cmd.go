@@ -23,8 +23,8 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "bsf",
-	Short: "bsf ",
-	Long:  ` `,
+	Short: "BuildSafe CLI ",
+	Long:  `An opinionated application definition framework built on top of Nix. `,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

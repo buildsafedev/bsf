@@ -21,6 +21,7 @@ var SearchCmd = &cobra.Command{
 	Short: "search searches for packages",
 	Long: `Search for Nix packages on the Nixpkgs repository
 	`,
+	Example: `bsf search <package-name>`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			fmt.Println(errorStyle.Render(fmt.Errorf("error: %v", "package name is required").Error()))
