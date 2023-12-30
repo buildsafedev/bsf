@@ -21,6 +21,12 @@ var BuildCmd = &cobra.Command{
 	It is recommended to check in the files in version control system(ex: Git) before building.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if _, err := os.Stat("bsf.hcl"); err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: Has the project been initialized?"))
+			fmt.Println(styles.HintStyle.Render("hint: ", "run `bsf init` to initialize the project"))
+			os.Exit(1)
+		}
+
 		_, err := nixcmd.Build()
 		if err != nil {
 			gotHash := isHashMismatchError(err.Error())
