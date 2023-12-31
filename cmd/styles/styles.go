@@ -25,6 +25,8 @@ var (
 	// CursorOptionStyle is the style for the cursor
 	CursorOptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("220")).Italic(true)
 
+	// HighlightStyle is the style for the highlight
+	HighlightStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("220")).Bold(true)
 	// HintStyle is the style for the hint
-	HintStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	HintStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("42"))
 )
