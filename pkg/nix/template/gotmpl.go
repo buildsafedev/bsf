@@ -17,6 +17,7 @@ const (
 	 }: buildGoModule {
 	   name = "{{ .Name }}";
 	   src = {{ .SourcePath }};  
+	   {{ if .DoCheck }}{{ else }}doCheck = false;{{ end }}
 	   {{ if .VendorHash }}
 		vendorHash = "{{ .VendorHash  }}";
 		{{ else }}
@@ -33,6 +34,7 @@ type goModule struct {
 	Name       string
 	SourcePath string
 	VendorHash template.HTML
+	DoCheck    bool
 	Meta       *hcl2nix.Meta
 }
 
@@ -41,6 +43,7 @@ func GenerateGoModule(fl *hcl2nix.GoModule, wr io.Writer) error {
 	data := goModule{
 		Name:       fl.Name,
 		SourcePath: fl.SourcePath,
+		DoCheck:    fl.DoCheck,
 
 		// Convert VendorHash to HTML to avoid escaping
 		VendorHash: template.HTML(fl.VendorHash),

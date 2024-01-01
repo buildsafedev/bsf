@@ -13,8 +13,9 @@ import (
 
 // Config for hcl2nix
 type Config struct {
-	Packages Packages  `hcl:"packages,block"`
-	GoModule *GoModule `hcl:"gomodule,block"`
+	Packages Packages       `hcl:"packages,block"`
+	GoModule *GoModule      `hcl:"gomodule,block"`
+	Export   []ExportConfig `hcl:"export,block"`
 }
 
 // Packages holds package parameters
@@ -38,7 +39,7 @@ func WriteConfig(config Config, wr io.Writer) error {
 // ReadConfig reads config from bytes and returns Config. If any errors are encountered, they are written to dstErr
 func ReadConfig(src []byte, dstErr io.Writer) (*Config, error) {
 	parser := hclparse.NewParser()
-	f, err := parser.ParseHCL(src, "bsf.mod")
+	f, err := parser.ParseHCL(src, "bsf.hcl")
 	if err != nil {
 		return nil, err
 	}

@@ -3,51 +3,61 @@
 	description = "";
 	
 	inputs = {
-		 nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688.url = "github:nixos/nixpkgs/a89ba043dda559ebc57fc6f1fa8cf3a0b207f688";
+		 nixpkgs-96d1259aefb7350ebc4fbcc0718447fe30321151.url = "github:nixos/nixpkgs/96d1259aefb7350ebc4fbcc0718447fe30321151";
+		 nixpkgs-c5e85c459830b30d1e54ca4ae0d4d37fc23adbe2.url = "github:nixos/nixpkgs/c5e85c459830b30d1e54ca4ae0d4d37fc23adbe2";
 		 nixpkgs-eeee184c00a7e542d2a837252a0ed4e74dd27dc5.url = "github:nixos/nixpkgs/eeee184c00a7e542d2a837252a0ed4e74dd27dc5";
+		 nixpkgs-7fbe081b14e1363801a6a60e105b403f37048ea6.url = "github:nixos/nixpkgs/7fbe081b14e1363801a6a60e105b403f37048ea6";
 			
 		nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
 	};
 	
-	outputs = { self, nixpkgs,  nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688, 
+	outputs = { self, nixpkgs,  nixpkgs-96d1259aefb7350ebc4fbcc0718447fe30321151, 
+	 nixpkgs-c5e85c459830b30d1e54ca4ae0d4d37fc23adbe2, 
 	 nixpkgs-eeee184c00a7e542d2a837252a0ed4e74dd27dc5, 
+	 nixpkgs-7fbe081b14e1363801a6a60e105b403f37048ea6, 
 	 }: let
 	  supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
 	  forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
-		 nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688-pkgs = import nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688 { inherit system; };
+		 nixpkgs-96d1259aefb7350ebc4fbcc0718447fe30321151-pkgs = import nixpkgs-96d1259aefb7350ebc4fbcc0718447fe30321151 { inherit system; };
+		 nixpkgs-c5e85c459830b30d1e54ca4ae0d4d37fc23adbe2-pkgs = import nixpkgs-c5e85c459830b30d1e54ca4ae0d4d37fc23adbe2 { inherit system; };
 		 nixpkgs-eeee184c00a7e542d2a837252a0ed4e74dd27dc5-pkgs = import nixpkgs-eeee184c00a7e542d2a837252a0ed4e74dd27dc5 { inherit system; };
+		 nixpkgs-7fbe081b14e1363801a6a60e105b403f37048ea6-pkgs = import nixpkgs-7fbe081b14e1363801a6a60e105b403f37048ea6 { inherit system; };
 		
 		pkgs = import nixpkgs { inherit system; };
 	  });
 	in {
-	  packages = forEachSupportedSystem ({ pkgs,  nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688-pkgs, 
+	  packages = forEachSupportedSystem ({ pkgs,  nixpkgs-96d1259aefb7350ebc4fbcc0718447fe30321151-pkgs, 
+		 nixpkgs-c5e85c459830b30d1e54ca4ae0d4d37fc23adbe2-pkgs, 
 		 nixpkgs-eeee184c00a7e542d2a837252a0ed4e74dd27dc5-pkgs, 
+		 nixpkgs-7fbe081b14e1363801a6a60e105b403f37048ea6-pkgs, 
 		 }: {
 		default = pkgs.callPackage ./default.nix {
 		  
 		};
 	  });
 	
-	  devShells = forEachSupportedSystem ({ pkgs,  nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688-pkgs, 
+	  devShells = forEachSupportedSystem ({ pkgs,  nixpkgs-96d1259aefb7350ebc4fbcc0718447fe30321151-pkgs, 
+		 nixpkgs-c5e85c459830b30d1e54ca4ae0d4d37fc23adbe2-pkgs, 
 		 nixpkgs-eeee184c00a7e542d2a837252a0ed4e74dd27dc5-pkgs, 
+		 nixpkgs-7fbe081b14e1363801a6a60e105b403f37048ea6-pkgs, 
 		 }: {
 		devShell = pkgs.mkShell {
 		  # The Nix packages provided in the environment
 		  packages =  [
-			nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688-pkgs.delve  
+			nixpkgs-96d1259aefb7350ebc4fbcc0718447fe30321151-pkgs.delve  
 			nixpkgs-eeee184c00a7e542d2a837252a0ed4e74dd27dc5-pkgs.go  
-			nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688-pkgs.goreleaser  
-			nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688-pkgs.gotools  
+			nixpkgs-7fbe081b14e1363801a6a60e105b403f37048ea6-pkgs.goreleaser  
+			nixpkgs-c5e85c459830b30d1e54ca4ae0d4d37fc23adbe2-pkgs.gotools  
 			
 		  ];
 		};
 	  });
 	
-	  runtimeEnvs = forEachSupportedSystem ({ pkgs,  nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688-pkgs,  nixpkgs-eeee184c00a7e542d2a837252a0ed4e74dd27dc5-pkgs,  }: {
+	  runtimeEnvs = forEachSupportedSystem ({ pkgs,  nixpkgs-96d1259aefb7350ebc4fbcc0718447fe30321151-pkgs,  nixpkgs-c5e85c459830b30d1e54ca4ae0d4d37fc23adbe2-pkgs,  nixpkgs-eeee184c00a7e542d2a837252a0ed4e74dd27dc5-pkgs,  nixpkgs-7fbe081b14e1363801a6a60e105b403f37048ea6-pkgs,  }: {
 		runtime = pkgs.buildEnv {
 		  name = "runtimeenv";
 		  paths = [ 
-			nixpkgs-a89ba043dda559ebc57fc6f1fa8cf3a0b207f688-pkgs.cacert   
+			nixpkgs-96d1259aefb7350ebc4fbcc0718447fe30321151-pkgs.cacert   
 			
 		   ];
 		};

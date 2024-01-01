@@ -7,8 +7,9 @@
 	 }: buildGoModule {
 	   name = "bsf";
 	   src = ../.;  
+	   doCheck = false;
 	   
-		vendorHash = "sha256-f29THF+FPQ4ORx2SJ2EJVOGbvoEvF4V+V0ZkmjUY35o=";
+		vendorHash = "sha256-x/9O7qBzA1PaHBmZEzd8Kt0XuSw6feuJnd9FVUbdTt4=";
 		
 	   meta = with lib; {
 		 description = "";

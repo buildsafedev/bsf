@@ -7,5 +7,21 @@ packages {
 gomodule {
   name       = "bsf"
   src        = "../."
-  vendorHash = "sha256-f29THF+FPQ4ORx2SJ2EJVOGbvoEvF4V+V0ZkmjUY35o="
+  vendorHash = "sha256-x/9O7qBzA1PaHBmZEzd8Kt0XuSw6feuJnd9FVUbdTt4="
+}
+
+
+export "dev"{
+  name = "ttl.sh/bsfdev/bsf:dev"
+  artifactType = "oci"
+  platform = "linux/arm64"
+  cmd = ["/result/bin/bsf"]
+}
+
+export "prod"{
+  name = "ttl.sh/bsfdev/bsf:prod"
+  artifactType = "oci"
+  platform = "linux/arm64"
+  cmd = ["/result/bin/bsf"]
+  publish = true
 }

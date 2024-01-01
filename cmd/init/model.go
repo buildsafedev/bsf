@@ -21,7 +21,7 @@ var (
 	spinnerStyle = styles.SpinnerStyle
 	helpStyle    = styles.HelpStyle.Render
 	errorStyle   = styles.ErrorStyle.Render
-	stages       = 4
+	stages       = 3
 )
 
 type model struct {

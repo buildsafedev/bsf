@@ -5,6 +5,7 @@ type GoModule struct {
 	Name       string `hcl:"name"`
 	SourcePath string `hcl:"src"`
 	VendorHash string `hcl:"vendorHash"`
+	DoCheck    bool   `hcl:"doCheck,optional"`
 	Meta       *Meta  `hcl:"meta"`
 }
 
