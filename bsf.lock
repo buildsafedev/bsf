@@ -12,12 +12,6 @@
     "datetime": "2023-12-14T15:01:40Z"
   },
   {
-    "name": "goreleaser",
-    "revision": "7fbe081b14e1363801a6a60e105b403f37048ea6",
-    "version": "1.22.1",
-    "datetime": "2023-12-26T16:04:44Z"
-  },
-  {
     "name": "go",
     "revision": "eeee184c00a7e542d2a837252a0ed4e74dd27dc5",
     "version": "1.21.4",
@@ -28,5 +22,11 @@
     "revision": "96d1259aefb7350ebc4fbcc0718447fe30321151",
     "version": "3.95",
     "datetime": "2023-12-31T16:10:42Z"
+  },
+  {
+    "name": "goreleaser",
+    "revision": "7fbe081b14e1363801a6a60e105b403f37048ea6",
+    "version": "1.22.1",
+    "datetime": "2023-12-26T16:04:44Z"
   }
 ]

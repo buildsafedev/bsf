@@ -2,7 +2,6 @@ package build
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -78,7 +77,6 @@ func dockerbuild(ctx context.Context, opts buildOpts) error {
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		_, err := c.Solve(ctx, nil, *solveOpts, ch)
-		fmt.Println(err.Error())
 		return err
 	})
 
