@@ -14,12 +14,14 @@ gomodule {
 export "dev"{
   name = "ttl.sh/bsfdev/bsf:dev"
   artifactType = "oci"
-  platform = ["linux/arm64"]
+  platform = "linux/arm64"
+  cmd = ["/result/bin/bsf"]
 }
 
 export "prod"{
   name = "ttl.sh/bsfdev/bsf:prod"
   artifactType = "oci"
-  platform = ["linux/arm64", "linux/amd64"]
+  platform = "linux/arm64"
+  cmd = ["/result/bin/bsf"]
   publish = true
 }

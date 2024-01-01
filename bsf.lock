@@ -1,15 +1,21 @@
 [
   {
-    "name": "cacert",
-    "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
-    "version": "3.95",
-    "datetime": "2023-12-14T12:27:10Z"
+    "name": "delve",
+    "revision": "96d1259aefb7350ebc4fbcc0718447fe30321151",
+    "version": "1.21.2",
+    "datetime": "2023-12-31T16:10:42Z"
   },
   {
     "name": "gotools",
-    "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
+    "revision": "c5e85c459830b30d1e54ca4ae0d4d37fc23adbe2",
     "version": "0.7.0",
-    "datetime": "2023-12-14T12:27:10Z"
+    "datetime": "2023-12-14T15:01:40Z"
+  },
+  {
+    "name": "goreleaser",
+    "revision": "7fbe081b14e1363801a6a60e105b403f37048ea6",
+    "version": "1.22.1",
+    "datetime": "2023-12-26T16:04:44Z"
   },
   {
     "name": "go",
@@ -18,15 +24,9 @@
     "datetime": "2023-12-08T11:56:41Z"
   },
   {
-    "name": "goreleaser",
-    "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
-    "version": "1.22.1",
-    "datetime": "2023-12-14T12:27:10Z"
-  },
-  {
-    "name": "delve",
-    "revision": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
-    "version": "1.21.2",
-    "datetime": "2023-12-14T12:27:10Z"
+    "name": "cacert",
+    "revision": "96d1259aefb7350ebc4fbcc0718447fe30321151",
+    "version": "3.95",
+    "datetime": "2023-12-31T16:10:42Z"
   }
 ]

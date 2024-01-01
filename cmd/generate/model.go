@@ -60,7 +60,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	var err error
-	if m.stage >= stages {
+	if m.stage > stages {
 		m.stageMsg = sucessStyle("Generated sucessfully!")
 		return m, tea.Quit
 	}

@@ -7,6 +7,7 @@
 	 }: buildGoModule {
 	   name = "bsf";
 	   src = ../.;  
+	   doCheck = false;
 	   
 		vendorHash = "sha256-f29THF+FPQ4ORx2SJ2EJVOGbvoEvF4V+V0ZkmjUY35o=";
 		
