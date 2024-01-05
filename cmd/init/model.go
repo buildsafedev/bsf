@@ -11,6 +11,7 @@ import (
 	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/buildsafedev/bsf/pkg/langdetect"
+	"github.com/buildsafedev/bsf/pkg/nix/cmd"
 	"github.com/charmbracelet/bubbles/spinner"
 )
 
@@ -121,6 +122,12 @@ func (m *model) processStages(stage int) error {
 		}
 
 		err = generate.Generate(fh, m.sc)
+		if err != nil {
+			m.stageMsg = errorStyle(err.Error())
+			return err
+		}
+
+		err = cmd.Lock()
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
