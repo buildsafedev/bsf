@@ -36,7 +36,7 @@ func Build(env hcl2nix.ExportConfig) error {
 		Name:          env.Name,
 	})
 
-	return nil
+	return err
 }
 
 // GenerateDockerfile generates Dockerfile

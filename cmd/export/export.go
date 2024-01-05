@@ -6,10 +6,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/build"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
-	"github.com/spf13/cobra"
 )
 
 var (

@@ -7,6 +7,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/elewis787/boa"
@@ -19,6 +20,12 @@ import (
 	initCmd "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/run"
 	"github.com/buildsafedev/bsf/cmd/search"
+	"github.com/buildsafedev/bsf/cmd/styles"
+)
+
+var (
+	// DebugDir is the directory where bsf project needs to be debugged
+	DebugDir string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -31,6 +38,16 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+
+	debugDir := getDebugPath()
+	if debugDir != "" {
+		err := os.Chdir(debugDir)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+	}
+
 	rootCmd.SetHelpFunc(boa.HelpFunc)
 	rootCmd.SetUsageFunc(boa.UsageFunc)
 
@@ -47,4 +64,11 @@ func Execute() {
 		os.Exit(1)
 	}
 
+}
+
+func getDebugPath() string {
+	if os.Getenv("BSF_DEBUG_DIR") != "" {
+		DebugDir = os.Getenv("BSF_DEBUG_DIR")
+	}
+	return DebugDir
 }

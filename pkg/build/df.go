@@ -77,7 +77,10 @@ func dockerbuild(ctx context.Context, opts buildOpts) error {
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		_, err := c.Solve(ctx, nil, *solveOpts, ch)
-		return err
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 
 	eg.Go(func() error {
