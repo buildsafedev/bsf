@@ -39,13 +39,20 @@ func WriteConfig(config Config, wr io.Writer) error {
 // ReadConfig reads config from bytes and returns Config. If any errors are encountered, they are written to dstErr
 func ReadConfig(src []byte, dstErr io.Writer) (*Config, error) {
 	parser := hclparse.NewParser()
-	f, err := parser.ParseHCL(src, "bsf.hcl")
-	if err != nil {
-		return nil, err
+	f, diags := parser.ParseHCL(src, "bsf.hcl")
+	if diags.HasErrors() {
+		wr := hcl.NewDiagnosticTextWriter(
+			dstErr,
+			parser.Files(),
+			78,
+			true,
+		)
+		wr.WriteDiagnostics(diags)
+		return nil, diags
 	}
 
 	var config Config
-	diags := gohcl.DecodeBody(f.Body, nil, &config)
+	diags = gohcl.DecodeBody(f.Body, nil, &config)
 	if diags.HasErrors() {
 		wr := hcl.NewDiagnosticTextWriter(
 			dstErr,
