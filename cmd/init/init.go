@@ -16,7 +16,7 @@ var InitCmd = &cobra.Command{
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		sc, err := search.NewClientWithURL("https://api.history.nix-packages.com/")
+		sc, err := search.NewClientWithAddr("localhost:8080")
 		if err != nil {
 			os.Exit(1)
 		}

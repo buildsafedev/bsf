@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/buildsafedev/bsf/pkg/clients/search"
 	bstrings "github.com/buildsafedev/bsf/pkg/strings"
+	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
 )
 
 // CategoryRevision holds category revision map  and revision list
@@ -20,7 +20,7 @@ type CategoryRevision struct {
 }
 
 // GenerateLockFile generates lock file
-func GenerateLockFile(packages []search.Package, wr io.Writer) error {
+func GenerateLockFile(packages []buildsafev1.Package, wr io.Writer) error {
 	data, err := json.MarshalIndent(packages, "", "  ")
 	if err != nil {
 		return err
@@ -34,9 +34,9 @@ func GenerateLockFile(packages []search.Package, wr io.Writer) error {
 }
 
 // ResolvePackages resolves a list of packages concurrently
-func ResolvePackages(ctx context.Context, sc *search.Client, packages Packages) ([]search.Package, error) {
+func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, packages Packages) ([]buildsafev1.Package, error) {
 	allPackages := bstrings.SliceToSet(append(packages.Development, packages.Runtime...))
-	resolvedPackages := make([]search.Package, 0, len(allPackages))
+	resolvedPackages := make([]buildsafev1.Package, 0, len(allPackages))
 
 	errStr := ""
 	var wg sync.WaitGroup
@@ -62,8 +62,8 @@ func ResolvePackages(ctx context.Context, sc *search.Client, packages Packages) 
 }
 
 // ResolvePackage resolves package name
-func ResolvePackage(ctx context.Context, sc *search.Client, pkg string) (*search.Package, error) {
-	var desiredVersion *search.Package
+func ResolvePackage(ctx context.Context, sc buildsafev1.SearchServiceClient, pkg string) (*buildsafev1.Package, error) {
+	var desiredVersion *buildsafev1.FetchPackageVersionResponse
 	var err error
 
 	if !strings.Contains(pkg, "@") {
@@ -76,34 +76,19 @@ func ResolvePackage(ctx context.Context, sc *search.Client, pkg string) (*search
 	name := s[0]
 	version := s[1]
 
-	desiredVersion, err = sc.GetPackageVersion(ctx, name, version)
+	desiredVersion, err = sc.FetchPackageVersion(ctx, &buildsafev1.FetchPackageVersionRequest{
+		Name:    name,
+		Version: version,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("error fetching package %s@%s: %v", name, version, err)
 	}
 
-	return desiredVersion, nil
-}
-
-// ResolveLatestPackageVersion resolves latest package version
-func ResolveLatestPackageVersion(ctx context.Context, sc *search.Client, pkg string) (*search.Package, error) {
-	if strings.Contains(pkg, "@") {
-		return nil, fmt.Errorf("Version is specified for the package %s", pkg)
-	}
-
-	versionList, err := sc.ListPackageVersions(ctx, pkg)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching package %s: %v", pkg, err)
-	}
-
-	if len(versionList) == 0 {
-		return nil, fmt.Errorf("no versions found for package %s", pkg)
-	}
-
-	return &versionList[0], nil
+	return desiredVersion.Package, nil
 }
 
 // ResolveCategoryRevisions maps packages to their category, returns development packages, runtime packages and a list of Nix revisions
-func ResolveCategoryRevisions(pkgs Packages, pkgVersions []search.Package) *CategoryRevision {
+func ResolveCategoryRevisions(pkgs Packages, pkgVersions []buildsafev1.Package) *CategoryRevision {
 	devRevisions := make(map[string]string, 0)
 	rtRevisions := make(map[string]string, 0)
 
@@ -111,14 +96,14 @@ func ResolveCategoryRevisions(pkgs Packages, pkgVersions []search.Package) *Cate
 	rtMap := sliceToMap(pkgs.Runtime)
 
 	var revisions []string
-	for _, pkg := range pkgVersions {
-		revisions = append(revisions, pkg.Revision)
-		pkgName := getPkgName(pkg.Name)
+	for i := range pkgVersions {
+		revisions = append(revisions, pkgVersions[i].Revision)
+		pkgName := getPkgName(pkgVersions[i].Name)
 		if _, ok := devMap[pkgName]; ok {
-			devRevisions[pkgName] = pkg.Revision
+			devRevisions[pkgName] = pkgVersions[i].Revision
 		}
 		if _, ok := rtMap[pkgName]; ok {
-			rtRevisions[pkgName] = pkg.Revision
+			rtRevisions[pkgName] = pkgVersions[i].Revision
 		}
 	}
 	return &CategoryRevision{

@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
-	"github.com/buildsafedev/bsf/pkg/clients/search"
 	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 	"github.com/buildsafedev/bsf/pkg/nix/cmd"
-	"github.com/charmbracelet/bubbles/spinner"
+	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
 )
 
 var (
@@ -27,7 +27,7 @@ var (
 
 type model struct {
 	spinner  spinner.Model
-	sc       *search.Client
+	sc       buildsafev1.SearchServiceClient
 	stageMsg string
 	permMsg  string
 	stage    int

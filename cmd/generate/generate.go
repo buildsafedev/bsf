@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/buildsafedev/bsf/cmd/styles"
-	"github.com/buildsafedev/bsf/pkg/clients/search"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
+
+	"github.com/buildsafedev/bsf/cmd/styles"
+	"github.com/buildsafedev/bsf/pkg/clients/search"
 )
 
 // GenCmd represents the generate command
@@ -24,8 +25,9 @@ var GenCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		sc, err := search.NewClientWithURL("https://api.history.nix-packages.com/")
+		sc, err := search.NewClientWithAddr("localhost:8080")
 		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
 

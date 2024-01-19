@@ -7,13 +7,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/buildsafedev/bsf/pkg/clients/search"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	btemplate "github.com/buildsafedev/bsf/pkg/nix/template"
+	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
 )
 
 // Generate reads bsf.hcl, resolves dependencies and generates bsf.lock, bsf/flake.nix and bsf/default.nix
-func Generate(fh *hcl2nix.FileHandlers, sc *search.Client) error {
+func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) error {
 	data, err := os.ReadFile("bsf.hcl")
 	if err != nil {
 		return err

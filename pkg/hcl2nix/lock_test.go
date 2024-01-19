@@ -3,16 +3,17 @@ package hcl2nix
 import (
 	"testing"
 
-	"github.com/buildsafedev/bsf/pkg/clients/search"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
+	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
 )
 
 func TestMapPackageCategory(t *testing.T) {
 	tests := []struct {
 		name        string
 		pkgs        Packages
-		pkgVersions []search.Package
+		pkgVersions []buildsafev1.Package
 		devExpected map[string]string
 		rtExpected  map[string]string
 		revExpected []string
@@ -23,7 +24,7 @@ func TestMapPackageCategory(t *testing.T) {
 				Development: []string{"pkg1", "pkg3", "pkg5"},
 				Runtime:     []string{"pkg2", "pkg4", "pkg5"},
 			},
-			pkgVersions: []search.Package{
+			pkgVersions: []buildsafev1.Package{
 				{Name: "pkg1", Revision: "rev1", Version: "1.0.0"},
 				{Name: "pkg2", Revision: "rev2", Version: "1.1.0"},
 				{Name: "pkg3", Revision: "rev3", Version: "1.2.0"},
@@ -51,7 +52,7 @@ func TestMapPackageCategory(t *testing.T) {
 				t.Errorf("DevDeps got %v, want %v", ct.Development, tt.devExpected)
 			}
 			if !cmp.Equal(ct.Runtime, tt.rtExpected) {
-				t.Errorf(" RTDeps got %v, want %v", ct.Runtime, tt.rtExpected)
+				t.Errorf("RTDeps got %v, want %v", ct.Runtime, tt.rtExpected)
 			}
 			less := func(a, b string) bool { return a < b }
 			equalIgnoreOrder := cmp.Diff(ct.Revisions, tt.revExpected, cmpopts.SortSlices(less)) == ""
