@@ -20,7 +20,7 @@ type CategoryRevision struct {
 }
 
 // GenerateLockFile generates lock file
-func GenerateLockFile(packages []buildsafev1.Package, wr io.Writer) error {
+func GenerateLockFile(packages []*buildsafev1.Package, wr io.Writer) error {
 	data, err := json.MarshalIndent(packages, "", "  ")
 	if err != nil {
 		return err
@@ -34,9 +34,9 @@ func GenerateLockFile(packages []buildsafev1.Package, wr io.Writer) error {
 }
 
 // ResolvePackages resolves a list of packages concurrently
-func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, packages Packages) ([]buildsafev1.Package, error) {
+func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, packages Packages) ([]*buildsafev1.Package, error) {
 	allPackages := bstrings.SliceToSet(append(packages.Development, packages.Runtime...))
-	resolvedPackages := make([]buildsafev1.Package, 0, len(allPackages))
+	resolvedPackages := make([]*buildsafev1.Package, 0, len(allPackages))
 
 	errStr := ""
 	var wg sync.WaitGroup
@@ -49,8 +49,12 @@ func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, pa
 				errStr += fmt.Sprintf("error resolving package %s: %v\n", pkg, err)
 				return
 			}
+			if p.Name == "" {
+				errStr += fmt.Sprintf("error resolving package %s: no package found\n", pkg)
+				return
+			}
 
-			resolvedPackages = append(resolvedPackages, *p)
+			resolvedPackages = append(resolvedPackages, p)
 		}(pkg)
 	}
 	wg.Wait()
@@ -88,7 +92,7 @@ func ResolvePackage(ctx context.Context, sc buildsafev1.SearchServiceClient, pkg
 }
 
 // ResolveCategoryRevisions maps packages to their category, returns development packages, runtime packages and a list of Nix revisions
-func ResolveCategoryRevisions(pkgs Packages, pkgVersions []buildsafev1.Package) *CategoryRevision {
+func ResolveCategoryRevisions(pkgs Packages, pkgVersions []*buildsafev1.Package) *CategoryRevision {
 	devRevisions := make(map[string]string, 0)
 	rtRevisions := make(map[string]string, 0)
 

@@ -13,7 +13,7 @@ func TestMapPackageCategory(t *testing.T) {
 	tests := []struct {
 		name        string
 		pkgs        Packages
-		pkgVersions []buildsafev1.Package
+		pkgVersions []*buildsafev1.Package
 		devExpected map[string]string
 		rtExpected  map[string]string
 		revExpected []string
@@ -24,7 +24,7 @@ func TestMapPackageCategory(t *testing.T) {
 				Development: []string{"pkg1", "pkg3", "pkg5"},
 				Runtime:     []string{"pkg2", "pkg4", "pkg5"},
 			},
-			pkgVersions: []buildsafev1.Package{
+			pkgVersions: []*buildsafev1.Package{
 				{Name: "pkg1", Revision: "rev1", Version: "1.0.0"},
 				{Name: "pkg2", Revision: "rev2", Version: "1.1.0"},
 				{Name: "pkg3", Revision: "rev3", Version: "1.2.0"},

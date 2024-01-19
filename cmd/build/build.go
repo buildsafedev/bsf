@@ -27,6 +27,7 @@ var BuildCmd = &cobra.Command{
 			fmt.Println(styles.HintStyle.Render("hint: ", "run `bsf init` to initialize the project"))
 			os.Exit(1)
 		}
+		fmt.Println(styles.HighlightStyle.Render("Building..."))
 
 		_, err := nixcmd.Build()
 		if err != nil {
