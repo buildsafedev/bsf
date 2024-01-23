@@ -20,9 +20,9 @@ type versionListModel struct {
 }
 
 func convFPR2Rows(versions *buildsafev1.FetchPackagesResponse) []table.Row {
-	items := make([]table.Row, 0, len(versions.Package))
+	items := make([]table.Row, 0, len(versions.Packages))
 
-	soredPackages := search.SortPackagesWithTimestamp(versions.Package)
+	soredPackages := search.SortPackagesWithTimestamp(versions.Packages)
 	for _, pkg := range soredPackages {
 		free := "false"
 		if pkg.Free {

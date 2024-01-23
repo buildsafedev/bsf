@@ -10,6 +10,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 
+	"github.com/buildsafedev/bsf/cmd/configure"
+	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/clients/search"
 	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
 )
@@ -33,6 +35,13 @@ var SearchCmd = &cobra.Command{
 			fmt.Println(errorStyle.Render(fmt.Errorf("error: %v", "package name is required").Error()))
 			os.Exit(1)
 		}
+		var err error
+		conf, err := configure.PreCheckConf()
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
 		if os.Getenv("BSF_DEBUG") != "" && strings.ToLower(os.Getenv("BSF_DEBUG")) == "true" {
 			// todo: maybe we should have an option to send this to server to help debug?
 			if f, err := tea.LogToFile("debug.log", "help"); err != nil {
@@ -48,8 +57,7 @@ var SearchCmd = &cobra.Command{
 			}
 		}
 
-		var err error
-		sc, err = search.NewClientWithAddr("localhost:8080")
+		sc, err = search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
 		if err != nil {
 			fmt.Println(errorStyle.Render(fmt.Errorf("error: %v", err).Error()))
 			os.Exit(1)

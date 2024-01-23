@@ -1,8 +1,11 @@
 package init
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/buildsafedev/bsf/cmd/configure"
+	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/clients/search"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -15,8 +18,13 @@ var InitCmd = &cobra.Command{
 	Long: `init setups package management for the project. It setups Nix files based on the language detected.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
+		conf, err := configure.PreCheckConf()
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
 
-		sc, err := search.NewClientWithAddr("localhost:8080")
+		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
 		if err != nil {
 			os.Exit(1)
 		}

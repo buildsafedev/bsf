@@ -1,17 +1,26 @@
 package search
 
 import (
+	"crypto/tls"
 	"log"
 	"sort"
 
 	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 // NewClientWithAddr initializes a Client with a specific API address
-func NewClientWithAddr(addr string) (buildsafev1.SearchServiceClient, error) {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func NewClientWithAddr(addr string, tlsSkip bool) (buildsafev1.SearchServiceClient, error) {
+	var creds credentials.TransportCredentials
+	if tlsSkip {
+		tlsConfig := &tls.Config{InsecureSkipVerify: true}
+		creds = credentials.NewTLS(tlsConfig)
+	} else {
+		creds = insecure.NewCredentials()
+	}
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}

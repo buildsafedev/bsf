@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/buildsafedev/bsf/cmd/build"
+	"github.com/buildsafedev/bsf/cmd/configure"
 	"github.com/buildsafedev/bsf/cmd/develop"
 	"github.com/buildsafedev/bsf/cmd/export"
 	"github.com/buildsafedev/bsf/cmd/generate"
@@ -55,6 +56,9 @@ func Execute() {
 	rootCmd.AddCommand(generate.GenCmd)
 	rootCmd.AddCommand(develop.DevCmd)
 	rootCmd.AddCommand(build.BuildCmd)
+	if os.Getenv("BSF_DEBUG_MODE") == "true" {
+		rootCmd.AddCommand(configure.ConfigureCmd)
+	}
 	// rootCmd.AddCommand(run.RunCmd)
 	rootCmd.AddCommand(export.ExportCmd)
 
