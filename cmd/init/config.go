@@ -13,7 +13,7 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 			name = pd.Name
 			entrypoint = pd.Entrypoint
 			if entrypoint == "" {
-				entrypoint = "../."
+				entrypoint = "./."
 			}
 
 		}

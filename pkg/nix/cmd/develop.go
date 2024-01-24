@@ -9,7 +9,7 @@ import (
 // Develop opens a BSF development shell
 func Develop() error {
 	// using the `path:` will let users work on the project without having to interact with git
-	cmd := exec.Command("nix", "develop", "path:bsf/.#devShell")
+	cmd := exec.Command("nix", "develop", "path:.#devShell")
 	// Connect the command's stdin, stdout, and stderr to the terminal
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

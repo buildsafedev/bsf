@@ -50,12 +50,12 @@ func NewFileHandlers(expectInit bool) (*FileHandlers, error) {
 		return nil, err
 	}
 
-	flakeFile, err := os.Create("bsf/flake.nix")
+	flakeFile, err := os.Create("flake.nix")
 	if err != nil {
 		return nil, err
 	}
 
-	defFlakeFile, err := os.Create("bsf/default.nix")
+	defFlakeFile, err := os.Create("default.nix")
 	if err != nil {
 		return nil, err
 	}
