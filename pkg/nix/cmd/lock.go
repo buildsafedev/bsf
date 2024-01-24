@@ -8,14 +8,18 @@ import (
 
 // Lock generates the Nix flake lock file
 func Lock() error {
-	cmd := exec.Command("nix", "flake", "lock", "path:.")
+	dir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command("nix", "flake", "lock", fmt.Sprintf("path:%s/bsf/", dir))
 
 	// Connect the command's stdin, stdout, and stderr to the terminal
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		return fmt.Errorf("failed with %s", err)
 	}
