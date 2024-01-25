@@ -20,7 +20,7 @@ type dockerfileCfg struct {
 // Build builds the environment
 func Build(env hcl2nix.ExportConfig) error {
 	tmpDir := os.TempDir()
-	fh, err := os.Create(tmpDir + "/" + generateRandomFilename())
+	fh, err := os.Create(tmpDir + "/" + "Dockerfile" + env.Environment + "." + generateRandomFilename())
 	if err != nil {
 		return err
 	}
@@ -80,4 +80,9 @@ func generateRandomFilename() string {
 		b[i] = letterRunes[r.Intn(len(letterRunes))]
 	}
 	return string(b)
+}
+
+func createTempDir() error {
+	tmpDir := os.TempDir()
+	return os.Mkdir(tmpDir+"/bsf", 0755)
 }
