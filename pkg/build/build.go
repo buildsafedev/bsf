@@ -19,7 +19,7 @@ type dockerfileCfg struct {
 
 // Build builds the environment
 func Build(env hcl2nix.ExportConfig) error {
-	tmpDir := "/tmp"
+	tmpDir := os.TempDir()
 	fh, err := os.Create(tmpDir + "/" + generateRandomFilename())
 	if err != nil {
 		return err
