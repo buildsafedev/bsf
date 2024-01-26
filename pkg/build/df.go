@@ -52,8 +52,8 @@ COPY --from=builder /tmp/build/bsf/runtimeEnv /result/env
 # Add /result/env to the PATH
 ENV SSL_CERT_FILE="/result/env/etc/ssl/certs/ca-bundle.crt"
 ENV PATH="/result/env/bin:${PATH}"
-{{ if gt (len .Cmd) 0 }}CMD [{{ range $index, $element := .Cmd }}{{if $index}}, {{end}}"{{$element}}"{{ end }}]{{ end }}
-{{ if gt (len .Entrypoint) 0 }} ENTRYPOINT [{{ range $index, $element := .Entrypoint }}{{if $index}}, {{end}}"{{$element}}"{{ end }}]{{ end }}
+{{ if gt (len .Cmd) 0 }}CMD [{{ range $index, $element := .Cmd }} {{if $index}}, {{end}} "{{ quote $element }}" {{ end }}]{{ end }}
+{{ if gt (len .Entrypoint) 0 }} ENTRYPOINT [{{ range $index, $element := .Entrypoint }}{{if $index}}, {{end}} "{{ quote $element }}" {{ end }}]{{ end }}
 `
 )
 
@@ -96,12 +96,16 @@ func dockerbuild(ctx context.Context, opts buildOpts) error {
 		return err
 	})
 
-	eg.Go(func() error {
-		if err := dockerLoad(ctx, pipeR, pipeW); err != nil {
-			return err
-		}
-		return pipeR.Close()
-	})
+	// for some reason the error message for loading dockerfile is hidden if we have the below routine.
+	// TODO: we need a proper fix for this.
+	if os.Getenv("BSF_DEBUG_DOCKER_BUILD") != "1" {
+		eg.Go(func() error {
+			if err := dockerLoad(ctx, pipeR, pipeW); err != nil {
+				return err
+			}
+			return pipeR.Close()
+		})
+	}
 	if err := eg.Wait(); err != nil {
 		return err
 	}

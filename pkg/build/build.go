@@ -6,6 +6,8 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
@@ -19,7 +21,10 @@ type dockerfileCfg struct {
 
 // Build builds the environment
 func Build(env hcl2nix.ExportConfig) error {
-	tmpDir := os.TempDir()
+	tmpDir, err := createTempDir()
+	if err != nil {
+		return err
+	}
 	fh, err := os.Create(tmpDir + "/" + "Dockerfile" + env.Environment + "." + generateRandomFilename())
 	if err != nil {
 		return err
@@ -39,11 +44,18 @@ func Build(env hcl2nix.ExportConfig) error {
 	return err
 }
 
+func quote(s string) string {
+	return strings.ReplaceAll(s, "\n", "\\n")
+}
+
 // GenerateDockerfile generates Dockerfile
 func GenerateDockerfile(w io.Writer, env hcl2nix.ExportConfig) error {
 	dfc := convertExportCfgToDockerfileCfg(env)
 
-	dftmpl, err := template.New("Dockerfile").Parse(dockerFileTmpl)
+	dftmpl, err := template.New("Dockerfile").Funcs(template.FuncMap{
+		"quote": quote,
+	}).
+		Parse(dockerFileTmpl)
 	if err != nil {
 		return err
 	}
@@ -82,7 +94,18 @@ func generateRandomFilename() string {
 	return string(b)
 }
 
-func createTempDir() error {
+func createTempDir() (string, error) {
 	tmpDir := os.TempDir()
-	return os.Mkdir(tmpDir+"/bsf", 0755)
+	bsfDir := filepath.Join(tmpDir, "bsf")
+
+	if _, err := os.Stat(bsfDir); os.IsNotExist(err) {
+		err := os.Mkdir(bsfDir, 0755)
+		if err != nil {
+			return "", err
+		}
+	} else if err != nil {
+		return "", err
+	}
+
+	return bsfDir, nil
 }

@@ -1,6 +1,6 @@
 
 packages {
-  development = ["goreleaser@1.21.1", "go@1.21.4", "gotools@0.7.0", "delve@1.21.2"]
+  development = ["gotools@0.7.0", "delve@1.21.2", "ngrok@3.5.0", "goreleaser@1.21.1", "go@1.21.4"]
   runtime     = ["cacert@3.95"]
 }
 
@@ -14,7 +14,7 @@ gomodule {
 export "dev" {
   artifactType = "oci"
   name         = "ttl.sh/bsfdev/bsf:dev"
-  cmd          = ["/result/bin/bsf"]
+  cmd          = ["/result/bin/bsf \n"]
   entrypoint   = null
   platform     = "linux/arm64"
 }
