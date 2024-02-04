@@ -7,10 +7,10 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 
+	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
-	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
 )
 
 var (

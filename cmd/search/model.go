@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 
-	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
+	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 )
 
 var (

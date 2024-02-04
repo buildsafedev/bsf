@@ -5,10 +5,11 @@ import (
 	"log"
 	"sort"
 
-	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+
+	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 )
 
 // NewClientWithAddr initializes a Client with a specific API address

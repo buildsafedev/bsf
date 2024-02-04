@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	bstrings "github.com/buildsafedev/bsf/pkg/strings"
-	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
 )
 
 // CategoryRevision holds category revision map  and revision list

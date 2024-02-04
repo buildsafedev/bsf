@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
+	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 )
 
 func TestMapPackageCategory(t *testing.T) {

@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
+	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	btemplate "github.com/buildsafedev/bsf/pkg/nix/template"
-	buildsafev1 "github.com/buildsafedev/cloud-api/apis/v1"
 )
 
 // Generate reads bsf.hcl, resolves dependencies and generates bsf.lock, bsf/flake.nix and bsf/default.nix
