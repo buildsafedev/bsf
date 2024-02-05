@@ -133,28 +133,32 @@ func (m packageOptionModel) View() string {
 	s := strings.Builder{}
 
 	if m.vulnResp != nil {
-		s.WriteString(styles.ErrorStyle.Render(fmt.Sprintf("%d vulnerabilities found for %s-%s", len(m.vulnResp.Vulnerabilities), m.name, m.version)))
-		s.WriteString("\n\n")
-		s.WriteString(styles.TitleStyle.Render(fmt.Sprintf("%-20s %-10s %-10s %-20s ", "CVE", "Severity", "Score", "Vector")))
-		s.WriteString("\n")
+		if len(m.vulnResp.Vulnerabilities) == 0 {
+			s.WriteString(styles.SucessStyle.Render(fmt.Sprintf("%d vulnerabilities found for %s-%s", len(m.vulnResp.Vulnerabilities), m.name, m.version)))
+		}
+		if len(m.vulnResp.Vulnerabilities) != 0 {
+			s.WriteString(styles.ErrorStyle.Render(fmt.Sprintf("%d vulnerabilities found for %s-%s", len(m.vulnResp.Vulnerabilities), m.name, m.version)))
+			s.WriteString("\n\n")
+			s.WriteString(styles.TitleStyle.Render(fmt.Sprintf("%-20s %-10s %-10s %-20s ", "CVE", "Severity", "Score", "Vector")))
+			s.WriteString("\n")
 
-		printableVulns := getTopVulnerabilities(m.vulnResp.Vulnerabilities)
+			printableVulns := getTopVulnerabilities(m.vulnResp.Vulnerabilities)
 
-		for _, v := range printableVulns {
-			// todo: maybe we should add style based on severity
-			if v.Cvss == nil {
-				continue
+			for _, v := range printableVulns {
+				// todo: maybe we should add style based on severity
+				if v.Cvss == nil {
+					continue
+				}
+
+				// let's pick the first cvss
+				s.WriteString(styles.TextStyle.Render(fmt.Sprintf("%-20s %-10s %-10f %-20s", v.Id, v.Severity, v.Cvss[0].Metrics.BaseScore, deriveAV(v.Cvss[0].Vector))))
+				s.WriteString("\n")
 			}
 
-			// let's pick the first cvss
-			s.WriteString(styles.TextStyle.Render(fmt.Sprintf("%-20s %-10s %-10f %-20s", v.Id, v.Severity, v.Cvss[0].Metrics.BaseScore, deriveAV(v.Cvss[0].Vector))))
-			s.WriteString("\n")
+			if len(m.vulnResp.Vulnerabilities) > printableVulnCount {
+				s.WriteString(styles.HintStyle.Render(fmt.Sprintf("More %d found, run `bsf scan %s:%s`", len(m.vulnResp.Vulnerabilities)-printableVulnCount, m.name, m.version)))
+			}
 		}
-
-		if len(m.vulnResp.Vulnerabilities) > printableVulnCount {
-			s.WriteString(styles.HintStyle.Render(fmt.Sprintf("More %d found, run `bsf scan %s:%s`", len(m.vulnResp.Vulnerabilities)-printableVulnCount, m.name, m.version)))
-		}
-
 	}
 	s.WriteString("\n\n")
 
