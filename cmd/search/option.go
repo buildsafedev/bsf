@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 
+	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
@@ -20,18 +21,24 @@ type packageOptionModel struct {
 	errorMsg string
 	selected map[string]bool
 	vlm      versionListModel
+	vulnResp *bsfv1.FetchVulnerabilitiesResponse
 }
+
+const (
+	printableVulnCount = 10
+)
 
 var optionsShown bool
 
 // InitOption initializes the option model
-func initOption(name, version string, vlm versionListModel) *packageOptionModel {
+func initOption(name, version string, vlm versionListModel, vulnResp *bsfv1.FetchVulnerabilitiesResponse) *packageOptionModel {
 	return &packageOptionModel{
 		name:     name,
 		version:  version,
 		cursor:   0,
 		selected: make(map[string]bool, 0),
 		vlm:      vlm,
+		vulnResp: vulnResp,
 	}
 
 }
@@ -125,6 +132,32 @@ func (m packageOptionModel) View() string {
 	}
 	s := strings.Builder{}
 
+	if m.vulnResp != nil {
+		s.WriteString(styles.ErrorStyle.Render(fmt.Sprintf("%d vulnerabilities found for %s-%s", len(m.vulnResp.Vulnerabilities), m.name, m.version)))
+		s.WriteString("\n\n")
+		s.WriteString(styles.TitleStyle.Render(fmt.Sprintf("%-20s %-10s %-10s %-20s ", "CVE", "Severity", "Score", "Vector")))
+		s.WriteString("\n")
+
+		printableVulns := getTopVulnerabilities(m.vulnResp.Vulnerabilities)
+
+		for _, v := range printableVulns {
+			// todo: maybe we should add style based on severity
+			if v.Cvss == nil {
+				continue
+			}
+
+			// let's pick the first cvss
+			s.WriteString(styles.TextStyle.Render(fmt.Sprintf("%-20s %-10s %-10f %-20s", v.Id, v.Severity, v.Cvss[0].Metrics.BaseScore, deriveAV(v.Cvss[0].Vector))))
+			s.WriteString("\n")
+		}
+
+		if len(m.vulnResp.Vulnerabilities) > printableVulnCount {
+			s.WriteString(styles.HintStyle.Render(fmt.Sprintf("More %d found, run `bsf scan %s:%s`", len(m.vulnResp.Vulnerabilities)-printableVulnCount, m.name, m.version)))
+		}
+
+	}
+	s.WriteString("\n\n")
+
 	s.WriteString(styles.TitleStyle.Render(fmt.Sprintf("Where would you like %s-%s to be added?", m.name, m.version)))
 	s.WriteString("\n\n")
 
@@ -142,6 +175,63 @@ func (m packageOptionModel) View() string {
 	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor, space to select/unselect, enter to submit)\n"))
 	currentMode = modeOption
 	return s.String()
+}
+
+func getTopVulnerabilities(allVuln []*bsfv1.Vulnerability) []*bsfv1.Vulnerability {
+	criticalVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
+	highVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
+	mediumVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
+	lowVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
+
+	for _, v := range allVuln {
+		switch strings.ToLower(v.Severity) {
+		case "critical":
+			criticalVuln = append(criticalVuln, v)
+		case "high":
+			highVuln = append(highVuln, v)
+		case "medium":
+			mediumVuln = append(mediumVuln, v)
+		case "low":
+			lowVuln = append(lowVuln, v)
+		}
+	}
+
+	printableVuln := make([]*bsfv1.Vulnerability, 0, 10)
+
+	addVuln := func(v []*bsfv1.Vulnerability) {
+		for _, id := range v {
+			if len(printableVuln) == printableVulnCount {
+				return
+			}
+			printableVuln = append(printableVuln, id)
+		}
+	}
+
+	addVuln(criticalVuln)
+	addVuln(highVuln)
+	addVuln(mediumVuln)
+	addVuln(lowVuln)
+
+	return printableVuln
+}
+
+func deriveAV(vector string) string {
+	parts := strings.Split(vector, "/")
+	for _, part := range parts {
+		if strings.HasPrefix(part, "AV:") {
+			switch part[3:] {
+			case "N":
+				return "Network"
+			case "A":
+				return "Adjacent Network"
+			case "L":
+				return "Local"
+			case "P":
+				return "Physical"
+			}
+		}
+	}
+	return ""
 }
 
 func newConfFromSelectedPackages(name, version string, selected map[string]bool) hcl2nix.Packages {

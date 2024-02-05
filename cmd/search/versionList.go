@@ -1,6 +1,8 @@
 package search
 
 import (
+	"context"
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -113,7 +115,15 @@ func (m versionListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			name := row[0]
 			version := row[1]
-			return initOption(name, version, m).Update(msg)
+			vulnResp, err := sc.FetchVulnerabilities(context.Background(), &buildsafev1.FetchVulnerabilitiesRequest{
+				Name:    name,
+				Version: version,
+			})
+			if err != nil {
+				fmt.Println(errorStyle.Render(err.Error()))
+			}
+
+			return initOption(name, version, m, vulnResp).Update(msg)
 		}
 	}
 
