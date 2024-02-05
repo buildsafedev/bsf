@@ -9,7 +9,13 @@ import (
 	"github.com/buildsafedev/bsf/cmd/configure"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/clients/search"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
+)
+
+var (
+	errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("196"))
 )
 
 // ScanCmd represents the build command
@@ -36,7 +42,7 @@ var ScanCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		vulnerabilies, err := sc.FetchVulnerabilities(context.Background(), &bsfv1.FetchVulnerabilitiesRequest{
+		vulnerabilities, err := sc.FetchVulnerabilities(context.Background(), &bsfv1.FetchVulnerabilitiesRequest{
 			Name:    args[0],
 			Version: args[1],
 		})
@@ -45,8 +51,10 @@ var ScanCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Println(styles.ErrorStyle.Render(fmt.Sprintf("%d vulnerabilities found", len(vulnerabilies.GetVulnerabilities()))))
-		// TODO: table view of vulnerabilities
-
+		m := initVulnTable(vulnerabilities)
+		if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
+			fmt.Println(errorStyle.Render(fmt.Errorf("error: %v", err).Error()))
+			os.Exit(1)
+		}
 	},
 }

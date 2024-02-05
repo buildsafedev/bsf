@@ -19,6 +19,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/export"
 	"github.com/buildsafedev/bsf/cmd/generate"
 	initCmd "github.com/buildsafedev/bsf/cmd/init"
+	"github.com/buildsafedev/bsf/cmd/scan"
 	"github.com/buildsafedev/bsf/cmd/search"
 	"github.com/buildsafedev/bsf/cmd/styles"
 )
@@ -56,6 +57,7 @@ func Execute() {
 	rootCmd.AddCommand(generate.GenCmd)
 	rootCmd.AddCommand(develop.DevCmd)
 	rootCmd.AddCommand(build.BuildCmd)
+	rootCmd.AddCommand(scan.ScanCmd)
 	if os.Getenv("BSF_DEBUG_MODE") == "true" {
 		rootCmd.AddCommand(configure.ConfigureCmd)
 	}

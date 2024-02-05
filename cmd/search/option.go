@@ -142,7 +142,8 @@ func (m packageOptionModel) View() string {
 			s.WriteString(styles.TitleStyle.Render(fmt.Sprintf("%-20s %-10s %-10s %-20s ", "CVE", "Severity", "Score", "Vector")))
 			s.WriteString("\n")
 
-			printableVulns := getTopVulnerabilities(m.vulnResp.Vulnerabilities)
+			sortedValues := SortVulnerabilities(m.vulnResp.Vulnerabilities)
+			printableVulns := getTopVulnerabilities(sortedValues)
 
 			for _, v := range printableVulns {
 				// todo: maybe we should add style based on severity
@@ -151,7 +152,7 @@ func (m packageOptionModel) View() string {
 				}
 
 				// let's pick the first cvss
-				s.WriteString(styles.TextStyle.Render(fmt.Sprintf("%-20s %-10s %-10f %-20s", v.Id, v.Severity, v.Cvss[0].Metrics.BaseScore, deriveAV(v.Cvss[0].Vector))))
+				s.WriteString(styles.TextStyle.Render(fmt.Sprintf("%-20s %-10s %-10f %-20s", v.Id, v.Severity, v.Cvss[0].Metrics.BaseScore, DeriveAV(v.Cvss[0].Vector))))
 				s.WriteString("\n")
 			}
 
@@ -181,7 +182,7 @@ func (m packageOptionModel) View() string {
 	return s.String()
 }
 
-func getTopVulnerabilities(allVuln []*bsfv1.Vulnerability) []*bsfv1.Vulnerability {
+func SortVulnerabilities(allVuln []*bsfv1.Vulnerability) []*bsfv1.Vulnerability {
 	criticalVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
 	highVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
 	mediumVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
@@ -200,14 +201,14 @@ func getTopVulnerabilities(allVuln []*bsfv1.Vulnerability) []*bsfv1.Vulnerabilit
 		}
 	}
 
-	printableVuln := make([]*bsfv1.Vulnerability, 0, 10)
+	sortedValues := make([]*bsfv1.Vulnerability, 0, len(allVuln))
 
 	addVuln := func(v []*bsfv1.Vulnerability) {
 		for _, id := range v {
-			if len(printableVuln) == printableVulnCount {
+			if len(sortedValues) == printableVulnCount {
 				return
 			}
-			printableVuln = append(printableVuln, id)
+			sortedValues = append(sortedValues, id)
 		}
 	}
 
@@ -216,10 +217,14 @@ func getTopVulnerabilities(allVuln []*bsfv1.Vulnerability) []*bsfv1.Vulnerabilit
 	addVuln(mediumVuln)
 	addVuln(lowVuln)
 
-	return printableVuln
+	return sortedValues
 }
 
-func deriveAV(vector string) string {
+func getTopVulnerabilities(allVuln []*bsfv1.Vulnerability) []*bsfv1.Vulnerability {
+	return allVuln[:10]
+}
+
+func DeriveAV(vector string) string {
 	parts := strings.Split(vector, "/")
 	for _, part := range parts {
 		if strings.HasPrefix(part, "AV:") {

@@ -24,8 +24,8 @@ type versionListModel struct {
 func convFPR2Rows(versions *buildsafev1.FetchPackagesResponse) []table.Row {
 	items := make([]table.Row, 0, len(versions.Packages))
 
-	soredPackages := search.SortPackagesWithTimestamp(versions.Packages)
-	for _, pkg := range soredPackages {
+	sortedPackages := search.SortPackagesWithTimestamp(versions.Packages)
+	for _, pkg := range sortedPackages {
 		free := "false"
 		if pkg.Free {
 			free = "true"
@@ -136,7 +136,7 @@ func (m versionListModel) View() string {
 	s := strings.Builder{}
 
 	s.WriteString(styles.BaseStyle.Render(m.versionTable.View() + "\n"))
-	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor,  enter to submit, esc to previous prompt,ctr+c to quit)\n"))
+	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor,  enter to submit, esc to previous prompt, ctr+c to quit)\n"))
 	currentMode = modeVersion
 	return s.String()
 }
