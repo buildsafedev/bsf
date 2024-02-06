@@ -6,6 +6,7 @@ import (
 
 	"github.com/buildsafedev/bsf/cmd/search"
 	"github.com/buildsafedev/bsf/cmd/styles"
+	"github.com/buildsafedev/bsf/pkg/vulnerability"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -14,8 +15,6 @@ import (
 	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 )
 
-var optionsShown bool
-
 type vulnListModel struct {
 	vulnTable table.Model
 }
@@ -23,13 +22,13 @@ type vulnListModel struct {
 func convVulns2Rows(vulnerabilities *bsfv1.FetchVulnerabilitiesResponse) []table.Row {
 	items := make([]table.Row, 0, len(vulnerabilities.Vulnerabilities))
 
-	sortedVulns := search.SortVulnerabilities(vulnerabilities.Vulnerabilities)
+	sortedVulns := vulnerability.SortVulnerabilities(vulnerabilities.Vulnerabilities)
 	for _, v := range sortedVulns {
 		items = append(items, table.Row{
 			v.Id,
 			v.Severity,
 			fmt.Sprint(v.Cvss[0].Metrics.BaseScore),
-			search.DeriveAV(v.Cvss[0].Vector),
+			vulnerability.DeriveAV(v.Cvss[0].Vector),
 		})
 	}
 	return items
@@ -39,12 +38,12 @@ func initVulnTable(vulnResp *bsfv1.FetchVulnerabilitiesResponse) *vulnListModel 
 
 	frameHeight, frameWidth := styles.DocStyle.GetFrameSize()
 
-	cols := 6
+	// cols := 4
 	columns := []table.Column{
-		{Title: "CVE", Width: frameWidth / cols},
-		{Title: "Severity", Width: frameWidth / cols},
-		{Title: "Score", Width: frameWidth / cols},
-		{Title: "Vector", Width: frameWidth / cols},
+		{Title: "CVE", Width: frameWidth},
+		{Title: "Severity", Width: frameWidth},
+		{Title: "Score", Width: frameWidth},
+		{Title: "Vector", Width: frameWidth},
 	}
 
 	rows := convVulns2Rows(vulnResp)
@@ -52,7 +51,7 @@ func initVulnTable(vulnResp *bsfv1.FetchVulnerabilitiesResponse) *vulnListModel 
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(frameHeight*8/10),
+		table.WithHeight(frameHeight),
 	)
 	s := table.DefaultStyles()
 
@@ -79,20 +78,29 @@ func (m vulnListModel) Init() tea.Cmd {
 
 // Update handles events and updates the model accordingly
 func (m vulnListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		h, v := styles.DocStyle.GetFrameSize()
+		m.vulnTable.SetWidth(msg.Width - h)
+		m.vulnTable.SetHeight(msg.Height - v)
+
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, search.KeyMap.Quit):
 			return m, tea.Quit
 
 		case key.Matches(msg, search.KeyMap.Back):
-			// without this, we would go back to the search model
-			if optionsShown {
-				break
+			if m.vulnTable.Focused() {
+				m.vulnTable.Blur()
+			} else {
+				m.vulnTable.Focus()
 			}
-			return initVulnTable(m.vulnTable.Items()), nil
 		}
 	}
+
+	m.vulnTable, cmd = m.vulnTable.Update(msg)
+	return m, cmd
 }
 
 // View renders the user interface based on the current model

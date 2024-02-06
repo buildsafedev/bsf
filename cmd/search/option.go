@@ -12,6 +12,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
+	"github.com/buildsafedev/bsf/pkg/vulnerability"
 )
 
 type packageOptionModel struct {
@@ -142,7 +143,7 @@ func (m packageOptionModel) View() string {
 			s.WriteString(styles.TitleStyle.Render(fmt.Sprintf("%-20s %-10s %-10s %-20s ", "CVE", "Severity", "Score", "Vector")))
 			s.WriteString("\n")
 
-			sortedValues := SortVulnerabilities(m.vulnResp.Vulnerabilities)
+			sortedValues := vulnerability.SortVulnerabilities(m.vulnResp.Vulnerabilities)
 			printableVulns := getTopVulnerabilities(sortedValues)
 
 			for _, v := range printableVulns {
@@ -152,7 +153,7 @@ func (m packageOptionModel) View() string {
 				}
 
 				// let's pick the first cvss
-				s.WriteString(styles.TextStyle.Render(fmt.Sprintf("%-20s %-10s %-10f %-20s", v.Id, v.Severity, v.Cvss[0].Metrics.BaseScore, DeriveAV(v.Cvss[0].Vector))))
+				s.WriteString(styles.TextStyle.Render(fmt.Sprintf("%-20s %-10s %-10f %-20s", v.Id, v.Severity, v.Cvss[0].Metrics.BaseScore, vulnerability.DeriveAV(v.Cvss[0].Vector))))
 				s.WriteString("\n")
 			}
 
@@ -182,65 +183,8 @@ func (m packageOptionModel) View() string {
 	return s.String()
 }
 
-func SortVulnerabilities(allVuln []*bsfv1.Vulnerability) []*bsfv1.Vulnerability {
-	criticalVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
-	highVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
-	mediumVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
-	lowVuln := make([]*bsfv1.Vulnerability, 0, len(allVuln))
-
-	for _, v := range allVuln {
-		switch strings.ToLower(v.Severity) {
-		case "critical":
-			criticalVuln = append(criticalVuln, v)
-		case "high":
-			highVuln = append(highVuln, v)
-		case "medium":
-			mediumVuln = append(mediumVuln, v)
-		case "low":
-			lowVuln = append(lowVuln, v)
-		}
-	}
-
-	sortedValues := make([]*bsfv1.Vulnerability, 0, len(allVuln))
-
-	addVuln := func(v []*bsfv1.Vulnerability) {
-		for _, id := range v {
-			if len(sortedValues) == printableVulnCount {
-				return
-			}
-			sortedValues = append(sortedValues, id)
-		}
-	}
-
-	addVuln(criticalVuln)
-	addVuln(highVuln)
-	addVuln(mediumVuln)
-	addVuln(lowVuln)
-
-	return sortedValues
-}
-
 func getTopVulnerabilities(allVuln []*bsfv1.Vulnerability) []*bsfv1.Vulnerability {
 	return allVuln[:10]
-}
-
-func DeriveAV(vector string) string {
-	parts := strings.Split(vector, "/")
-	for _, part := range parts {
-		if strings.HasPrefix(part, "AV:") {
-			switch part[3:] {
-			case "N":
-				return "Network"
-			case "A":
-				return "Adjacent Network"
-			case "L":
-				return "Local"
-			case "P":
-				return "Physical"
-			}
-		}
-	}
-	return ""
 }
 
 func newConfFromSelectedPackages(name, version string, selected map[string]bool) hcl2nix.Packages {
