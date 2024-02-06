@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	"github.com/buildsafedev/bsf/cmd/configure"
@@ -26,7 +27,7 @@ var ScanCmd = &cobra.Command{
 	Example : bsf scan <package name> <package version>
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 2 {
+		if len(args) < 1 {
 			fmt.Println(styles.ErrorStyle.Render(fmt.Errorf("error: %v", "package name and version is required").Error()))
 			os.Exit(1)
 		}
@@ -42,9 +43,11 @@ var ScanCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		nameWithVersion := strings.Split(args[0], ":")
+
 		vulnerabilities, err := sc.FetchVulnerabilities(context.Background(), &bsfv1.FetchVulnerabilitiesRequest{
-			Name:    args[0],
-			Version: args[1],
+			Name:    nameWithVersion[0],
+			Version: nameWithVersion[1],
 		})
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))

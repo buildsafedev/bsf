@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	"github.com/buildsafedev/bsf/cmd/search"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/vulnerability"
@@ -12,13 +13,7 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"golang.org/x/crypto/ssh/terminal"
-
-	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
-)
-
-var (
-	frameHeight, frameWidth int
+	"golang.org/x/term"
 )
 
 type vulnListModel struct {
@@ -42,18 +37,18 @@ func convVulns2Rows(vulnerabilities *bsfv1.FetchVulnerabilitiesResponse) []table
 
 func initVulnTable(vulnResp *bsfv1.FetchVulnerabilitiesResponse) *vulnListModel {
 
-	frameHeight, frameWidth, err := terminal.GetSize(0)
+	frameWidth, frameHeight, err := term.GetSize(0)
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 		os.Exit(1)
 	}
 
-	// cols := 4
+	cols := 5
 	columns := []table.Column{
-		{Title: "CVE", Width: frameWidth * 2 / 2},
-		{Title: "Severity", Width: frameWidth / 2},
-		{Title: "Score", Width: frameWidth / 2},
-		{Title: "Vector", Width: frameWidth / 2},
+		{Title: "CVE", Width: frameWidth / cols},
+		{Title: "Severity", Width: frameWidth / cols},
+		{Title: "Score", Width: frameWidth / cols},
+		{Title: "Vector", Width: frameWidth / cols},
 	}
 
 	rows := convVulns2Rows(vulnResp)
@@ -61,7 +56,7 @@ func initVulnTable(vulnResp *bsfv1.FetchVulnerabilitiesResponse) *vulnListModel 
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(frameHeight),
+		table.WithHeight(frameHeight*8/10),
 	)
 	s := table.DefaultStyles()
 
@@ -91,11 +86,13 @@ func (m vulnListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		frameHeight, frameWidth = styles.DocStyle.GetFrameSize()
-		m.vulnTable.SetHeight(msg.Height - frameHeight)
-		m.vulnTable.SetWidth(msg.Width - frameWidth)
-		frameHeight = msg.Height - frameWidth
-		frameWidth = msg.Width - frameHeight
+		frameWidth, frameHeight, err := term.GetSize(0)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+		m.vulnTable.SetWidth(frameWidth * 5 / 6)
+		m.vulnTable.SetHeight(frameHeight * 8 / 10)
 
 	case tea.KeyMsg:
 		switch {
