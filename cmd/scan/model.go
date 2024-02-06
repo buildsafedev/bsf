@@ -2,6 +2,7 @@ package scan
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/buildsafedev/bsf/cmd/search"
@@ -11,8 +12,13 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/crypto/ssh/terminal"
 
 	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
+)
+
+var (
+	frameHeight, frameWidth int
 )
 
 type vulnListModel struct {
@@ -36,14 +42,18 @@ func convVulns2Rows(vulnerabilities *bsfv1.FetchVulnerabilitiesResponse) []table
 
 func initVulnTable(vulnResp *bsfv1.FetchVulnerabilitiesResponse) *vulnListModel {
 
-	frameHeight, frameWidth := styles.DocStyle.GetFrameSize()
+	frameHeight, frameWidth, err := terminal.GetSize(0)
+	if err != nil {
+		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+		os.Exit(1)
+	}
 
 	// cols := 4
 	columns := []table.Column{
-		{Title: "CVE", Width: frameWidth},
-		{Title: "Severity", Width: frameWidth},
-		{Title: "Score", Width: frameWidth},
-		{Title: "Vector", Width: frameWidth},
+		{Title: "CVE", Width: frameWidth * 2 / 2},
+		{Title: "Severity", Width: frameWidth / 2},
+		{Title: "Score", Width: frameWidth / 2},
+		{Title: "Vector", Width: frameWidth / 2},
 	}
 
 	rows := convVulns2Rows(vulnResp)
@@ -81,21 +91,16 @@ func (m vulnListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		h, v := styles.DocStyle.GetFrameSize()
-		m.vulnTable.SetWidth(msg.Width - h)
-		m.vulnTable.SetHeight(msg.Height - v)
+		frameHeight, frameWidth = styles.DocStyle.GetFrameSize()
+		m.vulnTable.SetHeight(msg.Height - frameHeight)
+		m.vulnTable.SetWidth(msg.Width - frameWidth)
+		frameHeight = msg.Height - frameWidth
+		frameWidth = msg.Width - frameHeight
 
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, search.KeyMap.Quit):
 			return m, tea.Quit
-
-		case key.Matches(msg, search.KeyMap.Back):
-			if m.vulnTable.Focused() {
-				m.vulnTable.Blur()
-			} else {
-				m.vulnTable.Focus()
-			}
 		}
 	}
 
@@ -109,6 +114,6 @@ func (m vulnListModel) View() string {
 
 	// Header
 	s.WriteString(styles.BaseStyle.Render(m.vulnTable.View() + "\n"))
-	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor,  esc to previous prompt, ctr+c to quit)\n"))
+	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor, ctr+c to quit)\n"))
 	return s.String()
 }
