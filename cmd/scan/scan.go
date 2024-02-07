@@ -24,7 +24,11 @@ var ScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "scans the given package name and version for vulnerabilities.",
 	Long: `scans the given package name and version for vulnerabilities.
-	Example : bsf scan <package name:package version> / <package name> <package version>
+	Example : 
+	 bsf scan name version
+	 bsf scan name:version
+	 bsf scan curl:8.5.0
+	 bsf scan curl 8.5.0
 	`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.RangeArgs(1, 2)(cmd, args); err != nil {
