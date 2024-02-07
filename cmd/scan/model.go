@@ -16,7 +16,7 @@ import (
 	"golang.org/x/term"
 )
 
-type vulnListModel struct {
+type vulnModel struct {
 	vulnTable table.Model
 }
 
@@ -35,7 +35,7 @@ func convVulns2Rows(vulnerabilities *bsfv1.FetchVulnerabilitiesResponse) []table
 	return items
 }
 
-func initVulnTable(vulnResp *bsfv1.FetchVulnerabilitiesResponse) *vulnListModel {
+func initVulnTable(vulnResp *bsfv1.FetchVulnerabilitiesResponse) *vulnModel {
 
 	frameWidth, frameHeight, err := term.GetSize(0)
 	if err != nil {
@@ -71,18 +71,18 @@ func initVulnTable(vulnResp *bsfv1.FetchVulnerabilitiesResponse) *vulnListModel 
 		Bold(false)
 	t.SetStyles(s)
 
-	return &vulnListModel{
+	return &vulnModel{
 		vulnTable: t,
 	}
 
 }
 
-func (m vulnListModel) Init() tea.Cmd {
+func (m vulnModel) Init() tea.Cmd {
 	return nil
 }
 
 // Update handles events and updates the model accordingly
-func (m vulnListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m vulnModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -106,7 +106,7 @@ func (m vulnListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // View renders the user interface based on the current model
-func (m vulnListModel) View() string {
+func (m vulnModel) View() string {
 	s := strings.Builder{}
 
 	// Header
