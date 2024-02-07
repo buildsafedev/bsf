@@ -24,13 +24,35 @@ var ScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "scans the given package name and version for vulnerabilities.",
 	Long: `scans the given package name and version for vulnerabilities.
-	Example : bsf scan <package name> <package version>
+	Example : bsf scan <package name:package version> / <package name> <package version>
 	`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			fmt.Println(styles.ErrorStyle.Render(fmt.Errorf("error: %v", "package name and version is required").Error()))
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.RangeArgs(1, 2)(cmd, args); err != nil {
+			fmt.Println(styles.ErrorStyle.Render(fmt.Errorf("error: %v, received %v", "accepts between 1 and 2 arg(s)", len(args)).Error()))
 			os.Exit(1)
 		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		var name, version string
+
+		if len(args) == 1 {
+			nameWithVersion := strings.SplitN(args[0], ":", 2)
+
+			if len(nameWithVersion) < 2 {
+				fmt.Println(styles.ErrorStyle.Render(fmt.Errorf("error: %v", "version is required").Error()))
+				os.Exit(1)
+			}
+
+			name = nameWithVersion[0]
+			version = nameWithVersion[1]
+		}
+
+		if len(args) == 2 {
+			name = args[0]
+			version = args[1]
+		}
+
 		fmt.Println(styles.BaseStyle.Render("info: ", "Scanning..."))
 
 		conf, err := configure.PreCheckConf()
@@ -43,11 +65,9 @@ var ScanCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		nameWithVersion := strings.Split(args[0], ":")
-
 		vulnerabilities, err := sc.FetchVulnerabilities(context.Background(), &bsfv1.FetchVulnerabilitiesRequest{
-			Name:    nameWithVersion[0],
-			Version: nameWithVersion[1],
+			Name:    name,
+			Version: version,
 		})
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
