@@ -32,7 +32,7 @@ var ScanCmd = &cobra.Command{
 	`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.RangeArgs(1, 2)(cmd, args); err != nil {
-			fmt.Println(styles.ErrorStyle.Render(fmt.Errorf("error: %v, received %v", "accepts between 1 and 2 arg(s)", len(args)).Error()))
+			fmt.Println(styles.ErrorStyle.Render("Invalid arguments. Try `bsf scan name version or bsf scan name:version `") )
 			os.Exit(1)
 		}
 		return nil
