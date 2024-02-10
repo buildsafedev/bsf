@@ -184,6 +184,9 @@ func (m packageOptionModel) View() string {
 }
 
 func getTopVulnerabilities(allVuln []*bsfv1.Vulnerability) []*bsfv1.Vulnerability {
+	if len(allVuln) <= printableVulnCount {
+		return allVuln
+	}
 	return allVuln[:10]
 }
 
