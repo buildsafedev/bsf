@@ -73,5 +73,5 @@ func AllPrechecks() {
 	fmt.Println(styles.HighlightStyle.Render("Running prechecks..."))
 	ValidateNixVersion()
 	IsFlakesEnabled()
-	fmt.Println(styles.HighlightStyle.Render("Precheck successful"))
+	fmt.Println(styles.SucessStyle.Render("Prechecks ran successfully"))
 }
