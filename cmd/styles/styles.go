@@ -19,6 +19,9 @@ var (
 	// ErrorStyle is the style for the error message
 	ErrorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("196"))
 
+	// WarnStyle is the style for the warning message
+	WarnStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("226"))
+
 	// TitleStyle is the style for the title
 	TitleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Bold(true)
 	// OptionStyle is the style for the options

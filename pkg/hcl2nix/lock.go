@@ -80,6 +80,18 @@ func ResolvePackage(ctx context.Context, sc buildsafev1.SearchServiceClient, pkg
 	name := s[0]
 	version := s[1]
 
+	if strings.HasPrefix(version, "~") {
+		version = strings.TrimPrefix(version, "~")
+	}
+
+	if strings.HasPrefix(version, "^") {
+		version = strings.TrimPrefix(version, "^")
+	}
+
+	if strings.HasPrefix(version, "v") {
+		version = strings.TrimPrefix(version, "v")
+	}
+
 	desiredVersion, err = sc.FetchPackageVersion(ctx, &buildsafev1.FetchPackageVersionRequest{
 		Name:    name,
 		Version: version,

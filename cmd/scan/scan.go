@@ -11,15 +11,10 @@ import (
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/clients/search"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
-var (
-	errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("196"))
-)
-
-// ScanCmd represents the build command
+// ScanCmd represents the scan command
 var ScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "scans the given package name and version for vulnerabilities.",
@@ -32,7 +27,7 @@ var ScanCmd = &cobra.Command{
 	`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.RangeArgs(1, 2)(cmd, args); err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Invalid arguments. Try `bsf scan name version or bsf scan name:version `") )
+			fmt.Println(styles.ErrorStyle.Render("Invalid arguments. Try `bsf scan name version or bsf scan name:version `"))
 			os.Exit(1)
 		}
 		return nil
@@ -80,7 +75,7 @@ var ScanCmd = &cobra.Command{
 
 		m := initVulnTable(vulnerabilities)
 		if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
-			fmt.Println(errorStyle.Render(fmt.Errorf("error: %v", err).Error()))
+			fmt.Println(styles.ErrorStyle.Render(fmt.Errorf("error: %v", err).Error()))
 			os.Exit(1)
 		}
 	},

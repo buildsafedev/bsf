@@ -85,3 +85,21 @@ func AddPackages(src []byte, packages Packages, wr io.Writer) error {
 
 	return nil
 }
+
+// SetPackages updates config with new packages. It replaces existing packages with new packages
+func SetPackages(src []byte, packages Packages, wr io.Writer) error {
+	existingConfig, err := ReadConfig(src, io.Discard)
+	if err != nil {
+		return err
+	}
+
+	existingConfig.Packages = packages
+
+	err = WriteConfig(*existingConfig, wr)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
