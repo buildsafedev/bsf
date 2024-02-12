@@ -80,3 +80,24 @@ func GetLatestMinorVersion(v *buildsafev1.FetchPackagesResponse, version string)
 
 	return strings.TrimPrefix(validVersions[len(validVersions)-1], "v")
 }
+
+// TrimVersionInfo trims the version information and returns the package name and version.
+func TrimVersionInfo(pkg string) (string, string) {
+	s := strings.Split(pkg, "@")
+	name := s[0]
+	version := s[1]
+
+	if strings.HasPrefix(version, "~") {
+		version = strings.TrimPrefix(version, "~")
+	}
+
+	if strings.HasPrefix(version, "^") {
+		version = strings.TrimPrefix(version, "^")
+	}
+
+	if strings.HasPrefix(version, "v") {
+		version = strings.TrimPrefix(version, "v")
+	}
+
+	return name, version
+}

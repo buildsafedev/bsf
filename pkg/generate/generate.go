@@ -28,17 +28,17 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 
-	allPackages, err := hcl2nix.ResolvePackages(ctx, sc, conf.Packages)
+	lockPackages, err := hcl2nix.ResolvePackages(ctx, sc, conf.Packages)
 	if err != nil {
 		return err
 	}
 
-	err = hcl2nix.GenerateLockFile(allPackages, fh.LockFile)
+	err = hcl2nix.GenerateLockFile(conf, lockPackages, fh.LockFile)
 	if err != nil {
 		return err
 	}
 
-	cr := hcl2nix.ResolveCategoryRevisions(conf.Packages, allPackages)
+	cr := hcl2nix.ResolveCategoryRevisions(conf.Packages, lockPackages)
 	err = btemplate.GenerateFlake(btemplate.Flake{
 		// Description:         "bsf flake",
 		NixPackageRevisions: cr.Revisions,

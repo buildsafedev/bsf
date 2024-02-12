@@ -32,35 +32,35 @@
         "type": "github"
       }
     },
-    "nixpkgs-6d974716629d3bf8a31b519952c6a5754a41bd38": {
+    "nixpkgs-5a7b241264578c55cd25aa7422121aef072ce588": {
       "locked": {
-        "lastModified": 1706344000,
-        "narHash": "sha256-cy6KB7h+Bt8wRU+AEC8gvTM79PYEVh7Zuv/k/GkHZWk=",
+        "lastModified": 1707509006,
+        "narHash": "sha256-aqLiIgNEZ6Fy96QXmeQaMK/E3lmmiS0qkRZ0arvHoj4=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "6d974716629d3bf8a31b519952c6a5754a41bd38",
+        "rev": "5a7b241264578c55cd25aa7422121aef072ce588",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "6d974716629d3bf8a31b519952c6a5754a41bd38",
+        "rev": "5a7b241264578c55cd25aa7422121aef072ce588",
         "type": "github"
       }
     },
-    "nixpkgs-a6515b40d18282e1deee8129209998b4b62e4bec": {
+    "nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746": {
       "locked": {
-        "lastModified": 1702672590,
-        "narHash": "sha256-hWKBfHn6MGm2FlXDP6RxzX1daDAHdwUhHP5/EVz1myA=",
+        "lastModified": 1706195850,
+        "narHash": "sha256-X6wSiSht4tcaTBU30EUQ3MUd5w7MJpj2WrHL5GfNKZo=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "a6515b40d18282e1deee8129209998b4b62e4bec",
+        "rev": "a731d0cb71c58f56895f71a5b02eda2962a46746",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "a6515b40d18282e1deee8129209998b4b62e4bec",
+        "rev": "a731d0cb71c58f56895f71a5b02eda2962a46746",
         "type": "github"
       }
     },
@@ -84,8 +84,8 @@
       "inputs": {
         "nixpkgs": "nixpkgs",
         "nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7": "nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7",
-        "nixpkgs-6d974716629d3bf8a31b519952c6a5754a41bd38": "nixpkgs-6d974716629d3bf8a31b519952c6a5754a41bd38",
-        "nixpkgs-a6515b40d18282e1deee8129209998b4b62e4bec": "nixpkgs-a6515b40d18282e1deee8129209998b4b62e4bec",
+        "nixpkgs-5a7b241264578c55cd25aa7422121aef072ce588": "nixpkgs-5a7b241264578c55cd25aa7422121aef072ce588",
+        "nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746": "nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746",
         "nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14": "nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14"
       }
     }

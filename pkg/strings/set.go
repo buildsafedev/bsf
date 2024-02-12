@@ -1,7 +1,6 @@
 package strings
 
 // SliceToSet converts a slice of strings to a set of strings
-// TODO: we can probably replace this with slices.Compact from std lib
 func SliceToSet(s []string) []string {
 	set := make(map[string]bool)
 	for _, v := range s {

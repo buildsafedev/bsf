@@ -5,11 +5,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"sync"
 
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	bstrings "github.com/buildsafedev/bsf/pkg/strings"
+	"github.com/buildsafedev/bsf/pkg/update"
+)
+
+// Category defines category of package
+type Category int
+
+const (
+	// Development is a category of package
+	Development Category = iota
+	// Runtime is a category of package
+	Runtime = 1
 )
 
 // CategoryRevision holds category revision map  and revision list
@@ -19,9 +31,38 @@ type CategoryRevision struct {
 	Revisions   []string
 }
 
+// LockFile represents strcuture for LockFile
+type LockFile struct {
+	App      LockApp       `json:"app"`
+	Packages []LockPackage `json:"packages"`
+}
+
+// LockApp represents a app
+type LockApp struct {
+	Name string `json:"name"`
+}
+
+// LockPackage represents a package
+type LockPackage struct {
+	Package *buildsafev1.Package `json:"package"`
+	Runtime bool                 `json:"runtime"`
+}
+
 // GenerateLockFile generates lock file
-func GenerateLockFile(packages []*buildsafev1.Package, wr io.Writer) error {
-	data, err := json.MarshalIndent(packages, "", "  ")
+func GenerateLockFile(conf *Config, packages []LockPackage, wr io.Writer) error {
+	la := LockApp{}
+
+	// In future, when we have more languages, we can check all of them and pick the one that is used.
+	if conf.GoModule != nil {
+		la.Name = conf.GoModule.Name
+	}
+
+	lf := LockFile{
+		App:      la,
+		Packages: packages,
+	}
+
+	data, err := json.MarshalIndent(lf, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -34,9 +75,10 @@ func GenerateLockFile(packages []*buildsafev1.Package, wr io.Writer) error {
 }
 
 // ResolvePackages resolves a list of packages concurrently
-func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, packages Packages) ([]*buildsafev1.Package, error) {
-	allPackages := bstrings.SliceToSet(append(packages.Development, packages.Runtime...))
-	resolvedPackages := make([]*buildsafev1.Package, 0, len(allPackages))
+func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, packages Packages) ([]LockPackage, error) {
+	allPackages := slices.Compact(append(packages.Development, packages.Runtime...))
+	resolvedPackages := make([]LockPackage, 0, len(allPackages))
+	pkgMap := mapPackageCategory(packages)
 
 	errStr := ""
 	var wg sync.WaitGroup
@@ -54,7 +96,19 @@ func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, pa
 				return
 			}
 
-			resolvedPackages = append(resolvedPackages, p)
+			categories := pkgMap[p.Name+"@"+p.Version]
+			found := false
+			for _, cat := range categories {
+				if cat == Runtime {
+					found = true
+				}
+			}
+
+			lp := LockPackage{
+				Package: p,
+				Runtime: found,
+			}
+			resolvedPackages = append(resolvedPackages, lp)
 		}(pkg)
 	}
 	wg.Wait()
@@ -76,21 +130,7 @@ func ResolvePackage(ctx context.Context, sc buildsafev1.SearchServiceClient, pkg
 		// Go also has similar experience where user has to explicitly mention package versions in go.mod and the CLI can resolve "@latest" for imperative UX.
 		return nil, fmt.Errorf("Version not specified for package %s", pkg)
 	}
-	s := strings.Split(pkg, "@")
-	name := s[0]
-	version := s[1]
-
-	if strings.HasPrefix(version, "~") {
-		version = strings.TrimPrefix(version, "~")
-	}
-
-	if strings.HasPrefix(version, "^") {
-		version = strings.TrimPrefix(version, "^")
-	}
-
-	if strings.HasPrefix(version, "v") {
-		version = strings.TrimPrefix(version, "v")
-	}
+	name, version := update.TrimVersionInfo(pkg)
 
 	desiredVersion, err = sc.FetchPackageVersion(ctx, &buildsafev1.FetchPackageVersionRequest{
 		Name:    name,
@@ -104,24 +144,34 @@ func ResolvePackage(ctx context.Context, sc buildsafev1.SearchServiceClient, pkg
 }
 
 // ResolveCategoryRevisions maps packages to their category, returns development packages, runtime packages and a list of Nix revisions
-func ResolveCategoryRevisions(pkgs Packages, pkgVersions []*buildsafev1.Package) *CategoryRevision {
+func ResolveCategoryRevisions(pkgs Packages, pkgVersions []LockPackage) *CategoryRevision {
 	devRevisions := make(map[string]string, 0)
 	rtRevisions := make(map[string]string, 0)
 
-	devMap := sliceToMap(pkgs.Development)
-	rtMap := sliceToMap(pkgs.Runtime)
+	pkgsMap := mapPackageCategory(pkgs)
 
 	var revisions []string
-	for i := range pkgVersions {
-		revisions = append(revisions, pkgVersions[i].Revision)
-		pkgName := getPkgName(pkgVersions[i].Name)
-		if _, ok := devMap[pkgName]; ok {
-			devRevisions[pkgName] = pkgVersions[i].Revision
+	for _, pkg := range pkgVersions {
+		revisions = append(revisions, pkg.Package.Revision)
+
+		nameWithVersion := pkg.Package.Name + "@" + pkg.Package.Version
+		categories := pkgsMap[nameWithVersion]
+		if categories == nil {
+			continue
 		}
-		if _, ok := rtMap[pkgName]; ok {
-			rtRevisions[pkgName] = pkgVersions[i].Revision
+
+		for _, cat := range categories {
+			if cat == Runtime {
+				rtRevisions[pkg.Package.Name] = pkg.Package.Revision
+			}
+
+			if cat == Development {
+				devRevisions[pkg.Package.Name] = pkg.Package.Revision
+			}
 		}
+
 	}
+
 	return &CategoryRevision{
 		Development: devRevisions,
 		Runtime:     rtRevisions,
@@ -129,21 +179,20 @@ func ResolveCategoryRevisions(pkgs Packages, pkgVersions []*buildsafev1.Package)
 	}
 }
 
-func sliceToMap(slice []string) map[string]bool {
-	m := make(map[string]bool, 0)
-	for _, s := range slice {
-		m[getPkgName(s)] = true
+func mapPackageCategory(packages Packages) map[string][]Category {
+	m := make(map[string][]Category)
+
+	addCategory := func(p []string, category Category) {
+		for _, pkg := range p {
+			name, version := update.TrimVersionInfo(pkg)
+			key := name + "@" + version
+
+			m[key] = append(m[key], category)
+		}
 	}
+
+	addCategory(packages.Runtime, Runtime)
+	addCategory(packages.Development, Development)
 
 	return m
-}
-
-// getPkgName returns package name without version(if one is present)
-func getPkgName(pkg string) string {
-	if !strings.Contains(pkg, "@") {
-		return pkg
-	}
-
-	s := strings.Split(pkg, "@")
-	return s[0]
 }
