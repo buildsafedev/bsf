@@ -35,8 +35,8 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "bsf",
-	Short: "bsf CLI ",
-	Long:  `An opinionated application definition framework`,
+	Short: "bsf CLI lets you manage OS dependencies of your application seamlessly",
+	Long:  `Opinionated app dependency management tool.`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
