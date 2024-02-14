@@ -151,8 +151,8 @@ var KeyMap = keymap{
 		key.WithHelp("esc", "back"),
 	),
 	Quit: key.NewBinding(
-		key.WithKeys("ctrl+c", "q"),
-		key.WithHelp("ctrl+c/q", "quit"),
+		key.WithKeys("ctrl+c"),
+		key.WithHelp("ctrl+c", "quit"),
 	),
 	Space: key.NewBinding(
 		key.WithKeys(" "),
