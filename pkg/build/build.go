@@ -17,6 +17,7 @@ type dockerfileCfg struct {
 	Platform   string
 	Cmd        []string
 	Entrypoint []string
+	EnvVars    []string
 }
 
 // Build builds the environment
@@ -80,6 +81,7 @@ func convertExportCfgToDockerfileCfg(env hcl2nix.ExportConfig) dockerfileCfg {
 		Platform:   env.Platform,
 		Cmd:        env.Cmd,
 		Entrypoint: env.Entrypoint,
+		EnvVars:    env.EnvVars,
 	}
 }
 
