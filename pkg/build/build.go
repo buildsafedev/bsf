@@ -17,7 +17,7 @@ type dockerfileCfg struct {
 	Platform   string
 	Cmd        []string
 	Entrypoint []string
-	EnvVars    []string
+	EnvVars    map[string]string
 }
 
 // Build builds the environment
@@ -76,12 +76,13 @@ func convertExportCfgToDockerfileCfg(env hcl2nix.ExportConfig) dockerfileCfg {
 	case "linux/arm64":
 		env.Platform = "aarch64-linux"
 	}
-
+	envVarsMap := convertEnvsToMap(env.EnvVars)
+	
 	return dockerfileCfg{
 		Platform:   env.Platform,
 		Cmd:        env.Cmd,
 		Entrypoint: env.Entrypoint,
-		EnvVars:    env.EnvVars,
+		EnvVars:    envVarsMap,
 	}
 }
 
@@ -110,4 +111,17 @@ func createTempDir() (string, error) {
 	}
 
 	return bsfDir, nil
+}
+
+func convertEnvsToMap(envs []string) map[string]string {
+	envMap := make(map[string]string)
+
+	for _, env := range envs {
+		keyValuePair := strings.SplitN(env, "=", 2)
+		if len(keyValuePair) == 2 {
+			envMap[keyValuePair[0]] = keyValuePair[1]
+		}
+	}
+
+	return envMap
 }

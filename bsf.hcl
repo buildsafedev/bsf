@@ -17,5 +17,5 @@ export "dev" {
   cmd          = ["/result/bin/bsf \n"]
   entrypoint   = null
   platform     = "linux/arm64"
-  envVars      = ["SSL_CERT_FILE=/result/env/etc/ssl/certs/ca-bundle.crt"]
+  envVars      = null
 }
