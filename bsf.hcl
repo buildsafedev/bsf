@@ -17,4 +17,5 @@ export "dev" {
   cmd          = ["/result/bin/bsf \n"]
   entrypoint   = null
   platform     = "linux/arm64"
+  envVars      = null
 }

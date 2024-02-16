@@ -19,6 +19,7 @@ type ExportConfig struct {
 	Entrypoint   []string `hcl:"entrypoint,optional"`
 	Publish      *bool    `hcl:"publish"`
 	Platform     string   `hcl:"platform"`
+	EnvVars      []string `hcl:"envVars,optional"`
 	// Credentials or Credential location?
 	// todo: we need a field to specify if they want specific directories from current sandoxed directory to be copied over to runtime artifact
 }
@@ -32,6 +33,12 @@ func (c *ExportConfig) Validate() *string {
 
 	if !validatePlatform(c.Platform) {
 		return pointerTo("Invalid platform. Platform cannot contain spaces, commas, or semicolons. Note: multi-platform support will be added in future")
+	}
+
+	if len(c.EnvVars) != 0 {
+		if !validateEnvVars((c.EnvVars)) {
+			return pointerTo("Invalid environment variables, please use 'key=value' format")
+		}
 	}
 
 	return nil
@@ -55,4 +62,14 @@ func validateArtifactType(artifactType string) bool {
 
 func pointerTo[T any](value T) *T {
 	return &value
+}
+
+func validateEnvVars(envVars []string) bool {
+	for _, kv := range envVars {
+		keyValuePair := strings.SplitN(kv, "=", 2)
+		if len(keyValuePair) != 2 {
+			return false
+		}
+	}
+	return true
 }
