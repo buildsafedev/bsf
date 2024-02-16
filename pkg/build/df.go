@@ -52,7 +52,7 @@ COPY --from=builder /tmp/build/bsf/runtimeEnv /result/env
 # Add /result/env to the PATH
 ENV SSL_CERT_FILE="/result/env/etc/ssl/certs/ca-bundle.crt"
 ENV PATH="/result/env/bin:${PATH}"
-{{ if gt (len .Env) 0 }}ENV {{ range $key, $value := .Env }}{{ $key }}={{ quote $value }} {{ end }}{{ end }}
+{{ if gt (len .EnvVars) 0 }}ENV {{ range $key, $value := .EnvVars }}{{ $key }}={{ quote $value }} {{ end }}{{ end }}
 {{ if gt (len .Cmd) 0 }}CMD [{{ range $index, $element := .Cmd }} {{if $index}}, {{end}} "{{ quote $element }}" {{ end }}]{{ end }}
 {{ if gt (len .Entrypoint) 0 }} ENTRYPOINT [{{ range $index, $element := .Entrypoint }}{{if $index}}, {{end}} "{{ quote $element }}" {{ end }}]{{ end }}
 `
