@@ -2,7 +2,6 @@ package search
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -10,7 +9,6 @@ import (
 
 	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	"github.com/buildsafedev/bsf/cmd/styles"
-	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/buildsafedev/bsf/pkg/vulnerability"
 )
@@ -85,35 +83,11 @@ func (m packageOptionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if currentMode != modeOption {
 				break
 			}
-			fh, err := hcl2nix.NewFileHandlers(true)
-			if err != nil {
-				m.errorMsg = fmt.Sprintf("Error creating file handlers: %s", err.Error())
-				return m, tea.Quit
-			}
 
-			data, err := os.ReadFile("bsf.hcl")
-			if err != nil {
-				m.errorMsg = fmt.Sprintf(errorStyle.Render("Error reading bsf.hcl: %s", err.Error()))
-				return m, tea.Quit
-			}
-
-			// changing file handler to allow writes
-			fh.ModFile, err = os.Create("bsf.hcl")
-			if err != nil {
-				m.errorMsg = fmt.Sprintf(errorStyle.Render("Error creating bsf.hcl: %s", err.Error()))
-				return m, tea.Quit
-			}
-
-			err = hcl2nix.AddPackages(data, newConfFromSelectedPackages(m.name, m.version, m.selected), fh.ModFile)
-			if err != nil {
-				m.errorMsg = fmt.Sprintf(errorStyle.Render("Error updating bsf.hcl: %s", err.Error()))
-				return m, tea.Quit
-			}
-
-			err = generate.Generate(fh, sc)
-			if err != nil {
-				m.errorMsg = fmt.Sprintf(errorStyle.Render("Error generating files: %s", err.Error()))
-				return m, tea.Quit
+			v := initVersionConstraints(choices[m.cursor], m.name, m.version)
+			p := tea.NewProgram(v)
+			if err := p.Start(); err != nil {
+				m.errorMsg = fmt.Sprintf("Error starting version constraints model: %s", err.Error())
 			}
 
 			return m, tea.Quit
