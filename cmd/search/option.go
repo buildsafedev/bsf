@@ -83,8 +83,7 @@ func (m packageOptionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if currentMode != modeOption {
 				break
 			}
-
-			v := initVersionConstraints(choices[m.cursor], m.name, m.version)
+			v := initVersionConstraints(m.name, m.version, m.selected)
 			p := tea.NewProgram(v)
 			if err := p.Start(); err != nil {
 				m.errorMsg = fmt.Sprintf("Error starting version constraints model: %s", err.Error())
@@ -164,7 +163,7 @@ func getTopVulnerabilities(allVuln []*bsfv1.Vulnerability) []*bsfv1.Vulnerabilit
 	return allVuln[:10]
 }
 
-func newConfFromSelectedPackages(name, version string, selected map[string]bool) hcl2nix.Packages {
+func newConfFromSelectedPackages(name, version string, constraint string, selected map[string]bool) hcl2nix.Packages {
 	// since only package can searched and selected at a time, we can safely assume this.
 	packages := hcl2nix.Packages{
 		Development: make([]string, 0, 1),
@@ -174,11 +173,12 @@ func newConfFromSelectedPackages(name, version string, selected map[string]bool)
 		if selected[c] {
 			switch c {
 			case "Development":
-				packages.Development = append(packages.Development, name+"@"+version)
+				packages.Development = append(packages.Development, name+"@"+constraint+version)
 			case "Runtime":
-				packages.Runtime = append(packages.Runtime, name+"@"+version)
+				packages.Runtime = append(packages.Runtime, name+"@"+constraint+version)
 			}
 		}
 	}
+
 	return packages
 }

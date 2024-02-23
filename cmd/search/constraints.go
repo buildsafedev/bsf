@@ -15,28 +15,28 @@ import (
 type versionConstraintsModel struct {
 	choices             []string
 	cursor              int
-	selectedConstraints string
-	selected            map[string]bool
-	context             string
+	constraint          map[string]bool
 	errorMsg            string
 	name                string
 	version             string
+	selectedConstraints string
+	selected            map[string]bool
 }
 
 func (m *versionConstraintsModel) Init() tea.Cmd {
 	return nil
 }
 
-func initVersionConstraints(context, name, version string) *versionConstraintsModel {
+func initVersionConstraints(name, version string, selected map[string]bool) *versionConstraintsModel {
 	choices := []string{"pinned version", "allow minor version updates", "allow patch version updates"}
-	selected := make(map[string]bool)
+	constriant := make(map[string]bool)
 	return &versionConstraintsModel{
-		choices:  choices,
-		cursor:   0,
-		selected: selected,
-		context:  context,
-		name:     name,
-		version:  version,
+		choices:    choices,
+		cursor:     0,
+		constraint: constriant,
+		name:       name,
+		version:    version,
+		selected:   selected,
 	}
 }
 
@@ -56,8 +56,12 @@ func (m *versionConstraintsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.cursor < 0 {
 				m.cursor = len(m.choices) - 1
 			}
-		case key.Matches(msg, KeyMap.Enter):
+		case key.Matches(msg, KeyMap.Space):
+			choice := m.choices[m.cursor]
+			m.constraint = make(map[string]bool)
+			m.constraint[choice] = true
 
+		case key.Matches(msg, KeyMap.Enter):
 			fh, err := hcl2nix.NewFileHandlers(true)
 			if err != nil {
 				m.errorMsg = fmt.Sprintf("Error creating file handlers: %s", err.Error())
@@ -70,6 +74,13 @@ func (m *versionConstraintsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 
+			switch m.cursor {
+			case 1:
+				m.selectedConstraints = "~"
+			case 2:
+				m.selectedConstraints = "^"
+			}
+
 			// changing file handler to allow writes
 			fh.ModFile, err = os.Create("bsf.hcl")
 			if err != nil {
@@ -77,7 +88,7 @@ func (m *versionConstraintsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 
-			err = hcl2nix.AddPackages(data, newConfFromSelectedPackages(m.name, m.version, m.selected), fh.ModFile)
+			err = hcl2nix.AddPackages(data, newConfFromSelectedPackages(m.name, m.version, m.selectedConstraints, m.selected), fh.ModFile)
 			if err != nil {
 				m.errorMsg = fmt.Sprintf(errorStyle.Render("Error updating bsf.hcl: %s", err.Error()))
 				return m, tea.Quit
@@ -90,9 +101,6 @@ func (m *versionConstraintsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			return m, tea.Quit
-		case key.Matches(msg, KeyMap.Space):
-			choice := m.choices[m.cursor]
-			m.selected[choice] = !m.selected[choice]
 		}
 	}
 	return m, nil
@@ -102,7 +110,7 @@ func (m versionConstraintsModel) View() string {
 	var s strings.Builder
 
 	for i, choice := range m.choices {
-		if m.selected[choice] {
+		if m.constraint[choice] {
 			s.WriteString(styles.SelectedOptionStyle.Render("  [x] " + choice))
 		} else if m.cursor == i {
 			s.WriteString(styles.BaseStyle.Render(" ->  " + choice))
