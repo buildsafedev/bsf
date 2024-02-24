@@ -151,7 +151,6 @@ func (m packageOptionModel) View() string {
 		s.WriteString("\n")
 	}
 
-	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor, space to select/unselect, enter to submit)\n"))
 	currentMode = modeOption
 	return s.String()
 }

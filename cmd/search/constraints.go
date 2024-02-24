@@ -109,15 +109,19 @@ func (m *versionConstraintsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m versionConstraintsModel) View() string {
 	var s strings.Builder
 
+	s.WriteString("\n")
 	for i, choice := range m.choices {
 		if m.constraint[choice] {
-			s.WriteString(styles.SelectedOptionStyle.Render("  [x] " + choice))
+			s.WriteString(styles.SelectedOptionStyle.Render("✔ " + choice))
 		} else if m.cursor == i {
-			s.WriteString(styles.BaseStyle.Render(" ->  " + choice))
+			s.WriteString(styles.CursorOptionStyle.Render("-> " + choice))
 		} else {
-			s.WriteString(styles.BaseStyle.Render(" []" + choice))
+			s.WriteString(styles.OptionStyle.Render("  " + choice))
 		}
 		s.WriteString("\n")
+
 	}
+	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor, space to select/unselect, enter to submit)\n"))
+
 	return s.String()
 }
