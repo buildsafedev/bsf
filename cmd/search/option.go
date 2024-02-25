@@ -83,7 +83,7 @@ func (m packageOptionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if currentMode != modeOption {
 				break
 			}
-			v := initVersionConstraints(m.name, m.version, m.selected)
+			v := initVersionConstraints(m.name, m.version, m.selected, m)
 			p := tea.NewProgram(v)
 			if err := p.Start(); err != nil {
 				m.errorMsg = fmt.Sprintf("Error starting version constraints model: %s", err.Error())

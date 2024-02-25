@@ -21,13 +21,14 @@ type versionConstraintsModel struct {
 	version             string
 	selectedConstraints string
 	selected            map[string]bool
+	pkgoption           packageOptionModel
 }
 
 func (m *versionConstraintsModel) Init() tea.Cmd {
 	return nil
 }
 
-func initVersionConstraints(name, version string, selected map[string]bool) *versionConstraintsModel {
+func initVersionConstraints(name, version string, selected map[string]bool, pkgoption packageOptionModel) *versionConstraintsModel {
 	choices := []string{"pinned version", "allow minor version updates", "allow patch version updates"}
 	constriant := make(map[string]bool)
 	return &versionConstraintsModel{
@@ -37,6 +38,7 @@ func initVersionConstraints(name, version string, selected map[string]bool) *ver
 		name:       name,
 		version:    version,
 		selected:   selected,
+		pkgoption:  pkgoption,
 	}
 }
 
@@ -56,6 +58,9 @@ func (m *versionConstraintsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.cursor < 0 {
 				m.cursor = len(m.choices) - 1
 			}
+		case key.Matches(msg, KeyMap.Back):
+			fmt.Print("\033[H\033[2J")
+			return m.pkgoption, nil
 		case key.Matches(msg, KeyMap.Space):
 			choice := m.choices[m.cursor]
 			m.constraint = make(map[string]bool)
@@ -110,6 +115,8 @@ func (m versionConstraintsModel) View() string {
 	var s strings.Builder
 
 	s.WriteString("\n")
+	s.WriteString(styles.TitleStyle.Render(fmt.Sprintf("What type of updates would you like for %s-%s?", m.name, m.version)))
+	s.WriteString("\n\n")
 	for i, choice := range m.choices {
 		if m.constraint[choice] {
 			s.WriteString(styles.SelectedOptionStyle.Render("✔ " + choice))
