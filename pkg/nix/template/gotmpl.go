@@ -26,8 +26,16 @@ const (
 	   meta = with lib; {
 		 description = "";
 	   };
-	   {{ if gt (len .LdFlags) 0}}ldflags = [{{ range $key, $value := .LdFlags }}"{{ $value }}"{{ if not (eq $key (sub (len .LdFlags) 1)) }} {{ end }}{{ end }}];
-	   {{ if gt (len .Tags) 0 }}tags = [{{ range $key, $value := .Tags }}"{{ $value }}"{{ if not (eq $key (sub (len .Tags) 1)) }} {{ end }}{{ end }}];
+	   {{ if gt (len .LdFlags) 0}}
+	   ldflags = [
+		{{ range $value := .LdFlags }}"{{ $value }}" {{ end }}
+	   ];
+	   {{ end }}
+	   {{ if gt (len .Tags) 0 }}
+	   tags = [
+		{{ range $value := .Tags }}"{{ $value }}" {{ end }}
+	   ];
+	   {{ end }}
 	 }
 	`
 )
