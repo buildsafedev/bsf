@@ -10,6 +10,7 @@ import (
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/mod/semver"
 )
 
 type versionConstraintsModel struct {
@@ -20,7 +21,7 @@ type versionConstraintsModel struct {
 	name                string
 	version             string
 	selectedConstraints string
-	selected            map[string]bool
+	env                 map[string]bool
 	pkgoption           packageOptionModel
 }
 
@@ -28,16 +29,25 @@ func (m *versionConstraintsModel) Init() tea.Cmd {
 	return nil
 }
 
-func initVersionConstraints(name, version string, selected map[string]bool, pkgoption packageOptionModel) *versionConstraintsModel {
-	choices := []string{"pinned version", "allow minor version updates", "allow patch version updates"}
-	constriant := make(map[string]bool)
+func initVersionConstraints(name, version string, env map[string]bool, pkgoption packageOptionModel) *versionConstraintsModel {
+	var choices []string
+	var constriant map[string]bool
+	if semver.IsValid(version) {
+		choices = []string{"pinned version", "allow minor version updates", "allow patch version updates"}
+		constriant = map[string]bool{"allow patch version updates": true}
+	} else {
+		choices = []string{"pinned version"}
+		constriant = map[string]bool{"pinned version": true}
+
+	}
+
 	return &versionConstraintsModel{
 		choices:    choices,
 		cursor:     0,
 		constraint: constriant,
 		name:       name,
 		version:    version,
-		selected:   selected,
+		env:        env,
 		pkgoption:  pkgoption,
 	}
 }
@@ -59,53 +69,14 @@ func (m *versionConstraintsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor = len(m.choices) - 1
 			}
 		case key.Matches(msg, KeyMap.Back):
-			fmt.Print("\033[H\033[2J")
-			return m.pkgoption, nil
+			return m.pkgoption.Update(msg)
 		case key.Matches(msg, KeyMap.Space):
 			choice := m.choices[m.cursor]
 			m.constraint = make(map[string]bool)
 			m.constraint[choice] = true
 
 		case key.Matches(msg, KeyMap.Enter):
-			fh, err := hcl2nix.NewFileHandlers(true)
-			if err != nil {
-				m.errorMsg = fmt.Sprintf("Error creating file handlers: %s", err.Error())
-				return m, tea.Quit
-			}
-
-			data, err := os.ReadFile("bsf.hcl")
-			if err != nil {
-				m.errorMsg = fmt.Sprintf(errorStyle.Render("Error reading bsf.hcl: %s", err.Error()))
-				return m, tea.Quit
-			}
-
-			switch m.cursor {
-			case 1:
-				m.selectedConstraints = "~"
-			case 2:
-				m.selectedConstraints = "^"
-			}
-
-			// changing file handler to allow writes
-			fh.ModFile, err = os.Create("bsf.hcl")
-			if err != nil {
-				m.errorMsg = fmt.Sprintf(errorStyle.Render("Error creating bsf.hcl: %s", err.Error()))
-				return m, tea.Quit
-			}
-
-			err = hcl2nix.AddPackages(data, newConfFromSelectedPackages(m.name, m.version, m.selectedConstraints, m.selected), fh.ModFile)
-			if err != nil {
-				m.errorMsg = fmt.Sprintf(errorStyle.Render("Error updating bsf.hcl: %s", err.Error()))
-				return m, tea.Quit
-			}
-
-			err = generate.Generate(fh, sc)
-			if err != nil {
-				m.errorMsg = fmt.Sprintf(errorStyle.Render("Error generating files: %s", err.Error()))
-				return m, tea.Quit
-			}
-
-			return m, tea.Quit
+			return m.updateVersionConstraint()
 		}
 	}
 	return m, nil
@@ -131,4 +102,46 @@ func (m versionConstraintsModel) View() string {
 	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor, space to select/unselect, enter to submit)\n"))
 
 	return s.String()
+}
+
+func (m *versionConstraintsModel) updateVersionConstraint() (tea.Model, tea.Cmd) {
+	fh, err := hcl2nix.NewFileHandlers(true)
+	if err != nil {
+		m.errorMsg = fmt.Sprintf("Error creating file handlers: %s", err.Error())
+		return m, tea.Quit
+	}
+
+	data, err := os.ReadFile("bsf.hcl")
+	if err != nil {
+		m.errorMsg = fmt.Sprintf(errorStyle.Render("Error reading bsf.hcl: %s", err.Error()))
+		return m, tea.Quit
+	}
+
+	switch {
+	case m.constraint["allow minor version updates"]:
+		m.selectedConstraints = "^"
+	case m.constraint["allow patch version updates"]:
+		m.selectedConstraints = "~"
+	}
+
+	// changing file handler to allow writes
+	fh.ModFile, err = os.Create("bsf.hcl")
+	if err != nil {
+		m.errorMsg = fmt.Sprintf(errorStyle.Render("Error creating bsf.hcl: %s", err.Error()))
+		return m, tea.Quit
+	}
+
+	err = hcl2nix.AddPackages(data, newConfFromSelectedPackages(m.name, m.version, m.selectedConstraints, m.env), fh.ModFile)
+	if err != nil {
+		m.errorMsg = fmt.Sprintf(errorStyle.Render("Error updating bsf.hcl: %s", err.Error()))
+		return m, tea.Quit
+	}
+
+	err = generate.Generate(fh, sc)
+	if err != nil {
+		m.errorMsg = fmt.Sprintf(errorStyle.Render("Error generating files: %s", err.Error()))
+		return m, tea.Quit
+	}
+
+	return m, tea.Quit
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/mod/semver"
 
 	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	"github.com/buildsafedev/bsf/cmd/styles"
@@ -31,11 +32,12 @@ var optionsShown bool
 
 // InitOption initializes the option model
 func initOption(name, version string, vlm versionListModel, vulnResp *bsfv1.FetchVulnerabilitiesResponse) *packageOptionModel {
+	selected := map[string]bool{"Development": true}
 	return &packageOptionModel{
 		name:     name,
 		version:  version,
 		cursor:   0,
-		selected: make(map[string]bool, 0),
+		selected: selected,
 		vlm:      vlm,
 		vulnResp: vulnResp,
 	}
@@ -83,12 +85,15 @@ func (m packageOptionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if currentMode != modeOption {
 				break
 			}
-			v := initVersionConstraints(m.name, m.version, m.selected, m)
-			p := tea.NewProgram(v)
-			if err := p.Start(); err != nil {
-				m.errorMsg = fmt.Sprintf("Error starting version constraints model: %s", err.Error())
+			if semver.IsValid(m.version) {
+				v := initVersionConstraints(m.name, m.version, m.selected, m)
+				p := tea.NewProgram(v)
+				if err := p.Start(); err != nil {
+					m.errorMsg = fmt.Sprintf("Error starting version constraints model: %s", err.Error())
+				}
+			} else {
+				return initVersionConstraints(m.name, m.version, m.selected, m).updateVersionConstraint()
 			}
-
 			return m, tea.Quit
 
 		}
