@@ -27,14 +27,14 @@ const (
 		 description = "";
 	   };
 	   {{ if gt (len .LdFlags) 0}}
-	   ldflags = [
-		{{ range $value := .LdFlags }}"{{ $value }}" {{ end }}
-	   ];
+		ldflags = [
+			{{ range $value := .LdFlags }}"{{ $value }}" {{ end }}
+		];
 	   {{ end }}
 	   {{ if gt (len .Tags) 0 }}
-	   tags = [
-		{{ range $value := .Tags }}"{{ $value }}" {{ end }}
-	   ];
+		tags = [
+			{{ range $value := .Tags }}"{{ $value }}" {{ end }}
+		];
 	   {{ end }}
 	 }
 	`
