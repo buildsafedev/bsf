@@ -26,6 +26,16 @@ const (
 	   meta = with lib; {
 		 description = "";
 	   };
+	   {{ if gt (len .LdFlags) 0}}
+		ldflags = [
+			{{ range $value := .LdFlags }}"{{ $value }}" {{ end }}
+		];
+	   {{ end }}
+	   {{ if gt (len .Tags) 0 }}
+		tags = [
+			{{ range $value := .Tags }}"{{ $value }}" {{ end }}
+		];
+	   {{ end }}
 	 }
 	`
 )
@@ -33,6 +43,8 @@ const (
 type goModule struct {
 	Name       string
 	SourcePath string
+	LdFlags    []string
+	Tags       []string
 	VendorHash template.HTML
 	DoCheck    bool
 	Meta       *hcl2nix.Meta
@@ -47,6 +59,13 @@ func GenerateGoModule(fl *hcl2nix.GoModule, wr io.Writer) error {
 
 		// Convert VendorHash to HTML to avoid escaping
 		VendorHash: template.HTML(fl.VendorHash),
+	}
+
+	if len(fl.LdFlags) != 0 {
+		data.LdFlags = fl.LdFlags
+	}
+	if len(fl.Tags) != 0 {
+		data.Tags = fl.Tags
 	}
 
 	t, err := template.New(golangTmpl).Parse(golangTmpl)
