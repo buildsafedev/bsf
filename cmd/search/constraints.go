@@ -32,7 +32,7 @@ func (m *versionConstraintsModel) Init() tea.Cmd {
 func initVersionConstraints(name, version string, env map[string]bool, pkgoption packageOptionModel) *versionConstraintsModel {
 	var choices []string
 	var constriant map[string]bool
-	if semver.IsValid(version) {
+	if semver.IsValid("v" + version) {
 		choices = []string{"pinned version", "allow minor version updates", "allow patch version updates"}
 		constriant = map[string]bool{"allow patch version updates": true}
 	} else {
@@ -43,7 +43,7 @@ func initVersionConstraints(name, version string, env map[string]bool, pkgoption
 
 	return &versionConstraintsModel{
 		choices:    choices,
-		cursor:     0,
+		cursor:     2,
 		constraint: constriant,
 		name:       name,
 		version:    version,
