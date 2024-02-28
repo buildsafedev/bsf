@@ -87,7 +87,7 @@ func (m packageOptionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if semver.IsValid("v" + m.version) {
 				v := initVersionConstraints(m.name, m.version, m.selected, m)
-				p := tea.NewProgram(v)
+				p := tea.NewProgram(v, tea.WithAltScreen())
 				if err := p.Start(); err != nil {
 					m.errorMsg = fmt.Sprintf("Error starting version constraints model: %s", err.Error())
 				}
@@ -155,6 +155,7 @@ func (m packageOptionModel) View() string {
 		}
 		s.WriteString("\n")
 	}
+	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor, space to select/unselect, enter to submit)\n"))
 
 	currentMode = modeOption
 	return s.String()
