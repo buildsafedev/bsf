@@ -36,9 +36,11 @@ func initVersionConstraints(name, version string, env map[string]bool, pkgoption
 		choices = []string{"pinned version", "allow minor version updates", "allow patch version updates"}
 		constriant = map[string]bool{"allow patch version updates": true}
 	} else {
-		choices = []string{"pinned version"}
 		constriant = map[string]bool{"pinned version": true}
+	}
 
+	if !env["Development"] && !env["Runtime"] {
+		env["Development"] = true
 	}
 
 	return &versionConstraintsModel{
@@ -71,9 +73,14 @@ func (m *versionConstraintsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, KeyMap.Back):
 			return m.pkgoption.Update(msg)
 		case key.Matches(msg, KeyMap.Space):
-			choice := m.choices[m.cursor]
-			m.constraint = make(map[string]bool)
-			m.constraint[choice] = true
+			if m.constraint[m.choices[m.cursor]] {
+				m.constraint[m.choices[m.cursor]] = false
+			} else {
+				for k := range m.constraint {
+					m.constraint[k] = false
+				}
+				m.constraint[m.choices[m.cursor]] = true
+			}
 
 		case key.Matches(msg, KeyMap.Enter):
 			return m.updateVersionConstraint()
@@ -121,6 +128,9 @@ func (m *versionConstraintsModel) updateVersionConstraint() (tea.Model, tea.Cmd)
 	case m.constraint["allow minor version updates"]:
 		m.selectedConstraints = "^"
 	case m.constraint["allow patch version updates"]:
+		m.selectedConstraints = "~"
+	}
+	if m.selectedConstraints == "" && !m.constraint["pinned version"] {
 		m.selectedConstraints = "~"
 	}
 
