@@ -1,9 +1,12 @@
 package langdetect
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/buildsafedev/bsf/cmd/styles"
 )
 
 type (
@@ -23,6 +26,8 @@ type ProjectDetails struct {
 	Entrypoint string
 	Name       string
 }
+
+var supportedLanguages = []string{"GO"}
 
 // FindProjectType detects the programming language/package manager of the current project.
 func FindProjectType() (ProjectType, *ProjectDetails, error) {
@@ -62,5 +67,6 @@ func FindProjectType() (ProjectType, *ProjectDetails, error) {
 		}
 	}
 
-	return Unknown, nil, nil
+	err = fmt.Errorf(styles.ErrorStyle.Render("unable to detect the language ,supported languages: " + styles.HintStyle.Render(strings.Join(supportedLanguages, ", "))))
+	return Unknown, nil, err
 }
