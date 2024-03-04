@@ -162,11 +162,21 @@ func ResolveCategoryRevisions(pkgs Packages, pkgVersions []LockPackage) *Categor
 
 		for _, cat := range categories {
 			if cat == Runtime {
-				rtRevisions[pkg.Package.Name] = pkg.Package.Revision
+				// Preference should be given to Attribute name when it is available.
+				// Over time, we expect the all packages to have one but to avoid rebuilding the search index, we fall back to name.
+				name := pkg.Package.AttrName
+				if name == "" {
+					name = pkg.Package.Name
+				}
+				rtRevisions[name] = pkg.Package.Revision
 			}
 
 			if cat == Development {
-				devRevisions[pkg.Package.Name] = pkg.Package.Revision
+				name := pkg.Package.AttrName
+				if name == "" {
+					name = pkg.Package.Name
+				}
+				devRevisions[name] = pkg.Package.Revision
 			}
 		}
 
