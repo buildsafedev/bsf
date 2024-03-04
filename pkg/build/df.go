@@ -32,11 +32,22 @@ RUN nix \
     --option filter-syscalls false \
     build .#runtimeEnvs.{{ .Platform }}.runtime -o runtimeEnv
 
+{{ if (.DevDeps)}}
+# Build development packages if devDeps is set to true in bsf.hcl
+RUN nix \
+    --extra-experimental-features "nix-command flakes" \
+    --option filter-syscalls false \
+    build .#devEnvs.{{ .Platform }}.development -o devEnv
+{{ end }}
+
 # Copy the Nix store closure into a directory. The Nix store closure is the
 # entire set of Nix store values that we need for our build and custom environment.
 RUN mkdir /tmp/nix-store-closure
 RUN cp -R $(nix-store -qR result/) /tmp/nix-store-closure
 RUN cp -R $(nix-store -qR runtimeEnv/) /tmp/nix-store-closure
+{{ if (.DevDeps)}}
+RUN cp -R $(nix-store -qR devEnv/) /tmp/nix-store-closure
+{{ end }}
 
 # # Final image is based on scratch. We copy a bunch of Nix dependencies
 # # but they're fully self-contained so we don't need Nix anymore.
