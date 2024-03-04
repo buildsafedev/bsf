@@ -59,7 +59,10 @@ WORKDIR /result
 COPY --from=builder /tmp/nix-store-closure /nix/store
 # Add symlink to result
 COPY --from=builder /tmp/build/bsf/result /result
-COPY --from=builder /tmp/build/bsf/runtimeEnv /result/env
+COPY --from=builder /tmp/build/bsf/runtimeEnv /result/runtimeEnv
+{{ if (.DevDeps)}}
+COPY --from=builder /tmp/build/bsf/devEnv /result/devEnv
+{{ end }}
 # Add /result/env to the PATH
 ENV SSL_CERT_FILE="/result/env/etc/ssl/certs/ca-bundle.crt"
 ENV PATH="/result/env/bin:${PATH}"
