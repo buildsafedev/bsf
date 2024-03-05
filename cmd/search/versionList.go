@@ -25,6 +25,7 @@ func convFPR2Rows(versions *buildsafev1.FetchPackagesResponse) []table.Row {
 	items := make([]table.Row, 0, len(versions.Packages))
 
 	sortedPackages := search.SortPackagesWithTimestamp(versions.Packages)
+	sortedPackages = search.SortPackagesWithVersion(sortedPackages)
 	for _, pkg := range sortedPackages {
 		free := "false"
 		if pkg.Free {

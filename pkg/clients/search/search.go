@@ -39,3 +39,14 @@ func SortPackagesWithTimestamp(packageVersions []*buildsafev1.Package) []*builds
 	})
 	return packageVersions
 }
+
+// SortPackagesWithSamver sorts packages with samver with latest being the first element
+func SortPackagesWithVersion(packageVersions []*buildsafev1.Package) []*buildsafev1.Package {
+	if packageVersions == nil {
+		return nil
+	}
+	sort.SliceStable(packageVersions, func(i, j int) bool {
+		return packageVersions[i].Version > packageVersions[j].Version
+	})
+	return packageVersions
+}
