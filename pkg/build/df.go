@@ -51,10 +51,12 @@ RUN cp -R $(nix-store -qR devEnv/) /tmp/nix-store-closure
 
 # # Final image is based on scratch. We copy a bunch of Nix dependencies
 # # but they're fully self-contained so we don't need Nix anymore.
-FROM scratch
+FROM busybox
 
 WORKDIR /result
-
+{{ if ne .Config ""}}
+COPY {{ .Config }} /result/app
+{{ end }}
 # Copy /nix/store
 COPY --from=builder /tmp/nix-store-closure /nix/store
 # Add symlink to result

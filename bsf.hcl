@@ -19,4 +19,5 @@ export "dev" {
   platform     = "linux/arm64"
   envVars      = null
   devDeps      = false
+  config       = ""
 }
