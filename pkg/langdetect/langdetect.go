@@ -5,8 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/buildsafedev/bsf/cmd/styles"
 )
 
 type (
@@ -67,6 +65,6 @@ func FindProjectType() (ProjectType, *ProjectDetails, error) {
 		}
 	}
 
-	err = fmt.Errorf(styles.ErrorStyle.Render("unable to detect the language ,supported languages: " + styles.HintStyle.Render(strings.Join(supportedLanguages, ", "))))
+	err = fmt.Errorf("unable to detect the language ,supported languages: " + (strings.Join(supportedLanguages, ",") + "."))
 	return Unknown, nil, err
 }
