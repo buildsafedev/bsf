@@ -51,7 +51,11 @@ RUN cp -R $(nix-store -qR devEnv/) /tmp/nix-store-closure
 
 # # Final image is based on scratch. We copy a bunch of Nix dependencies
 # # but they're fully self-contained so we don't need Nix anymore.
+{{ if (.DevDeps)}}
 FROM busybox
+{{ else }}
+FROM scratch
+{{ end }}
 
 WORKDIR /result
 {{ if ne .Config ""}}
@@ -61,9 +65,9 @@ COPY {{ .Config }} /result/app
 COPY --from=builder /tmp/nix-store-closure /nix/store
 # Add symlink to result
 COPY --from=builder /tmp/build/bsf/result /result
-COPY --from=builder /tmp/build/bsf/runtimeEnv /result/runtimeEnv
+COPY --from=builder /tmp/build/bsf/runtimeEnv /result/env
 {{ if (.DevDeps)}}
-COPY --from=builder /tmp/build/bsf/devEnv /result/devEnv
+COPY --from=builder /tmp/build/bsf/devEnv /result/env
 {{ end }}
 # Add /result/env to the PATH
 ENV SSL_CERT_FILE="/result/env/etc/ssl/certs/ca-bundle.crt"
