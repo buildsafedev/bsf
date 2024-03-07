@@ -61,7 +61,17 @@ const (
 			{{ end }}
 		   ];
 		};
-	});
+	   });
+
+	   devEnvs = forEachSupportedSystem ({ pkgs, {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
+		development = pkgs.buildEnv {
+		  name = "devenv";
+		  paths = [ 
+			{{ range $key, $value :=.DevPackages }}nixpkgs-{{ $value  }}-pkgs.{{ $key }}  
+			{{ end }}
+		   ];
+		};
+	   });
 	};
 }
 `

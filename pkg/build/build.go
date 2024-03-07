@@ -18,6 +18,8 @@ type dockerfileCfg struct {
 	Cmd        []string
 	Entrypoint []string
 	EnvVars    map[string]string
+	DevDeps    bool
+	Config     string
 }
 
 // Build builds the environment
@@ -77,12 +79,14 @@ func convertExportCfgToDockerfileCfg(env hcl2nix.ExportConfig) dockerfileCfg {
 		env.Platform = "aarch64-linux"
 	}
 	envVarsMap := convertEnvsToMap(env.EnvVars)
-	
+
 	return dockerfileCfg{
 		Platform:   env.Platform,
 		Cmd:        env.Cmd,
 		Entrypoint: env.Entrypoint,
 		EnvVars:    envVarsMap,
+		DevDeps:    env.DevDeps,
+		Config:     env.Config,
 	}
 }
 

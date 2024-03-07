@@ -20,6 +20,8 @@ type ExportConfig struct {
 	Publish      *bool    `hcl:"publish"`
 	Platform     string   `hcl:"platform"`
 	EnvVars      []string `hcl:"envVars,optional"`
+	DevDeps      bool     `hcl:"devDeps,optional"`
+	Config       string   `hcl:"config,optional"`
 	// Credentials or Credential location?
 	// todo: we need a field to specify if they want specific directories from current sandoxed directory to be copied over to runtime artifact
 }
