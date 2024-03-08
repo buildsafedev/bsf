@@ -62,9 +62,10 @@ func FindProjectType() (ProjectType, *ProjectDetails, error) {
 			return GoModule, &ProjectDetails{
 				Name: binaryName,
 			}, nil
+		default:
+			err = fmt.Errorf("unable to detect the language ,supported languages: " + (strings.Join(supportedLanguages, ",") + "."))
 		}
 	}
 
-	err = fmt.Errorf("unable to detect the language ,supported languages: " + (strings.Join(supportedLanguages, ",") + "."))
 	return Unknown, nil, err
 }

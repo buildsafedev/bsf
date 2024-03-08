@@ -49,6 +49,9 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 		return err
 	}
 	// todo: there should be a generic method "GenerateApplicationModule" that can switch between different project types
+	if conf.GoModule == nil {
+		return nil
+	}
 	err = btemplate.GenerateGoModule(conf.GoModule, fh.DefFlakeFile)
 	if err != nil {
 		return err
