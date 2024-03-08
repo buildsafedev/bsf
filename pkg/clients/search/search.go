@@ -5,6 +5,7 @@ import (
 	"log"
 	"sort"
 
+	"golang.org/x/mod/semver"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -45,8 +46,34 @@ func SortPackagesWithVersion(packageVersions []*buildsafev1.Package) []*buildsaf
 	if packageVersions == nil {
 		return nil
 	}
-	sort.SliceStable(packageVersions, func(i, j int) bool {
-		return packageVersions[i].Version > packageVersions[j].Version
+
+	for i := range packageVersions {
+		packageVersions[i].Version = "v" + packageVersions[i].Version
+	}
+	sort.Slice(packageVersions, func(i, j int) bool {
+		if semver.Compare(packageVersions[i].Version, packageVersions[j].Version) > 0 {
+			return true
+		}
+		return false
 	})
+	for i := range packageVersions {
+		packageVersions[i].Version = packageVersions[i].Version[1:]
+	}
+
 	return packageVersions
+}
+
+// SortPackages sorts the pkg based on  Semantic Versioning
+func SortPackages(packageVersions []*buildsafev1.Package) []*buildsafev1.Package {
+	for i := range packageVersions {
+		packageVersions[i].Version = "v" + packageVersions[i].Version
+		if semver.IsValid(packageVersions[i].Version) {
+			packageVersions[i].Version = packageVersions[i].Version[1:]
+			continue
+		} else {
+			return SortPackagesWithTimestamp(packageVersions)
+		}
+	}
+
+	return SortPackagesWithVersion(packageVersions)
 }
