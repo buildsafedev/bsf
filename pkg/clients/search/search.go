@@ -71,6 +71,7 @@ func SortPackages(packageVersions []*buildsafev1.Package) []*buildsafev1.Package
 			packageVersions[i].Version = packageVersions[i].Version[1:]
 			continue
 		} else {
+			packageVersions[i].Version = packageVersions[i].Version[1:]
 			return SortPackagesWithTimestamp(packageVersions)
 		}
 	}
