@@ -65,15 +65,28 @@ func SortPackagesWithVersion(packageVersions []*buildsafev1.Package) []*buildsaf
 
 // SortPackages sorts the pkg based on  Semantic Versioning
 func SortPackages(packageVersions []*buildsafev1.Package) []*buildsafev1.Package {
+
+	semverPkgs := make([]*buildsafev1.Package, 0)
+	nonsemverPkgs := make([]*buildsafev1.Package, 0)
+
 	for i := range packageVersions {
 		packageVersions[i].Version = "v" + packageVersions[i].Version
 		if semver.IsValid(packageVersions[i].Version) {
 			packageVersions[i].Version = packageVersions[i].Version[1:]
+			semverPkgs = append(semverPkgs, packageVersions[i])
 			continue
 		} else {
 			packageVersions[i].Version = packageVersions[i].Version[1:]
-			return SortPackagesWithTimestamp(packageVersions)
+			nonsemverPkgs = append(nonsemverPkgs, packageVersions[i])
+			continue
 		}
+	}
+
+	if nonsemverPkgs != nil {
+		semverPkgs := SortPackagesWithVersion(semverPkgs)
+		nonsemverPkgs := SortPackagesWithTimestamp(nonsemverPkgs)
+		semverPkgs = append(semverPkgs, nonsemverPkgs...)
+		return semverPkgs
 	}
 
 	return SortPackagesWithVersion(packageVersions)
