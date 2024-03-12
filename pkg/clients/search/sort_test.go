@@ -5,7 +5,6 @@ import (
 
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestSortPackages(t *testing.T) {
@@ -342,11 +341,8 @@ func TestSortPackages(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := SortPackages(tt.pkgs)
 			for i := range got {
-				less := func(a, b string) bool { return a > b }
-				equalIgnoreOrder := cmp.Diff(got[i].Version, tt.want[i].Version, cmpopts.EquateEmpty(), cmp.Comparer(less))
-				if equalIgnoreOrder == "" {
-					t.Fail()
-					return
+				if diff := cmp.Diff(got[i].Version, tt.want[i].Version); diff != "" {
+					t.Errorf("TestSortPackages() mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
