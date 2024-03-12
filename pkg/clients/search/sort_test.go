@@ -1,7 +1,6 @@
 package search
 
 import (
-	"fmt"
 	"testing"
 
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
@@ -178,14 +177,14 @@ func TestSortPackages(t *testing.T) {
 
 			want: []*buildsafev1.Package{
 				{
-					Name:         "non-semver",
+					Name:         "semver",
 					Version:      "4.74.0",
 					SpdxId:       "MIT",
 					Free:         true,
 					Homepage:     "https://test.com",
-					EpochSeconds: 4,
+					EpochSeconds: 1,
 				}, {
-					Name:         "non-semver",
+					Name:         "semver",
 					Version:      "2.6.11",
 					SpdxId:       "MIT",
 					Free:         true,
@@ -345,7 +344,10 @@ func TestSortPackages(t *testing.T) {
 			for i := range got {
 				less := func(a, b string) bool { return a > b }
 				equalIgnoreOrder := cmp.Diff(got[i].Version, tt.want[i].Version, cmpopts.EquateEmpty(), cmp.Comparer(less))
-				fmt.Println(equalIgnoreOrder)
+				if equalIgnoreOrder == "" {
+					t.Fail()
+					return
+				}
 			}
 		})
 	}
