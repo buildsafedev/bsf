@@ -42,7 +42,7 @@ func convFPR2Rows(versions *buildsafev1.FetchPackagesResponse) []table.Row {
 }
 
 // initVersionTable initializes the version table
-func initVersionTable(pkgName string, searchList list.Model, versions *buildsafev1.FetchPackagesResponse) *versionListModel {
+func initVersionTable(searchList list.Model, versions *buildsafev1.FetchPackagesResponse) *versionListModel {
 	cols := 6
 	columns := []table.Column{
 		{Title: "Name", Width: frameWidth / cols},

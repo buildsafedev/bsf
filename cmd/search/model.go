@@ -107,7 +107,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 
-			m.vlModel = initVersionTable(item.FilterValue(), m.searchList, pvr)
+			m.vlModel = initVersionTable(m.searchList, pvr)
 			nm, cmd := m.vlModel.Update(msg)
 			return nm, cmd
 		}

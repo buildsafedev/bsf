@@ -8,8 +8,8 @@ import (
 // Flake holds flake parameters
 type Flake struct {
 	Description         string
+	Language            string
 	NixPackageRevisions []string
-	PackageInputs       map[string]string
 	DevPackages         map[string]string
 	RuntimePackages     map[string]string
 }
@@ -24,25 +24,34 @@ const (
 		{{range .NixPackageRevisions}} nixpkgs-{{ .}}.url = "github:nixos/nixpkgs/{{ . }}";
 		{{ end }}	
 		nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+		{{if eq .Language "go"}} gomod2nix.url = "github:nix-community/gomod2nix";
+		gomod2nix.inputs.nixpkgs.follows = "nixpkgs";{{end}}
 	};
 	
-	outputs = { self, nixpkgs, {{range .NixPackageRevisions}} nixpkgs-{{ .}}, 
+	outputs = { self, nixpkgs, 
+	{{if eq .Language "go"}} gomod2nix, {{end}}
+	{{range .NixPackageRevisions}} nixpkgs-{{ .}}, 
 	{{end}} }: let
 	  supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
 	  forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs = import nixpkgs-{{ .}} { inherit system; };
 		{{ end }}
+		{{if eq .Language "go"}} buildGoApplication = gomod2nix.legacyPackages.${system}.buildGoApplication;{{end}}
 		pkgs = import nixpkgs { inherit system; };
 	  });
 	in {
-	  packages = forEachSupportedSystem ({ pkgs, {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
+	  packages = forEachSupportedSystem ({ pkgs,
+		{{if eq .Language "go"}} buildGoApplication, {{end}}
+		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		default = pkgs.callPackage ./default.nix {
-		  {{range $key, $value :=.PackageInputs}} {{ $key }} = {{ $value }};{{ end }}
+			{{if eq .Language "go"}} inherit buildGoApplication; {{end}}
 		};
 	  });
 	
-	  devShells = forEachSupportedSystem ({ pkgs, {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
+	  devShells = forEachSupportedSystem ({ pkgs, 
+		{{if eq .Language "go"}} buildGoApplication, {{end}}
+		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		devShell = pkgs.mkShell {
 		  # The Nix packages provided in the environment
@@ -53,7 +62,9 @@ const (
 		};
 	  });
 	
-	  runtimeEnvs = forEachSupportedSystem ({ pkgs, {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
+	  runtimeEnvs = forEachSupportedSystem ({ pkgs,
+		{{if eq .Language "go"}} buildGoApplication, {{end}}
+		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
 		runtime = pkgs.buildEnv {
 		  name = "runtimeenv";
 		  paths = [ 

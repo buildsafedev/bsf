@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/atotto/clipboard"
 	"github.com/spf13/cobra"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
@@ -29,27 +28,8 @@ var BuildCmd = &cobra.Command{
 		}
 		fmt.Println(styles.HighlightStyle.Render("Building, please be patient..."))
 
-		_, err := nixcmd.Build()
+		err := nixcmd.Build()
 		if err != nil {
-			gotHash := isHashMismatchError(err.Error())
-			if gotHash != "" {
-				fmt.Println(fmt.Sprintf(styles.ErrorStyle.Render("Hash mismatch detected.")))
-				fmt.Println(styles.HintStyle.Render("hint: 1) please insert the following hash in the build app/module section(ex: vendorHash, vendorSha256) of bsf.hcl` : "))
-				err = clipboard.WriteAll(gotHash)
-				copied := true
-				if err != nil {
-					fmt.Println(styles.ErrorStyle.Render("Failed to copy hash to clipboard: ", err.Error()))
-					copied = false
-				}
-				if copied {
-					fmt.Println(styles.HighlightStyle.Render(gotHash + " (copied to clipboard) " + "📋"))
-				} else {
-					fmt.Println(styles.HighlightStyle.Render(gotHash))
-				}
-				fmt.Println(styles.HintStyle.Render("2) run `bsf generate` to lock dependencies and generate Nix files"))
-				os.Exit(1)
-			}
-
 			if isNoFileError(err.Error()) {
 				fmt.Println(styles.ErrorStyle.Render(err.Error() + "\n Please ensure all necessary files are added/committed in your version control system"))
 				fmt.Println(styles.HintStyle.Render("hint: run git add .  "))

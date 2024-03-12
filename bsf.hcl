@@ -7,8 +7,7 @@ packages {
 gomodule {
   name       = "bsf"
   src        = "../."
-  vendorHash = "sha256-x/9O7qBzA1PaHBmZEzd8Kt0XuSw6feuJnd9FVUbdTt4="
-  doCheck    = false
+  doCheck = false
 }
 
 export "dev" {

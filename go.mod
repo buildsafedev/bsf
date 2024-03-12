@@ -1,8 +1,9 @@
 module github.com/buildsafedev/bsf
 
-go 1.22rc2
+go 1.21
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/atotto/clipboard v0.1.4
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/bom-squad/protobom v0.3.0
@@ -14,6 +15,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/moby/buildkit v0.13.0-beta1.0.20231222215742-686c0ad25646
+	github.com/nix-community/go-nix v0.0.0-20231219074122-93cb24a86856
 	github.com/project-copacetic/copacetic v0.5.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -21,6 +23,7 @@ require (
 	golang.org/x/sync v0.6.0
 	golang.org/x/term v0.16.0
 	google.golang.org/grpc v1.61.0
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
@@ -92,7 +95,6 @@ require (
 	google.golang.org/genproto v0.0.0-20240116215550-a9fa1716bcac // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240125205218-1f4bbc51befe // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240125205218-1f4bbc51befe // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
 	sigs.k8s.io/release-utils v0.7.7 // indirect
 )
 

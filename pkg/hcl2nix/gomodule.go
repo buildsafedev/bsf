@@ -6,9 +6,9 @@ type GoModule struct {
 	SourcePath string   `hcl:"src"`
 	LdFlags    []string `hcl:"ldFlags,optional"`
 	Tags       []string `hcl:"tags,optional"`
-	VendorHash string   `hcl:"vendorHash"`
-	DoCheck    bool     `hcl:"doCheck,optional"`
-	Meta       *Meta    `hcl:"meta"`
+	// VendorHash string   `hcl:"vendorHash"`
+	DoCheck bool `hcl:"doCheck,optional"`
+	// Meta       *Meta    `hcl:"meta"`
 }
 
 // Meta holds Nix lib meta parameters
