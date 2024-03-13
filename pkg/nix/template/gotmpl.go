@@ -20,11 +20,13 @@ const (
 		  ];
 		}
 	  )
-	, buildGoApplication ? pkgs.buildGoApplication
+	, buildGoApplication ? pkgs.buildGoApplication,
+	go ? go,
 	}:
 	
 	buildGoApplication {
 	  pname = "{{ .Name }}";
+	  inherit go;
 	  version = "0.1";
 	  pwd = ./.;
 	  src = {{ .SourcePath }};  

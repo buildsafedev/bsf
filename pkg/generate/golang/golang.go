@@ -59,7 +59,7 @@ func common(directory string) ([]*goModDownload, map[string]string, error) {
 	{
 
 		cmd := exec.Command(
-			"nix-shell", "-p", "go", "--run", "go mod download --json",
+			"nix-shell", "-p", "go_1_22", "--run", "go mod download --json",
 		)
 		cmd.Dir = directory
 		stdout, err := cmd.Output()

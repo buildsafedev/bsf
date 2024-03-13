@@ -23,7 +23,7 @@ const (
 	inputs = {
 		{{range .NixPackageRevisions}} nixpkgs-{{ .}}.url = "github:nixos/nixpkgs/{{ . }}";
 		{{ end }}	
-		nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+		nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 		{{if eq .Language "go"}} gomod2nix.url = "github:nix-community/gomod2nix";
 		gomod2nix.inputs.nixpkgs.follows = "nixpkgs";{{end}}
 	};
@@ -45,7 +45,8 @@ const (
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		default = pkgs.callPackage ./default.nix {
-			{{if eq .Language "go"}} inherit buildGoApplication; {{end}}
+			{{if eq .Language "go"}} inherit buildGoApplication;
+			go = pkgs.go_1_22; {{end}}
 		};
 	  });
 	
