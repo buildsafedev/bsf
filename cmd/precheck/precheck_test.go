@@ -1,6 +1,12 @@
 package precheck
 
-import "testing"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"testing"
+)
 
 func TestCheckVersionConstraint(t *testing.T) {
 	tests := []struct {
@@ -20,4 +26,49 @@ func TestCheckVersionConstraint(t *testing.T) {
 			t.Errorf("checkVersionConstraint(%s, %s) = %t, want %t", test.currentVer, test.requiredVer, result, test.expectResult)
 		}
 	}
+}
+
+func TestIsSnapshotterEnabled(t *testing.T) {
+
+	tempDir := os.TempDir()
+
+	tmpFile, err := ioutil.TempFile(tempDir, "daemon.json")
+	if err != nil {
+		fmt.Println("Error creating temporary file:", err)
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+
+	data := struct {
+		Features struct {
+			ContainerdSnapshotter bool `json:"containerd-snapshotter"`
+		} `json:"features"`
+	}{
+		Features: struct {
+			ContainerdSnapshotter bool `json:"containerd-snapshotter"`
+		}{
+			ContainerdSnapshotter: true,
+		},
+	}
+
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return
+	}
+	if _, err := tmpFile.Write(jsonData); err != nil {
+		fmt.Println("Error writing to temporary file:", err)
+		return
+	}
+
+	dockerdaemon_json = tmpFile.Name()
+	resp, err := IsSnapshotterEnabled()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !resp {
+		t.Errorf(" ⚠️  containerd image store is not enabled [ https://docs.docker.com/storage/containerd/ ]")
+	}
+
 }
