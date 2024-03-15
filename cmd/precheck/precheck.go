@@ -1,13 +1,12 @@
 package precheck
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
+	"github.com/buildsafedev/bsf/pkg/build"
 	"github.com/buildsafedev/bsf/pkg/nix/cmd"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
@@ -16,8 +15,6 @@ import (
 const (
 	nixversion = `v2.18.1`
 )
-
-var dockerdaemon_json = `/etc/docker/daemon.json`
 
 // PreCheckCmd represents the precheck command that checks the pre-requisites
 var PreCheckCmd = &cobra.Command{
@@ -74,39 +71,20 @@ func IsFlakesEnabled() {
 	}
 }
 
-// IsSnapshotterEnabled checks containerd image store is enabled. or not
-func IsSnapshotterEnabled() (bool, error) {
-	file, err := os.Open(dockerdaemon_json)
+func IsContainerDStoreEnabled() {
+	data, err := build.ReadDockerfile()
 	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return false, err
-	}
-	defer file.Close()
-
-	content, err := ioutil.ReadAll(file)
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return false, err
-	}
-
-	var data map[string]interface{}
-
-	if err := json.Unmarshal(content, &data); err != nil {
-		fmt.Println("Error decoding JSON:", err)
-		return false, err
+		fmt.Println(styles.ErrorStyle.Render("err:", err.Error()))
+		os.Exit(1)
 	}
 
 	if features, ok := data["features"].(map[string]interface{}); ok {
 		if snapshotter, ok := features["containerd-snapshotter"]; ok {
 			if snapshotterBool, ok := snapshotter.(bool); ok && snapshotterBool {
 				fmt.Println(styles.HelpStyle.Render(" ✅ containerd-snapshotter is set to true"))
-				return true, nil
 			}
 		}
 	}
-
-	return false, nil
-
 }
 
 // AllPrechecks runs all the prechecks
@@ -114,12 +92,6 @@ func AllPrechecks() {
 	fmt.Println(styles.TextStyle.Render("Running prechecks..."))
 	ValidateNixVersion()
 	IsFlakesEnabled()
-	resp, err := IsSnapshotterEnabled()
-	if err != nil {
-		fmt.Println(err)
-	}
-	if !resp {
-		fmt.Println(styles.HelpStyle.Render(" ⚠️  containerd image store is not enabled [ https://docs.docker.com/storage/containerd/ ]"))
-	}
+	IsContainerDStoreEnabled()
 	fmt.Println(styles.SucessStyle.Render(" Prechecks ran successfully"))
 }

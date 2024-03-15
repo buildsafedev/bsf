@@ -2,6 +2,8 @@ package build
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"math/rand"
@@ -12,6 +14,8 @@ import (
 
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 )
+
+var DockerDaemonJSON = `/etc/docker/daemon.json`
 
 type dockerfileCfg struct {
 	Platform   string
@@ -128,4 +132,37 @@ func convertEnvsToMap(envs []string) map[string]string {
 	}
 
 	return envMap
+}
+
+// ReadDockerfile reads the docker daemon form host machine
+func ReadDockerfile() (map[string]any, error) {
+	file, err := os.Open(DockerDaemonJSON)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	fileStat, err := file.Stat()
+	if err != nil {
+		fmt.Println("Error getting file size:", err)
+		return nil, err
+	}
+	fileSize := fileStat.Size()
+
+	fileContents := make([]byte, fileSize)
+
+	_, err = file.Read(fileContents)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return nil, err
+	}
+
+	var data map[string]interface{}
+
+	if err := json.Unmarshal(fileContents, &data); err != nil {
+		fmt.Println("Error unmarshalling JSON:", err)
+		return nil, err
+	}
+
+	return data, nil
 }

@@ -3,9 +3,11 @@ package precheck
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
+
+	bsfbuild "github.com/buildsafedev/bsf/pkg/build"
 )
 
 func TestCheckVersionConstraint(t *testing.T) {
@@ -30,45 +32,82 @@ func TestCheckVersionConstraint(t *testing.T) {
 
 func TestIsSnapshotterEnabled(t *testing.T) {
 
-	tempDir := os.TempDir()
-
-	tmpFile, err := ioutil.TempFile(tempDir, "daemon.json")
-	if err != nil {
-		fmt.Println("Error creating temporary file:", err)
-		return
-	}
-	defer os.Remove(tmpFile.Name())
-
-	data := struct {
-		Features struct {
-			ContainerdSnapshotter bool `json:"containerd-snapshotter"`
-		} `json:"features"`
+	tests := []struct {
+		name     string
+		data     interface{}
+		expected interface{}
 	}{
-		Features: struct {
-			ContainerdSnapshotter bool `json:"containerd-snapshotter"`
-		}{
-			ContainerdSnapshotter: true,
+		{
+			name: "ContainerdSnapshotter is true",
+			data: struct {
+				Features struct {
+					ContainerdSnapshotter bool `json:"containerd-snapshotter"`
+				} `json:"features"`
+			}{
+				Features: struct {
+					ContainerdSnapshotter bool `json:"containerd-snapshotter"`
+				}{
+					ContainerdSnapshotter: true,
+				},
+			},
+			expected: map[string]interface{}{
+				"features": map[string]interface{}{
+					"containerd-snapshotter": true,
+				},
+			},
+		}, {
+			name: "ContainerdSnapshotter is false",
+			data: struct {
+				Features struct {
+					ContainerdSnapshotter bool `json:"containerd-snapshotter"`
+				} `json:"features"`
+			}{
+				Features: struct {
+					ContainerdSnapshotter bool `json:"containerd-snapshotter"`
+				}{
+					ContainerdSnapshotter: false,
+				},
+			},
+			expected: map[string]interface{}{
+				"features": map[string]interface{}{
+					"containerd-snapshotter": false,
+				},
+			},
 		},
 	}
 
-	jsonData, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		fmt.Println("Error marshaling JSON:", err)
-		return
-	}
-	if _, err := tmpFile.Write(jsonData); err != nil {
-		fmt.Println("Error writing to temporary file:", err)
-		return
-	}
+	for _, testCases := range tests {
+		t.Run(testCases.name, func(t *testing.T) {
 
-	dockerdaemon_json = tmpFile.Name()
-	resp, err := IsSnapshotterEnabled()
-	if err != nil {
-		t.Error(err)
-	}
+			tempDir := os.TempDir()
 
-	if !resp {
-		t.Errorf(" ⚠️  containerd image store is not enabled [ https://docs.docker.com/storage/containerd/ ]")
-	}
+			tmpFile, err := os.CreateTemp(tempDir, "daemon.json")
+			if err != nil {
+				fmt.Println("Error creating temporary file:", err)
+				return
+			}
+			defer os.Remove(tmpFile.Name())
 
+			bsfbuild.DockerDaemonJSON = tmpFile.Name()
+
+			jsonData, err := json.MarshalIndent(testCases.data, "", "  ")
+			if err != nil {
+				fmt.Println("Error marshaling JSON:", err)
+				return
+			}
+			if _, err := tmpFile.Write(jsonData); err != nil {
+				fmt.Println("Error writing to temporary file:", err)
+				return
+			}
+
+			result, err := bsfbuild.ReadDockerfile()
+			if err != nil {
+				t.Fail()
+			}
+
+			if !reflect.DeepEqual(testCases.expected, result) {
+				t.Fail()
+			}
+		})
+	}
 }
