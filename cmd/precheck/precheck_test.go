@@ -84,7 +84,6 @@ func TestIsSnapshotterEnabled(t *testing.T) {
 			tmpFile, err := os.CreateTemp(tempDir, "daemon.json")
 			if err != nil {
 				fmt.Println("Error creating temporary file:", err)
-				return
 			}
 			defer os.Remove(tmpFile.Name())
 
@@ -93,19 +92,22 @@ func TestIsSnapshotterEnabled(t *testing.T) {
 			jsonData, err := json.MarshalIndent(testCases.data, "", "  ")
 			if err != nil {
 				fmt.Println("Error marshaling JSON:", err)
-				return
 			}
 			if _, err := tmpFile.Write(jsonData); err != nil {
 				fmt.Println("Error writing to temporary file:", err)
-				return
 			}
 
-			result, err := bsfbuild.ReadDockerfile()
+			conf, err := bsfbuild.ReadDockerDaemonCfg()
 			if err != nil {
-				t.Fail()
+				fmt.Println("Error Reading DockerDaemon Config", err)
 			}
 
-			if !reflect.DeepEqual(testCases.expected, result) {
+			var data map[string]interface{}
+			if err := json.Unmarshal([]byte(conf.Features), &data); err != nil {
+				fmt.Println("Error Unmarshaling JSON", err)
+			}
+
+			if !reflect.DeepEqual(testCases.expected, data) {
 				t.Fail()
 			}
 		})

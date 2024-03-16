@@ -1,6 +1,7 @@
 package precheck
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -72,19 +73,28 @@ func IsFlakesEnabled() {
 }
 
 func IsContainerDStoreEnabled() {
-	data, err := build.ReadDockerfile()
+	conf, err := build.ReadDockerDaemonCfg()
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("err:", err.Error()))
 		os.Exit(1)
 	}
 
-	if features, ok := data["features"].(map[string]interface{}); ok {
-		if snapshotter, ok := features["containerd-snapshotter"]; ok {
-			if snapshotterBool, ok := snapshotter.(bool); ok && snapshotterBool {
-				fmt.Println(styles.HelpStyle.Render(" ✅ containerd-snapshotter is set to true"))
-			}
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(conf.Features), &data); err != nil {
+		fmt.Println(styles.ErrorStyle.Render("err:", err.Error()))
+		os.Exit(1)
+	}
+
+	features, _ := data["features"]
+
+	if containerdSnapshotter, ok := features.(map[string]interface{})["containerd-snapshotter"]; ok {
+		if value, ok := containerdSnapshotter.(bool); ok && value {
+			fmt.Println(styles.HelpStyle.Render(" ✅ containerd-snapshotter is set to true"))
+			return
 		}
 	}
+	fmt.Println(styles.HelpStyle.Render(" ⚠️  containerd image store is not enabled [ https://docs.docker.com/storage/containerd/ ]"))
+
 }
 
 // AllPrechecks runs all the prechecks

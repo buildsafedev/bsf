@@ -2,8 +2,6 @@ package build
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"html/template"
 	"io"
 	"math/rand"
@@ -24,6 +22,10 @@ type dockerfileCfg struct {
 	EnvVars    map[string]string
 	DevDeps    bool
 	Config     string
+}
+
+type dockerDaemonConf struct {
+	Features string `json:"fileContents"`
 }
 
 // Build builds the environment
@@ -135,34 +137,20 @@ func convertEnvsToMap(envs []string) map[string]string {
 }
 
 // ReadDockerfile reads the docker daemon form host machine
-func ReadDockerfile() (map[string]any, error) {
+func ReadDockerDaemonCfg() (dockerDaemonConf, error) {
+	var data dockerDaemonConf
+
 	file, err := os.Open(DockerDaemonJSON)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 	defer file.Close()
 
-	fileStat, err := file.Stat()
+	fileContents, err := os.ReadFile(file.Name())
 	if err != nil {
-		fmt.Println("Error getting file size:", err)
-		return nil, err
-	}
-	fileSize := fileStat.Size()
-
-	fileContents := make([]byte, fileSize)
-
-	_, err = file.Read(fileContents)
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return nil, err
+		return data, err
 	}
 
-	var data map[string]interface{}
-
-	if err := json.Unmarshal(fileContents, &data); err != nil {
-		fmt.Println("Error unmarshalling JSON:", err)
-		return nil, err
-	}
-
+	data.Features = string(fileContents)
 	return data, nil
 }
