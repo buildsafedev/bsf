@@ -2,18 +2,18 @@ package build
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 	"io"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 )
-
-var DockerDaemonJSON = `/etc/docker/daemon.json`
 
 type dockerfileCfg struct {
 	Platform   string
@@ -22,10 +22,6 @@ type dockerfileCfg struct {
 	EnvVars    map[string]string
 	DevDeps    bool
 	Config     string
-}
-
-type dockerDaemonConf struct {
-	Features string `json:"fileContents"`
 }
 
 // Build builds the environment
@@ -136,21 +132,12 @@ func convertEnvsToMap(envs []string) map[string]string {
 	return envMap
 }
 
-// ReadDockerfile reads the docker daemon form host machine
-func ReadDockerDaemonCfg() (dockerDaemonConf, error) {
-	var data dockerDaemonConf
-
-	file, err := os.Open(DockerDaemonJSON)
+// GetSnapshotter gets the containerd snapshotter value
+func GetSnapshotter() (string, error) {
+	script := exec.Command("docker", "info", "-f", " '{{ .DriverStatus }}' ")
+	out, err := script.CombinedOutput()
 	if err != nil {
-		return data, err
+		return "", fmt.Errorf("error fetching  DriverStatus: %s", err)
 	}
-	defer file.Close()
-
-	fileContents, err := os.ReadFile(file.Name())
-	if err != nil {
-		return data, err
-	}
-
-	data.Features = string(fileContents)
-	return data, nil
+	return string(out), nil
 }

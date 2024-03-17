@@ -1,13 +1,8 @@
 package precheck
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
 	"reflect"
 	"testing"
-
-	bsfbuild "github.com/buildsafedev/bsf/pkg/build"
 )
 
 func TestCheckVersionConstraint(t *testing.T) {
@@ -34,80 +29,25 @@ func TestIsSnapshotterEnabled(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		data     interface{}
-		expected interface{}
+		data     string
+		expected bool
 	}{
 		{
-			name: "ContainerdSnapshotter is true",
-			data: struct {
-				Features struct {
-					ContainerdSnapshotter bool `json:"containerd-snapshotter"`
-				} `json:"features"`
-			}{
-				Features: struct {
-					ContainerdSnapshotter bool `json:"containerd-snapshotter"`
-				}{
-					ContainerdSnapshotter: true,
-				},
-			},
-			expected: map[string]interface{}{
-				"features": map[string]interface{}{
-					"containerd-snapshotter": true,
-				},
-			},
-		}, {
-			name: "ContainerdSnapshotter is false",
-			data: struct {
-				Features struct {
-					ContainerdSnapshotter bool `json:"containerd-snapshotter"`
-				} `json:"features"`
-			}{
-				Features: struct {
-					ContainerdSnapshotter bool `json:"containerd-snapshotter"`
-				}{
-					ContainerdSnapshotter: false,
-				},
-			},
-			expected: map[string]interface{}{
-				"features": map[string]interface{}{
-					"containerd-snapshotter": false,
-				},
-			},
+			name:     "ContainerdSnapshotter is true",
+			data:     " '[[driver-type io.containerd.snapshotter.v1]]' ",
+			expected: true,
+		},
+		{
+			name:     "ContainerSnapshotter is false",
+			data:     "[[Backing Filesystem extfs] [Supports d_type true] [Using metacopy false] [Native Overlay Diff true] [userxattr false]]",
+			expected: false,
 		},
 	}
 
 	for _, testCases := range tests {
 		t.Run(testCases.name, func(t *testing.T) {
-
-			tempDir := os.TempDir()
-
-			tmpFile, err := os.CreateTemp(tempDir, "daemon.json")
-			if err != nil {
-				fmt.Println("Error creating temporary file:", err)
-			}
-			defer os.Remove(tmpFile.Name())
-
-			bsfbuild.DockerDaemonJSON = tmpFile.Name()
-
-			jsonData, err := json.MarshalIndent(testCases.data, "", "  ")
-			if err != nil {
-				fmt.Println("Error marshaling JSON:", err)
-			}
-			if _, err := tmpFile.Write(jsonData); err != nil {
-				fmt.Println("Error writing to temporary file:", err)
-			}
-
-			conf, err := bsfbuild.ReadDockerDaemonCfg()
-			if err != nil {
-				fmt.Println("Error Reading DockerDaemon Config", err)
-			}
-
-			var data map[string]interface{}
-			if err := json.Unmarshal([]byte(conf.Features), &data); err != nil {
-				fmt.Println("Error Unmarshaling JSON", err)
-			}
-
-			if !reflect.DeepEqual(testCases.expected, data) {
+			resp := isSnapshotterEnabled(testCases.data)
+			if !reflect.DeepEqual(testCases.expected, resp) {
 				t.Fail()
 			}
 		})

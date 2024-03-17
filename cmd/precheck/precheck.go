@@ -1,9 +1,9 @@
 package precheck
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
@@ -72,29 +72,28 @@ func IsFlakesEnabled() {
 	}
 }
 
+// IsContainerDStoreEnabled checks is containerd storage is enabled
 func IsContainerDStoreEnabled() {
-	conf, err := build.ReadDockerDaemonCfg()
+	conf, err := build.GetSnapshotter()
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("err:", err.Error()))
 		os.Exit(1)
 	}
-
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(conf.Features), &data); err != nil {
-		fmt.Println(styles.ErrorStyle.Render("err:", err.Error()))
-		os.Exit(1)
+	resp := isSnapshotterEnabled(conf)
+	if resp {
+		fmt.Println(styles.HelpStyle.Render(" ✅ containerd-snapshotter is set to true"))
+	} else {
+		fmt.Println(styles.HelpStyle.Render(" ⚠️  containerd image store is not enabled [ https://docs.docker.com/storage/containerd/ ]"))
 	}
+}
 
-	features, _ := data["features"]
-
-	if containerdSnapshotter, ok := features.(map[string]interface{})["containerd-snapshotter"]; ok {
-		if value, ok := containerdSnapshotter.(bool); ok && value {
-			fmt.Println(styles.HelpStyle.Render(" ✅ containerd-snapshotter is set to true"))
-			return
-		}
+func isSnapshotterEnabled(conf string) bool {
+	expectedOutput := " '[[driver-type io.containerd.snapshotter.v1]]' "
+	if reflect.DeepEqual(strings.TrimSpace(expectedOutput), strings.TrimSpace(conf)) {
+		return true
+	} else {
+		return false
 	}
-	fmt.Println(styles.HelpStyle.Render(" ⚠️  containerd image store is not enabled [ https://docs.docker.com/storage/containerd/ ]"))
-
 }
 
 // AllPrechecks runs all the prechecks
