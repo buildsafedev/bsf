@@ -3,7 +3,6 @@ package precheck
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
@@ -83,13 +82,13 @@ func IsContainerDStoreEnabled() {
 	if resp {
 		fmt.Println(styles.HelpStyle.Render(" ✅ containerd-snapshotter is set to true"))
 	} else {
-		fmt.Println(styles.HelpStyle.Render(" ⚠️  containerd image store is not enabled [ https://docs.docker.com/storage/containerd/ ]"))
+		fmt.Println(styles.HelpStyle.Render(" ⚠️  Export functionality might not work as containerd image store is not enabled . To enable it, refer https://docs.docker.com/storage/containerd/ "))
 	}
 }
 
 func isSnapshotterEnabled(conf string) bool {
 	expectedOutput := " '[[driver-type io.containerd.snapshotter.v1]]' "
-	if reflect.DeepEqual(strings.TrimSpace(expectedOutput), strings.TrimSpace(conf)) {
+	if strings.Compare(strings.TrimSpace(expectedOutput), strings.TrimSpace(conf)) == 0 {
 		return true
 	} else {
 		return false
