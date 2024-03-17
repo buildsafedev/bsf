@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/build"
@@ -98,8 +99,24 @@ func isSnapshotterEnabled(conf string) bool {
 // AllPrechecks runs all the prechecks
 func AllPrechecks() {
 	fmt.Println(styles.TextStyle.Render("Running prechecks..."))
-	ValidateNixVersion()
-	IsFlakesEnabled()
-	IsContainerDStoreEnabled()
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		ValidateNixVersion()
+		wg.Done()
+	}()
+	go func() {
+		IsFlakesEnabled()
+		wg.Done()
+
+	}()
+	go func() {
+		IsContainerDStoreEnabled()
+		wg.Done()
+
+	}()
+
+	wg.Wait()
+
 	fmt.Println(styles.SucessStyle.Render(" Prechecks ran successfully"))
 }
