@@ -10,15 +10,19 @@
 		  ];
 		}
 	  )
-	, buildGoApplication ? pkgs.buildGoApplication
+	, buildGoApplication ? pkgs.buildGoApplication,
+	go ? go,
 	}:
 	
 	buildGoApplication {
 	  pname = "bsf";
+	  inherit go;
 	  version = "0.1";
 	  pwd = ./.;
 	  src = ../.;  
 	  modules = ./gomod2nix.toml;
 	  doCheck = false;
+	  
+	 
 	}	
 	
