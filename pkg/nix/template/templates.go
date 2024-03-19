@@ -75,7 +75,9 @@ const (
 		};
 	   });
 
-	   devEnvs = forEachSupportedSystem ({ pkgs, {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
+	   devEnvs = forEachSupportedSystem ({ pkgs,
+		{{if eq .Language "go"}} buildGoApplication, {{end}}
+	   {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
 		development = pkgs.buildEnv {
 		  name = "devenv";
 		  paths = [ 

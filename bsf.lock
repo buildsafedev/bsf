@@ -46,14 +46,14 @@
     },
     {
       "package": {
-        "name": "gotools",
-        "revision": "1ebb7d7bba2953a4223956cfb5f068b0095f84a7",
-        "version": "0.7.0",
-        "description": "Additional tools for Go development",
-        "homepage": "https://go.googlesource.com/tools",
+        "name": "delve",
+        "revision": "a731d0cb71c58f56895f71a5b02eda2962a46746",
+        "version": "1.22.0",
+        "description": "debugger for the Go programming language",
+        "homepage": "https://github.com/go-delve/delve",
         "free": true,
-        "spdx_id": "BSD-3-Clause",
-        "epoch_seconds": 1653393815,
+        "spdx_id": "MIT",
+        "epoch_seconds": 1705066566,
         "platforms": [
           "x86_64-darwin",
           "i686-darwin",
@@ -86,14 +86,14 @@
     },
     {
       "package": {
-        "name": "delve",
-        "revision": "a731d0cb71c58f56895f71a5b02eda2962a46746",
-        "version": "1.22.0",
-        "description": "debugger for the Go programming language",
-        "homepage": "https://github.com/go-delve/delve",
+        "name": "gotools",
+        "revision": "1ebb7d7bba2953a4223956cfb5f068b0095f84a7",
+        "version": "0.7.0",
+        "description": "Additional tools for Go development",
+        "homepage": "https://go.googlesource.com/tools",
         "free": true,
-        "spdx_id": "MIT",
-        "epoch_seconds": 1705066566,
+        "spdx_id": "BSD-3-Clause",
+        "epoch_seconds": 1653393815,
         "platforms": [
           "x86_64-darwin",
           "i686-darwin",
