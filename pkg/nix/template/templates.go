@@ -26,10 +26,16 @@ const (
 		nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 		{{if eq .Language "GoModule"}} gomod2nix.url = "github:nix-community/gomod2nix";
 		gomod2nix.inputs.nixpkgs.follows = "nixpkgs";{{end}}
+		
+		{{if eq .Language "PythonPoetry"}} poetry2nix = {
+			url = "github:nix-community/poetry2nix";
+			inputs.nixpkgs.follows = "nixpkgs";
+		  }; {{end}}
 	};
 	
 	outputs = { self, nixpkgs, 
 	{{if eq .Language "GoModule"}} gomod2nix, {{end}}
+	{{ if eq .Language "PythonPoetry"}} poetry2nix, {{end}}
 	{{range .NixPackageRevisions}} nixpkgs-{{ .}}, 
 	{{end}} }: let
 	  supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
@@ -38,20 +44,24 @@ const (
 		{{ end }}
 		{{if eq .Language "GoModule"}} buildGoApplication = gomod2nix.legacyPackages.${system}.buildGoApplication;{{end}}
 		pkgs = import nixpkgs { inherit system; };
+		{{if eq .Language "PythonPoetry"}} inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs.legacyPackages.${system}; }) mkPoetryApplication; {{end}}
 	  });
 	in {
 	  packages = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
+		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		default = pkgs.callPackage ./default.nix {
 			{{if eq .Language "GoModule"}} inherit buildGoApplication;
 			go = pkgs.go_1_22; {{end}}
+			{{if eq .Language "PythonPoetry"}} inherit mkPoetryApplication; {{end}}
 		};
 	  });
 	
 	  devShells = forEachSupportedSystem ({ pkgs, 
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
+		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		devShell = pkgs.mkShell {
@@ -65,6 +75,7 @@ const (
 	
 	  runtimeEnvs = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
+		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
 		runtime = pkgs.buildEnv {
 		  name = "runtimeenv";
@@ -77,6 +88,7 @@ const (
 
 	   devEnvs = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
+		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 	   {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
 		development = pkgs.buildEnv {
 		  name = "devenv";
