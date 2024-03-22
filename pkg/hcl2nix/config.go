@@ -13,9 +13,10 @@ import (
 
 // Config for hcl2nix
 type Config struct {
-	Packages Packages       `hcl:"packages,block"`
-	GoModule *GoModule      `hcl:"gomodule,block"`
-	Export   []ExportConfig `hcl:"export,block"`
+	Packages  Packages       `hcl:"packages,block"`
+	GoModule  *GoModule      `hcl:"gomodule,block"`
+	PoetryApp *PoetryApp     `hcl:"poetryapp,block"`
+	Export    []ExportConfig `hcl:"export,block"`
 }
 
 // Packages holds package parameters

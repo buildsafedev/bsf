@@ -58,7 +58,7 @@ type goModule struct {
 func GenerateGoModule(fl *hcl2nix.GoModule, wr io.Writer) error {
 	data := goModule{
 		Name:       fl.Name,
-		SourcePath: fl.SourcePath,
+		SourcePath: parentFolder(fl.SourcePath),
 		DoCheck:    fl.DoCheck,
 	}
 

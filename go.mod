@@ -4,7 +4,6 @@ go 1.21
 
 require (
 	github.com/BurntSushi/toml v0.3.1
-	github.com/atotto/clipboard v0.1.4
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/bom-squad/protobom v0.3.0
 	github.com/buildsafedev/bsf-apis v0.0.0-00010101000000-000000000000
@@ -35,6 +34,7 @@ require (
 	github.com/anchore/go-struct-converter v0.0.0-20230627203149-c72ef8859ca9 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect

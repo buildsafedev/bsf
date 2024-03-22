@@ -7,8 +7,10 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+// SchemaVersion is the version of the schema used to generate the lock file
 const SchemaVersion = 3
 
+// GoPackage is a struct to hold Nix Go module parameters
 type GoPackage struct {
 	GoPackagePath string `toml:"-"`
 	Version       string `toml:"version"`
@@ -16,6 +18,7 @@ type GoPackage struct {
 	ReplacedPath  string `toml:"replaced,omitempty"`
 }
 
+// Output is the output of the generator
 type Output struct {
 	SchemaVersion int                  `toml:"schema"`
 	Mod           map[string]GoPackage `toml:"mod"`
@@ -27,6 +30,7 @@ type Output struct {
 	GoPackagePath string `toml:"goPackagePath,omitempty"`
 }
 
+// Marshal marshals the output to a byte slice
 func Marshal(pkgs []GoPackage, goPackagePath string, subPackages []string) ([]byte, error) {
 	out := &Output{
 		SchemaVersion: SchemaVersion,
@@ -49,6 +53,7 @@ func Marshal(pkgs []GoPackage, goPackagePath string, subPackages []string) ([]by
 	return buf.Bytes(), nil
 }
 
+// ReadCache reads the cache file and returns a map of GoPackages
 func ReadCache(filePath string) map[string]GoPackage {
 	ret := make(map[string]GoPackage)
 

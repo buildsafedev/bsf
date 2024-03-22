@@ -34,7 +34,7 @@ func sourceFilter(name string, nodeType nar.NodeType) bool {
 	return strings.ToLower(filepath.Base(name)) != ".ds_store"
 }
 
-func common(directory string) ([]*goModDownload, map[string]string, error) {
+func resolveDeps(directory string) ([]*goModDownload, map[string]string, error) {
 	goModPath := filepath.Join(directory, "go.mod")
 
 	// Read go.mod
@@ -84,7 +84,7 @@ func common(directory string) ([]*goModDownload, map[string]string, error) {
 
 // GenGolangPackages generates a list of packages from a go.mod file
 func GenGolangPackages(directory string, goMod2NixPath string, numWorkers int) ([]GoPackage, error) {
-	modDownloads, replace, err := common(directory)
+	modDownloads, replace, err := resolveDeps(directory)
 	if err != nil {
 		return nil, err
 	}

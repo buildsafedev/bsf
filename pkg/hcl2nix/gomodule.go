@@ -1,5 +1,7 @@
 package hcl2nix
 
+// btemplate "github.com/buildsafedev/bsf/pkg/nix/template"
+
 // GoModule is a struct to hold Nix Go module parameters
 type GoModule struct {
 	Name       string   `hcl:"name"`
