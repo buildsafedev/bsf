@@ -43,7 +43,6 @@
 			go = pkgs.go_1_22; 
 		};
 	  });
-	
 	  devShells = forEachSupportedSystem ({ pkgs, 
 		 buildGoApplication, 
 		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs, 
