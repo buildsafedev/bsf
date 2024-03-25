@@ -20,6 +20,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/generate"
 	initCmd "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/precheck"
+	"github.com/buildsafedev/bsf/cmd/provenance"
 	"github.com/buildsafedev/bsf/cmd/sbom"
 	"github.com/buildsafedev/bsf/cmd/scan"
 	"github.com/buildsafedev/bsf/cmd/search"
@@ -64,11 +65,11 @@ func Execute() {
 	rootCmd.AddCommand(precheck.PreCheckCmd)
 	rootCmd.AddCommand(update.UpdateCmd)
 	rootCmd.AddCommand(sbom.SBOMCmd)
+	rootCmd.AddCommand(provenance.ProvenanceCMD)
 
 	if os.Getenv("BSF_DEBUG_MODE") == "true" {
 		rootCmd.AddCommand(configure.ConfigureCmd)
 	}
-	// rootCmd.AddCommand(run.RunCmd)
 	rootCmd.AddCommand(export.ExportCmd)
 
 	err := rootCmd.ExecuteContext(context.Background())

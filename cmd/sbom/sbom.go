@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/bom-squad/protobom/pkg/formats"
+	"github.com/bom-squad/protobom/pkg/sbom"
 	"github.com/bom-squad/protobom/pkg/writer"
 	"github.com/spf13/cobra"
 
@@ -102,13 +103,18 @@ var SBOMCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		graph, err := nixcmd.GetRuntimeClosureGraph()
+		appDetails, graph, err := nixcmd.GetRuntimeClosureGraph()
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
+		appNode := &sbom.Node{
+			Id:             bsbom.PurlFromNameVersion(appDetails.Name, appDetails.Version),
+			PrimaryPurpose: []sbom.Purpose{sbom.Purpose_APPLICATION},
+			Name:           appDetails.Name,
+		}
 		w := writer.New()
-		doc := bsbom.PackageGraphToSBOM(lockFile, graph)
+		doc := bsbom.PackageGraphToSBOM(appNode, lockFile, graph)
 
 		if output != "" {
 			sbomFile, err := os.Create(output)

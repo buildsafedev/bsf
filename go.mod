@@ -13,6 +13,7 @@ require (
 	github.com/elewis787/boa v0.1.2
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/hcl/v2 v2.19.1
+	github.com/in-toto/in-toto-golang v0.9.0
 	github.com/moby/buildkit v0.13.0-beta1.0.20231222215742-686c0ad25646
 	github.com/nix-community/go-nix v0.0.0-20231219074122-93cb24a86856
 	github.com/project-copacetic/copacetic v0.5.1
@@ -73,6 +74,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/sahilm/fuzzy v0.1.0 // indirect
+	github.com/secure-systems-lab/go-securesystemslib v0.7.0 // indirect
+	github.com/shibumi/go-pathspec v1.3.0 // indirect
 	github.com/spdx/tools-golang v0.5.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tonistiigi/fsutil v0.0.0-20230825212630-f09800878302 // indirect

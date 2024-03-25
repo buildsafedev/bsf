@@ -21,16 +21,10 @@ func sbomTools() []*sbom.Tool {
 }
 
 // PackageGraphToSBOM converts the package graph to a SBOM
-func PackageGraphToSBOM(lockFile *hcl2nix.LockFile, graph *gographviz.Graph) *sbom.Document {
+func PackageGraphToSBOM(appNode *sbom.Node, lockFile *hcl2nix.LockFile, graph *gographviz.Graph) *sbom.Document {
 	document := sbom.NewDocument()
 
 	document.Metadata.Tools = sbomTools()
-
-	appNode := &sbom.Node{
-		Id:             purlFromNameVersion(lockFile.App.Name, "0.0.0"),
-		PrimaryPurpose: []sbom.Purpose{sbom.Purpose_APPLICATION},
-		Name:           lockFile.App.Name,
-	}
 
 	document.Metadata.Name = "SBOM for " + appNode.Name
 
@@ -47,7 +41,7 @@ func PackageGraphToSBOM(lockFile *hcl2nix.LockFile, graph *gographviz.Graph) *sb
 func parseLockfileToSBOMNodes(document *sbom.Document, appNode *sbom.Node, lf *hcl2nix.LockFile) {
 	for _, pkg := range lf.Packages {
 		snode := sbom.Node{
-			Id:               purlFromNameVersion(pkg.Package.Name, pkg.Package.Version),
+			Id:               PurlFromNameVersion(pkg.Package.Name, pkg.Package.Version),
 			Type:             sbom.Node_PACKAGE,
 			Name:             pkg.Package.Name,
 			Version:          pkg.Package.Version,
@@ -81,7 +75,7 @@ func parseDotGraph(document *sbom.Document, appNode *sbom.Node, graph *gographvi
 		snode := sbom.Node{
 			Name:           name,
 			Type:           sbom.Node_PACKAGE,
-			Id:             purlFromNameVersion(name, version),
+			Id:             PurlFromNameVersion(name, version),
 			Version:        version,
 			PrimaryPurpose: []sbom.Purpose{sbom.Purpose_DATA},
 			Hashes: map[int32]string{
@@ -116,7 +110,8 @@ func nameVersionFromNode(node *gographviz.Node) (string, string) {
 	return packageName, version
 }
 
-func purlFromNameVersion(name, version string) string {
+// PurlFromNameVersion returns a package url for the given name and version
+func PurlFromNameVersion(name, version string) string {
 	return "pkg:" + "nix/" + name + "@v" + version
 }
 
