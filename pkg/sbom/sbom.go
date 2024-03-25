@@ -1,7 +1,6 @@
 package sbom
 
 import (
-	"strings"
 	"time"
 
 	"github.com/awalterschulze/gographviz"
@@ -13,7 +12,8 @@ import (
 func sbomTools() []*sbom.Tool {
 	return []*sbom.Tool{
 		{
-			Name:    "bsf",
+			Name: "bsf",
+			// TODO: this version should be picked from ldFlags.
 			Version: "0.0.0",
 			Vendor:  "buildsafe",
 		},
@@ -67,7 +67,8 @@ func parseLockfileToSBOMNodes(document *sbom.Document, appNode *sbom.Node, lf *h
 
 func parseDotGraph(document *sbom.Document, appNode *sbom.Node, graph *gographviz.Graph) {
 	for _, node := range graph.Nodes.Nodes {
-		name, version := nameVersionFromNode(node)
+		name := node.Attrs["name"]
+		version := node.Attrs["version"]
 		if name == appNode.Name {
 			continue
 		}
@@ -89,43 +90,7 @@ func parseDotGraph(document *sbom.Document, appNode *sbom.Node, graph *gographvi
 	return
 }
 
-func nameVersionFromNode(node *gographviz.Node) (string, string) {
-	// Trim the leading and trailing double quotes
-	trimmed := strings.Trim(node.Attrs["label"], "\"")
-
-	// Split the string by the dash
-	parts := strings.Split(trimmed, "-")
-
-	// The last part is the version if it exists
-	version := ""
-	if len(parts) > 1 {
-		version = parts[len(parts)-1]
-	} else if len(parts) == 1 {
-		return parts[0], ""
-	}
-
-	// The package name is all parts except the last
-	packageName := strings.Join(parts[:len(parts)-1], "-")
-
-	return packageName, version
-}
-
 // PurlFromNameVersion returns a package url for the given name and version
 func PurlFromNameVersion(name, version string) string {
 	return "pkg:" + "nix/" + name + "@v" + version
-}
-
-func extractHash(input string) string {
-	// Trim the leading and trailing double quotes
-	trimmed := strings.Trim(input, "\"")
-
-	// Split the string by the dash
-	parts := strings.Split(trimmed, "-")
-
-	if len(parts) < 1 {
-		return ""
-	}
-
-	// The first part is the hash
-	return parts[0]
 }
