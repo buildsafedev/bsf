@@ -41,7 +41,11 @@ func PackageGraphToSBOM(appNode *sbom.Node, lockFile *hcl2nix.LockFile, graph *g
 func parseLockfileToSBOMNodes(document *sbom.Document, appNode *sbom.Node, lf *hcl2nix.LockFile) {
 	for _, pkg := range lf.Packages {
 		snode := sbom.Node{
-			Id:               PurlFromNameVersion(pkg.Package.Name, pkg.Package.Version),
+			Id: PurlFromNameVersion(pkg.Package.Name, pkg.Package.Version),
+			Identifiers: map[int32]string{
+				int32(sbom.SoftwareIdentifierType_CPE23): pkg.Package.Cpe,
+				int32(sbom.SoftwareIdentifierType_PURL):  PurlFromNameVersion(pkg.Package.Name, pkg.Package.Version),
+			},
 			Type:             sbom.Node_PACKAGE,
 			Name:             pkg.Package.Name,
 			Version:          pkg.Package.Version,
@@ -79,6 +83,9 @@ func parseDotGraph(document *sbom.Document, appNode *sbom.Node, graph *gographvi
 			Id:             PurlFromNameVersion(name, version),
 			Version:        version,
 			PrimaryPurpose: []sbom.Purpose{sbom.Purpose_DATA},
+			Identifiers: map[int32]string{
+				int32(sbom.SoftwareIdentifierType_PURL): PurlFromNameVersion(name, version),
+			},
 			Hashes: map[int32]string{
 				int32(sbom.HashAlgorithm_SHA256): node.Attrs["hash"],
 			},
