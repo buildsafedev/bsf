@@ -66,7 +66,7 @@ func addNarHashToGraph(graph *gographviz.Graph) {
 
 		go func(node *gographviz.Node) {
 			defer wg.Done()
-			path := sanitize(node.Name)
+			path := CleanNameFromGraph(node.Name)
 			hash, err := GetNarHashFromPath("/nix/store/" + path)
 			if err != nil {
 				return
@@ -97,7 +97,8 @@ func GetNarHashFromPath(path string) (string, error) {
 	return nixbase32.EncodeToString(h.Sum(nil)), nil
 }
 
-func sanitize(s string) string {
+// CleanNameFromGraph removes leading and trailing double quotes and escape characters
+func CleanNameFromGraph(s string) string {
 	// Remove leading and trailing double quotes
 	s = strings.Trim(s, "\"")
 

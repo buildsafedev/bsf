@@ -91,9 +91,8 @@ func isSnapshotterEnabled(conf string) bool {
 	expectedOutput := " '[[driver-type io.containerd.snapshotter.v1]]' "
 	if strings.Compare(strings.TrimSpace(expectedOutput), strings.TrimSpace(conf)) == 0 {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // AllPrechecks runs all the prechecks

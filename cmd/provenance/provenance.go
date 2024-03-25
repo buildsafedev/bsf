@@ -78,16 +78,46 @@ var ProvenanceCMD = &cobra.Command{
 			os.Exit(1)
 		}
 
+		drvPath, err := nixcmd.GetDrvPathFromResult()
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		drv, err := provenance.GetDerivation(drvPath)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
 		appDetails, graph, err := nixcmd.GetRuntimeClosureGraph()
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
-		_ = graph
-		_ = appDetails
 
-		provSt := provenance.NewStatement()
-		_ = provSt
+		provSt := provenance.NewStatement(appDetails)
+		err = provSt.FromDerivationClosure(drvPath, drv, graph)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+		provJ, err := provSt.ToJSON()
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		// write json to file
+		if output != "" {
+			err = os.WriteFile(output, provJ, 0644)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println(string(provJ))
+		}
 
 		fmt.Println(styles.SucessStyle.Render("Provenance generated successfully"))
 
