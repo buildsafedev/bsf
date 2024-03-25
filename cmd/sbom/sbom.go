@@ -12,8 +12,6 @@ import (
 
 	"github.com/buildsafedev/bsf/cmd/configure"
 	"github.com/buildsafedev/bsf/cmd/styles"
-	"github.com/buildsafedev/bsf/pkg/clients/search"
-	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 	bsbom "github.com/buildsafedev/bsf/pkg/sbom"
@@ -59,6 +57,12 @@ var SBOMCmd = &cobra.Command{
 			format = formats.CDX15JSON
 		}
 
+		conf, err := configure.PreCheckConf()
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
 		fmt.Println(styles.HighlightStyle.Render("Generating SBOM..."))
 
 		// Generating to make sure we have a lock file to work with.
@@ -72,18 +76,8 @@ var SBOMCmd = &cobra.Command{
 		defer fh.FlakeFile.Close()
 		defer fh.DefFlakeFile.Close()
 
-		conf, err := configure.PreCheckConf()
-		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-			os.Exit(1)
-		}
-		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
-		if err != nil {
-			os.Exit(1)
-		}
-
 		// re-generating to make sure we have the latest data.
-		err = generate.Generate(fh, sc)
+		err = nixcmd.Build(conf)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
@@ -112,6 +106,9 @@ var SBOMCmd = &cobra.Command{
 			Id:             bsbom.PurlFromNameVersion(appDetails.Name, appDetails.Version),
 			PrimaryPurpose: []sbom.Purpose{sbom.Purpose_APPLICATION},
 			Name:           appDetails.Name,
+			Hashes: map[int32]string{
+				int32(sbom.HashAlgorithm_SHA256): appDetails.Hash,
+			},
 		}
 		w := writer.New()
 		doc := bsbom.PackageGraphToSBOM(appNode, lockFile, graph)

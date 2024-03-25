@@ -3,11 +3,11 @@ package build
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/buildsafedev/bsf/cmd/configure"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 )
@@ -28,7 +28,13 @@ var BuildCmd = &cobra.Command{
 		}
 		fmt.Println(styles.HighlightStyle.Render("Building, please be patient..."))
 
-		err := nixcmd.Build()
+		conf, err := configure.PreCheckConf()
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		err = nixcmd.Build(conf)
 		if err != nil {
 			if isNoFileError(err.Error()) {
 				fmt.Println(styles.ErrorStyle.Render(err.Error() + "\n Please ensure all necessary files are added/committed in your version control system"))
@@ -44,17 +50,6 @@ var BuildCmd = &cobra.Command{
 		fmt.Println(styles.SucessStyle.Render("Build completed successfully, please check the result directory"))
 
 	},
-}
-
-func isHashMismatchError(err string) string {
-	if strings.Contains(err, "hash mismatch") {
-		re := regexp.MustCompile(`got:\s+(sha256-.*)`)
-		matches := re.FindStringSubmatch(err)
-		if len(matches) > 1 {
-			return matches[1]
-		}
-	}
-	return ""
 }
 
 func isNoFileError(err string) bool {

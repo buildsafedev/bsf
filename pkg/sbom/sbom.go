@@ -79,7 +79,7 @@ func parseDotGraph(document *sbom.Document, appNode *sbom.Node, graph *gographvi
 			Version:        version,
 			PrimaryPurpose: []sbom.Purpose{sbom.Purpose_DATA},
 			Hashes: map[int32]string{
-				int32(sbom.HashAlgorithm_SHA256): extractHash(node.Attrs["label"]),
+				int32(sbom.HashAlgorithm_SHA256): node.Attrs["hash"],
 			},
 		}
 		document.NodeList.AddNode(&snode)

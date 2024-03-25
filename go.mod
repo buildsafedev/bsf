@@ -24,6 +24,7 @@ require (
 	golang.org/x/term v0.16.0
 	google.golang.org/grpc v1.61.0
 	google.golang.org/protobuf v1.33.0
+	zombiezen.com/go/nix v0.0.0-20240320004700-0734e137f7fe
 )
 
 require (

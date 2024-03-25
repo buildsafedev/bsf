@@ -84,6 +84,7 @@ var ProvenanceCMD = &cobra.Command{
 			os.Exit(1)
 		}
 		_ = graph
+		_ = appDetails
 
 		provSt := provenance.NewStatement()
 		_ = provSt
