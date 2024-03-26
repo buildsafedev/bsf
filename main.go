@@ -17,6 +17,9 @@ func main() {
 }
 
 func handlePanic() {
+	if os.Getenv("BSF_DEBUG") == "true" {
+		return
+	}
 	if r := recover(); r != nil {
 		fmt.Println("Something went wrong, please reach out to the maintainers:", r)
 		os.Exit(1)

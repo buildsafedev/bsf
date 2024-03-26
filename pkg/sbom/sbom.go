@@ -1,13 +1,43 @@
 package sbom
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/awalterschulze/gographviz"
+	"github.com/bom-squad/protobom/pkg/formats"
 	"github.com/bom-squad/protobom/pkg/sbom"
-	"github.com/buildsafedev/bsf/pkg/hcl2nix"
+	"github.com/bom-squad/protobom/pkg/writer"
+	intoto "github.com/in-toto/in-toto-golang/in_toto"
+	intotoCom "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/buildsafedev/bsf/pkg/hcl2nix"
+	bio "github.com/buildsafedev/bsf/pkg/io"
+	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 )
+
+// Statement is a struct to hold the SBOM in SPDX format
+type Statement struct {
+	intoto.StatementHeader
+	// Predicate can be SPDX or CDX format
+	Predicate interface{}
+}
+
+// NewSPDXStatement creates a new SBOM
+func NewSPDXStatement(appDetails *nixcmd.App) *Statement {
+	st := Statement{}
+	st.Type = "https://in-toto.io/Statement/v1"
+	st.Subject = []intoto.Subject{
+		{
+			Name: appDetails.Name,
+			Digest: intotoCom.DigestSet{
+				"sha256": appDetails.Hash,
+			},
+		},
+	}
+	return &st
+}
 
 func sbomTools() []*sbom.Tool {
 	return []*sbom.Tool{
@@ -36,6 +66,33 @@ func PackageGraphToSBOM(appNode *sbom.Node, lockFile *hcl2nix.LockFile, graph *g
 
 	return document
 
+}
+
+// ToJSON returns the statement in JSON format
+func (s *Statement) ToJSON(bom *sbom.Document, format formats.Format) ([]byte, error) {
+	s.PredicateType = "https://spdx.github.io/spdx-spec/v2.3/"
+	if format == formats.CDX15JSON {
+		s.PredicateType = "https://cyclonedx.org/specification/overview/"
+	}
+
+	w := writer.New()
+	bomBytes := bio.NewBufferCloser()
+	err := w.WriteStreamWithOptions(bom, bomBytes, &writer.Options{
+		Format: format,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal the Predicate into an interface{} to prettify it
+	var pred interface{}
+	err = json.Unmarshal(bomBytes.Bytes(), &pred)
+	if err != nil {
+		return nil, err
+	}
+	s.Predicate = pred
+
+	return json.MarshalIndent(s, "", "  ")
 }
 
 func parseLockfileToSBOMNodes(document *sbom.Document, appNode *sbom.Node, lf *hcl2nix.LockFile) {

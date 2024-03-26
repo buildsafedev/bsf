@@ -7,7 +7,6 @@ import (
 
 	"github.com/bom-squad/protobom/pkg/formats"
 	"github.com/bom-squad/protobom/pkg/sbom"
-	"github.com/bom-squad/protobom/pkg/writer"
 	"github.com/spf13/cobra"
 
 	"github.com/buildsafedev/bsf/cmd/configure"
@@ -110,34 +109,24 @@ var SBOMCmd = &cobra.Command{
 				int32(sbom.HashAlgorithm_SHA256): appDetails.Hash,
 			},
 		}
-		w := writer.New()
-		doc := bsbom.PackageGraphToSBOM(appNode, lockFile, graph)
 
-		if output != "" {
-			sbomFile, err := os.Create(output)
-			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-				os.Exit(1)
-			}
-			defer sbomFile.Close()
+		bom := bsbom.PackageGraphToSBOM(appNode, lockFile, graph)
 
-			err = w.WriteStreamWithOptions(doc, sbomFile, &writer.Options{
-				Format: format,
-			})
-			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-				os.Exit(1)
-			}
-			fmt.Println(styles.SucessStyle.Render("SBOM generated successfully"))
-			return
-		}
-
-		err = w.WriteStreamWithOptions(doc, os.Stdout, &writer.Options{
-			Format: format,
-		})
+		bomSt := bsbom.NewSPDXStatement(appDetails)
+		bomJ, err := bomSt.ToJSON(bom, format)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
+		}
+		// write json to file
+		if output != "" {
+			err = os.WriteFile(output, bomJ, 0644)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println(string(bomJ))
 		}
 
 		fmt.Println(styles.SucessStyle.Render("SBOM generated successfully"))
