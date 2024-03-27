@@ -24,8 +24,8 @@ type Statement struct {
 	Predicate interface{}
 }
 
-// NewSPDXStatement creates a new SBOM
-func NewSPDXStatement(appDetails *nixcmd.App) *Statement {
+// NewStatement creates a new SBOM
+func NewStatement(appDetails *nixcmd.App) *Statement {
 	st := Statement{}
 	st.Type = "https://in-toto.io/Statement/v1"
 	st.Subject = []intoto.Subject{

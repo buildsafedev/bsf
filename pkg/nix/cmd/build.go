@@ -12,7 +12,7 @@ import (
 )
 
 // Build invokes nix build to build the project
-func Build(conf *config.Config) error {
+func Build(conf *config.Config, dir string) error {
 	fh, err := hcl2nix.NewFileHandlers(true)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func Build(conf *config.Config) error {
 		return err
 	}
 
-	cmd := exec.Command("nix", "build", "bsf/.")
+	cmd := exec.Command("nix", "build", "bsf/.", "-o", dir)
 
 	cmd.Stdout = os.Stdout
 	// TODO: in future- we can pipe to stderr pipe and modify error messages to be understandable by the user

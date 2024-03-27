@@ -8,10 +8,10 @@ import (
 )
 
 // GetDrvPathFromResult returns the derivation
-func GetDrvPathFromResult() (string, error) {
+func GetDrvPathFromResult(output string) (string, error) {
 	// TODO: check how to do this via go-nix package-
 	// found that it this information comes from narinfo but couldn't figure out how to get narinfo from go-nix
-	cmd := exec.Command("nix-store", "--query", "--deriver", "result")
+	cmd := exec.Command("nix-store", "--query", "--deriver", output+"/result")
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

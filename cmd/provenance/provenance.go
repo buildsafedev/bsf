@@ -78,7 +78,7 @@ var ProvenanceCMD = &cobra.Command{
 			os.Exit(1)
 		}
 
-		drvPath, err := nixcmd.GetDrvPathFromResult()
+		drvPath, err := nixcmd.GetDrvPathFromResult("")
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
@@ -90,7 +90,7 @@ var ProvenanceCMD = &cobra.Command{
 			os.Exit(1)
 		}
 
-		appDetails, graph, err := nixcmd.GetRuntimeClosureGraph()
+		appDetails, graph, err := nixcmd.GetRuntimeClosureGraph("")
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)

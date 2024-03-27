@@ -76,27 +76,27 @@ var SBOMCmd = &cobra.Command{
 		defer fh.DefFlakeFile.Close()
 
 		// re-generating to make sure we have the latest data.
-		err = nixcmd.Build(conf)
+		err = nixcmd.Build(conf, "bsf-result/result")
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
 
 		// Read the bsf.lock file
-		data, err := os.ReadFile("bsf.lock")
+		lockData, err := os.ReadFile("bsf.lock")
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
 
 		lockFile := &hcl2nix.LockFile{}
-		err = json.Unmarshal(data, lockFile)
+		err = json.Unmarshal(lockData, lockFile)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
 
-		appDetails, graph, err := nixcmd.GetRuntimeClosureGraph()
+		appDetails, graph, err := nixcmd.GetRuntimeClosureGraph("")
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
@@ -112,7 +112,7 @@ var SBOMCmd = &cobra.Command{
 
 		bom := bsbom.PackageGraphToSBOM(appNode, lockFile, graph)
 
-		bomSt := bsbom.NewSPDXStatement(appDetails)
+		bomSt := bsbom.NewStatement(appDetails)
 		bomJ, err := bomSt.ToJSON(bom, format)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
