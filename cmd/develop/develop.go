@@ -6,7 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	binit "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/styles"
+	"github.com/buildsafedev/bsf/pkg/generate"
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 )
 
@@ -17,13 +19,19 @@ var DevCmd = &cobra.Command{
 	Long: `develop spawns a development shell. All packages mentioned in bsf.hcl in development attribute will be available in the shell.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if _, err := os.Stat("bsf.hcl"); err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()+"\nHas the project been initialized?"))
-			fmt.Println(styles.HintStyle.Render("hint: ", "run `bsf init` to initialize the project"))
+		sc, fh, err := binit.GetBSFInitializers()
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
 
-		err := nixcmd.Develop()
+		err = generate.Generate(fh, sc)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		err = nixcmd.Develop()
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)

@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"os"
 
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/spf13/cobra"
+
+	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	"github.com/buildsafedev/bsf/cmd/configure"
 	"github.com/buildsafedev/bsf/cmd/precheck"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/clients/search"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/spf13/cobra"
+	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 )
 
 // InitCmd represents the init command
@@ -41,4 +44,29 @@ var InitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 	},
+}
+
+// GetBSFInitializers generates the nix files
+func GetBSFInitializers() (bsfv1.SearchServiceClient, *hcl2nix.FileHandlers, error) {
+	if _, err := os.Stat("bsf.hcl"); err != nil {
+		fmt.Println(styles.HintStyle.Render("hint: ", "run `bsf init` to initialize the project"))
+		return nil, nil, fmt.Errorf("error: %s\nHas the project been initialized?", err.Error())
+	}
+
+	conf, err := configure.PreCheckConf()
+	if err != nil {
+		return nil, nil, fmt.Errorf("error: %s", err.Error())
+	}
+
+	fh, err := hcl2nix.NewFileHandlers(true)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error: %s", err.Error())
+	}
+
+	sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error: %s", err.Error())
+	}
+
+	return sc, fh, nil
 }

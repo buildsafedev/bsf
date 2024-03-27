@@ -12,9 +12,9 @@ import (
 	"github.com/bom-squad/protobom/pkg/sbom"
 	"github.com/spf13/cobra"
 
-	"github.com/buildsafedev/bsf/cmd/configure"
+	binit "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/styles"
-	"github.com/buildsafedev/bsf/pkg/config"
+	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 	"github.com/buildsafedev/bsf/pkg/provenance"
@@ -38,16 +38,15 @@ var BuildCmd = &cobra.Command{
 	It is recommended to check in the files in version control system(ex: Git) before building.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if _, err := os.Stat("bsf.hcl"); err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error: Has the project been initialized?"))
-			fmt.Println(styles.HintStyle.Render("hint: ", "run `bsf init` to initialize the project"))
+		sc, fh, err := binit.GetBSFInitializers()
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
-		fmt.Println(styles.HighlightStyle.Render("Building, please be patient..."))
 
-		conf, err := configure.PreCheckConf()
+		err = generate.Generate(fh, sc)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
 
@@ -55,7 +54,7 @@ var BuildCmd = &cobra.Command{
 			output = "bsf-result"
 		}
 
-		err = nixcmd.Build(conf, output+"/result")
+		err = nixcmd.Build(output + "/result")
 		if err != nil {
 			if isNoFileError(err.Error()) {
 				fmt.Println(styles.ErrorStyle.Render(err.Error() + "\n Please ensure all necessary files are added/committed in your version control system"))
@@ -68,7 +67,7 @@ var BuildCmd = &cobra.Command{
 
 		fmt.Println(styles.HighlightStyle.Render("Generating artifacts..."))
 
-		err = GenerateArtifcats(conf, output)
+		err = GenerateArtifcats(output)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
@@ -80,7 +79,7 @@ var BuildCmd = &cobra.Command{
 }
 
 // GenerateSBOM generates the Software Bill of Materials (SBOM)
-func GenerateSBOM(conf *config.Config, output string, lockFile *hcl2nix.LockFile, appDetails *nixcmd.App, graph *gographviz.Graph) error {
+func GenerateSBOM(output string, lockFile *hcl2nix.LockFile, appDetails *nixcmd.App, graph *gographviz.Graph) error {
 	appNode := &sbom.Node{
 		Id:             bsbom.PurlFromNameVersion(appDetails.Name, appDetails.Version),
 		PrimaryPurpose: []sbom.Purpose{sbom.Purpose_APPLICATION},
@@ -115,7 +114,7 @@ func GenerateSBOM(conf *config.Config, output string, lockFile *hcl2nix.LockFile
 }
 
 // GenerateProvenance generates the provenance
-func GenerateProvenance(conf *config.Config, output string, appDetails *nixcmd.App, graph *gographviz.Graph) error {
+func GenerateProvenance(output string, appDetails *nixcmd.App, graph *gographviz.Graph) error {
 	drvPath, err := nixcmd.GetDrvPathFromResult(output)
 	if err != nil {
 		return err
@@ -145,7 +144,7 @@ func GenerateProvenance(conf *config.Config, output string, appDetails *nixcmd.A
 }
 
 // GenerateArtifcats generates remaining artifacts after build
-func GenerateArtifcats(conf *config.Config, output string) error {
+func GenerateArtifcats(output string) error {
 	// Read the bsf.lock file
 	lockData, err := os.ReadFile("bsf.lock")
 	if err != nil {
@@ -166,13 +165,13 @@ func GenerateArtifcats(conf *config.Config, output string) error {
 		os.Exit(1)
 	}
 
-	err = GenerateSBOM(conf, output, lockFile, appDetails, graph)
+	err = GenerateSBOM(output, lockFile, appDetails, graph)
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 		os.Exit(1)
 	}
 
-	err = GenerateProvenance(conf, output, appDetails, graph)
+	err = GenerateProvenance(output, appDetails, graph)
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 		os.Exit(1)

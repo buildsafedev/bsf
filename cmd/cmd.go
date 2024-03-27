@@ -56,15 +56,15 @@ func Execute() {
 
 	rootCmd.AddCommand(initCmd.InitCmd)
 	rootCmd.AddCommand(search.SearchCmd)
-	rootCmd.AddCommand(generate.GenCmd)
 	rootCmd.AddCommand(develop.DevCmd)
 	rootCmd.AddCommand(build.BuildCmd)
 	rootCmd.AddCommand(scan.ScanCmd)
-	rootCmd.AddCommand(precheck.PreCheckCmd)
 	rootCmd.AddCommand(update.UpdateCmd)
 
 	if os.Getenv("BSF_DEBUG_MODE") == "true" {
 		rootCmd.AddCommand(configure.ConfigureCmd)
+		rootCmd.AddCommand(generate.GenCmd)
+		rootCmd.AddCommand(precheck.PreCheckCmd)
 	}
 	rootCmd.AddCommand(export.ExportCmd)
 
