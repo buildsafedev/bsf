@@ -15,6 +15,7 @@ import (
 	binit "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/generate"
+	bgit "github.com/buildsafedev/bsf/pkg/git"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 	"github.com/buildsafedev/bsf/pkg/provenance"
@@ -52,6 +53,18 @@ var BuildCmd = &cobra.Command{
 
 		if output == "" {
 			output = "bsf-result"
+		}
+
+		err = bgit.Add("bsf/")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		err = bgit.Ignore(output + "/")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
 		}
 
 		err = nixcmd.Build(output + "/result")
@@ -181,5 +194,5 @@ func GenerateArtifcats(output string) error {
 }
 
 func isNoFileError(err string) bool {
-	return strings.Contains(err, "No such file or directory")
+	return strings.Contains(err, "No such file or directory") || strings.Contains(err, "does not contain a 'bsf/flake.nix' file")
 }

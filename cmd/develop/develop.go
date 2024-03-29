@@ -9,6 +9,7 @@ import (
 	binit "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/generate"
+	bgit "github.com/buildsafedev/bsf/pkg/git"
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 )
 
@@ -26,6 +27,12 @@ var DevCmd = &cobra.Command{
 		}
 
 		err = generate.Generate(fh, sc)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		err = bgit.Add("bsf/")
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)

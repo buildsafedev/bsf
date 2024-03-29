@@ -10,6 +10,7 @@ import (
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/generate"
+	bgit "github.com/buildsafedev/bsf/pkg/git"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 	"github.com/buildsafedev/bsf/pkg/nix/cmd"
@@ -128,6 +129,18 @@ func (m *model) processStages(stage int) error {
 		}
 
 		err = cmd.Lock()
+		if err != nil {
+			m.stageMsg = errorStyle(err.Error())
+			return err
+		}
+
+		err = bgit.Add("bsf/")
+		if err != nil {
+			m.stageMsg = errorStyle(err.Error())
+			return err
+		}
+
+		err = bgit.Ignore("bsf-result/")
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
