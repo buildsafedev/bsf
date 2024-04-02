@@ -27,15 +27,9 @@ type rustApp struct {
 
 // GenerateRustApp generates default flake
 func GenerateRustApp(fl *hcl2nix.RustApp, wr io.Writer) error {
-	var rustVersion string
-	if fl.RustVersion == ""{
-		rustVersion = "1.75.0"
-	} else {
-		rustVersion = fl.RustVersion
-	}
 	data := rustApp{
 		ProjectName: fl.ProjectName,
-		RustVersion: rustVersion,
+		RustVersion: fl.RustVersion,
 	}
 
 	t, err := template.New("rust").Parse(rustTmpl)

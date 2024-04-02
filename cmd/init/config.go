@@ -11,10 +11,26 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 		return genGoModuleConf(pd)
 	case langdetect.PythonPoetry:
 		return genPythonPoetryConf(pd)
+	case langdetect.RustCargo:
+		return genRustCargoConf(pd)
 	default:
 		return hcl2nix.Config{
 			Packages: hcl2nix.Packages{},
 		}
+	}
+}
+
+func genRustCargoConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
+	// TODO: maybe we should note down the path of the poetry.lock file and use it here.
+	return hcl2nix.Config{
+		Packages: hcl2nix.Packages{
+			Development: []string{"cargo@1.76.0"},
+			Runtime:     []string{"cacert@3.95"},
+		},
+		RustApp: &hcl2nix.RustApp{
+			ProjectName: "my-project",
+			RustVersion: "1.75.0",
+		},
 	}
 }
 
