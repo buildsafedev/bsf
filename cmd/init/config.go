@@ -21,7 +21,6 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 }
 
 func genRustCargoConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
-	// TODO: maybe we should note down the path of the poetry.lock file and use it here.
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
 			Development: []string{"cargo@1.76.0"},

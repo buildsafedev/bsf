@@ -1,6 +1,6 @@
 package hcl2nix
 
-// PoetryApp defines the parameters for a poetry application.
+// RustApp defines the parameters for a rust application.
 type RustApp struct {
 	// ProjectName: name of the project.
 	ProjectName string `hcl:"projectName"`
