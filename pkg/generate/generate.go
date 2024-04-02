@@ -76,6 +76,10 @@ func findLang(conf *hcl2nix.Config) langdetect.ProjectType {
 		lang = langdetect.PythonPoetry
 	}
 
+	if conf.RustApp != nil {
+		lang = langdetect.RustCargo
+	}
+
 	return lang
 }
 
@@ -95,9 +99,25 @@ func GenAppModule(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
 		}
 	}
 
+	if conf.RustApp != nil {
+		err := genRustApp(fh, conf)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 
 }
+
+func genRustApp(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
+	err := btemplate.GenerateRustApp(conf.RustApp, fh.DefFlakeFile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 
 func genPythonPoetryApp(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
 	err := btemplate.GeneratePoetryApp(conf.PoetryApp, fh.DefFlakeFile)

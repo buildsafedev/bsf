@@ -17,9 +17,10 @@ type (
 const (
 	// GoModule is the project type for Go modules
 	GoModule ProjectType = "GoModule"
-
 	// PythonPoetry is the project type for Python Poetry projects
 	PythonPoetry ProjectType = "PythonPoetry"
+	// RustCargo is the project type for Rust Cargo projects
+	RustCargo ProjectType = "RustCargo"
 	// Unknown is the project type for unknown project types
 	Unknown ProjectType = "Unknown"
 )
