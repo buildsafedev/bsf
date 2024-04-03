@@ -4,6 +4,8 @@ package hcl2nix
 type RustApp struct {
 	// CrateName: name of the project.
 	CrateName string `hcl:"projectName"`
+	// Release: To enable or disable the release mode, defaults to "true".
+	Release bool `hcl:"release"`
 	// RustVersion: Version of Rust
 	RustVersion string `hcl:"rustVersion,optional"`
 	// RustToolChain: Used to override the toolchain
@@ -14,6 +16,4 @@ type RustApp struct {
 	RustProfile string `hcl:"rustProfile,optional"`
 	// ExtraRustComponents: Extra rust components to be added with the build process
 	ExtraRustComponents []string `hcl:"extraRustComponents,optional"`
-	// Release: To enable or disable the release mode, defaults to "true".
-	Release bool `hcl:"release,optional"`
 }

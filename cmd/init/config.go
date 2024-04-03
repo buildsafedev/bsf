@@ -23,11 +23,12 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 func genRustCargoConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: []string{"cargo@1.76.0"},
+			Development: []string{"cargo@1.75.0"},
 			Runtime:     []string{"cacert@3.95"},
 		},
 		RustApp: &hcl2nix.RustApp{
 			CrateName: "my-project",
+			Release:   true,
 		},
 	}
 }

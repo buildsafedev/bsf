@@ -48,14 +48,8 @@ const (
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs = import nixpkgs-{{ .}} { inherit system; };
 		{{ end }}
 		{{if eq .Language "GoModule"}} buildGoApplication = gomod2nix.legacyPackages.${system}.buildGoApplication;{{end}}
-		pkgs = import nixpkgs { inherit system; };
+		pkgs = import nixpkgs { inherit system; {{ if eq .Language "RustCargo"}} overlays = [cargo2nix.overlays.default]; {{end}} };
 		{{if eq .Language "PythonPoetry"}} inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs.legacyPackages.${system}; }) mkPoetryApplication; {{end}}
-		{{if eq .Language "RustCargo"}}
-		 pkgs = import nixpkgs {
-			 inherit system;
-			 overlays = [cargo2nix.overlays.default];
-		 };
-		{{end}}
 	  });
 	in {
 	  packages = forEachSupportedSystem ({ pkgs,

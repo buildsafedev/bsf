@@ -12,7 +12,6 @@ const (
 	{ pkgs}:
     rustPkgs = pkgs: pkgs.rustBuilder.makePackageSet {
 		packageFun = import ./Cargo.nix;
-		release = {{ .Release }}
 		{{ if ne .RustVersion ""}}
 		rustVersion = {{ .RustVersion }}; {{ end }}
 		{{ if ne .RustToolChain ""}}
@@ -23,10 +22,11 @@ const (
 		rustProfile = {{ .RustProfile }}; {{ end }}
 		{{ if gt (len .ExtraRustComponents) 0}}
 		extraRustComponenets = {{ .ExtraRustComponents }} {{ end }}
+		{{ if ne .Release true}}
+		release = {{ .Release }} {{ end }}
 	};
 	
-	default = (rustPkgs pkgs).workspace.{{.Name}} {};
-    }
+	default = (rustPkgs pkgs).workspace.{{.CrateName}} {};
     `
 )
 
@@ -49,12 +49,7 @@ func GenerateRustApp(fl *hcl2nix.RustApp, wr io.Writer) error {
 		RustChannel:         fl.RustChannel,
 		RustProfile:         fl.RustProfile,
 		ExtraRustComponents: fl.ExtraRustComponents,
-	}
-
-	if !fl.Release {
-		data.Release = fl.Release
-	} else {
-		data.Release = true
+		Release:             fl.Release,
 	}
 
 	t, err := template.New("rust").Parse(rustTmpl)

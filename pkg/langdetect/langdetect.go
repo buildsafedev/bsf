@@ -31,7 +31,7 @@ type ProjectDetails struct {
 	Name       string
 }
 
-var supportedLanguages = []string{string(GoModule), string(PythonPoetry)}
+var supportedLanguages = []string{string(GoModule), string(PythonPoetry), string(RustCargo)}
 
 // FindProjectType detects the programming language/package manager of the current project.
 func FindProjectType() (ProjectType, *ProjectDetails, error) {
@@ -56,6 +56,9 @@ func FindProjectType() (ProjectType, *ProjectDetails, error) {
 
 		case "poetry.lock":
 			return PythonPoetry, &ProjectDetails{}, nil
+
+		case "Cargo.lock":
+			return RustCargo, &ProjectDetails{}, nil
 
 		default:
 			err = fmt.Errorf("unable to detect the language ,supported languages: " + (strings.Join(supportedLanguages, ",") + "."))
