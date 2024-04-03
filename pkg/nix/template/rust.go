@@ -11,8 +11,18 @@ const (
 	rustTmpl = `
 	{ pkgs}:
     rustPkgs = pkgs: pkgs.rustBuilder.makePackageSet {
-		rustVersion = "1.75.0";
 		packageFun = import ./Cargo.nix;
+		release = {{ .Release }}
+		{{ if ne .RustVersion ""}}
+		rustVersion = {{ .RustVersion }}; {{ end }}
+		{{ if ne .RustToolChain ""}}
+		rustToolchain = {{ .RustToolChain }}; {{ end }}
+		{{ if ne .RustChannel ""}}
+		rustChannel = {{ .RustChannel }}; {{ end }}
+		{{ if ne .RustProfile ""}}
+		rustProfile = {{ .RustProfile }}; {{ end }}
+		{{ if gt (len .ExtraRustComponents) 0}}
+		extraRustComponenets = {{ .ExtraRustComponents }} {{ end }}
 	};
 	
 	default = (rustPkgs pkgs).workspace.{{.Name}} {};
@@ -21,15 +31,30 @@ const (
 )
 
 type rustApp struct {
-	ProjectName string
-	RustVersion string
+	CrateName           string
+	RustVersion         string
+	RustToolChain       string
+	RustChannel         string
+	RustProfile         string
+	ExtraRustComponents []string
+	Release             bool
 }
 
 // GenerateRustApp generates default flake
 func GenerateRustApp(fl *hcl2nix.RustApp, wr io.Writer) error {
 	data := rustApp{
-		ProjectName: fl.ProjectName,
-		RustVersion: fl.RustVersion,
+		CrateName:           fl.CrateName,
+		RustVersion:         fl.RustVersion,
+		RustToolChain:       fl.RustToolChain,
+		RustChannel:         fl.RustChannel,
+		RustProfile:         fl.RustProfile,
+		ExtraRustComponents: fl.ExtraRustComponents,
+	}
+
+	if !fl.Release {
+		data.Release = fl.Release
+	} else {
+		data.Release = true
 	}
 
 	t, err := template.New("rust").Parse(rustTmpl)

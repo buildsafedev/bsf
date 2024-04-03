@@ -34,8 +34,7 @@ const (
 		
 		{{if eq .Language "RustCargo"}}
 		 cargo2nix.url = "github:cargo2nix/cargo2nix/release-0.11.0";
-    	 nixpkgs.follows = "cargo2nix/nixpkgs";
-		{{end}}
+    	 nixpkgs.follows = "cargo2nix/nixpkgs";{{end}}
 	};
 	
 	outputs = { self, nixpkgs, 

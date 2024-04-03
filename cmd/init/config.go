@@ -27,8 +27,7 @@ func genRustCargoConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 			Runtime:     []string{"cacert@3.95"},
 		},
 		RustApp: &hcl2nix.RustApp{
-			ProjectName: "my-project",
-			RustVersion: "1.75.0",
+			CrateName: "my-project",
 		},
 	}
 }
