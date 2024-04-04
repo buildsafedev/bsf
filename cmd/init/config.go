@@ -1,6 +1,10 @@
 package init
 
 import (
+	"fmt"
+	"os"
+	"regexp"
+
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 )
@@ -21,13 +25,28 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 }
 
 func genRustCargoConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
+	content, err := os.ReadFile("Cargo.lock")
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+	}
+
+	packageNameRegex := regexp.MustCompile(`name = "(.*?)"`)
+
+	match := packageNameRegex.FindStringSubmatch(string(content))
+
+	var CrateName string
+	if len(match) >= 2 {
+		CrateName = match[1]
+	} else {
+		CrateName = "my-project"
+	}
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
 			Development: []string{"cargo@1.75.0"},
 			Runtime:     []string{"cacert@3.95"},
 		},
 		RustApp: &hcl2nix.RustApp{
-			CrateName: "my-project",
+			CrateName: CrateName,
 			Release:   true,
 		},
 	}

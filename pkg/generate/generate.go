@@ -112,9 +112,7 @@ func GenAppModule(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
 }
 
 func genRustApp(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
-	cargoNixPath := filepath.Join("bsf/", "Cargo.nix")
-	outFile := cargoNixPath
-	err := rust.GenCargoNix(outFile)
+	err := rust.GenCargoNix()
 	if err != nil {
 		return err
 	}
