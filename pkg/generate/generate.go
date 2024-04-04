@@ -10,6 +10,7 @@ import (
 
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	golang "github.com/buildsafedev/bsf/pkg/generate/golang"
+	rust "github.com/buildsafedev/bsf/pkg/generate/rust"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 	btemplate "github.com/buildsafedev/bsf/pkg/nix/template"
@@ -111,13 +112,18 @@ func GenAppModule(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
 }
 
 func genRustApp(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
-	err := btemplate.GenerateRustApp(conf.RustApp, fh.DefFlakeFile)
+	cargoNixPath := filepath.Join("bsf/", "Cargo.nix")
+	outFile := cargoNixPath
+	err := rust.GenCargoNix(outFile)
+	if err != nil {
+		return err
+	}
+	err = btemplate.GenerateRustApp(conf.RustApp, fh.DefFlakeFile)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-
 
 func genPythonPoetryApp(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
 	err := btemplate.GeneratePoetryApp(conf.PoetryApp, fh.DefFlakeFile)

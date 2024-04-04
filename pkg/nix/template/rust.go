@@ -9,7 +9,7 @@ import (
 
 const (
 	rustTmpl = `
-	{ pkgs}:
+	{ pkgs ? rustPkgs}:
     rustPkgs = pkgs: pkgs.rustBuilder.makePackageSet {
 		packageFun = import ./Cargo.nix;
 		{{ if ne .RustVersion ""}}
@@ -26,7 +26,7 @@ const (
 		release = {{ .Release }} {{ end }}
 	};
 	
-	default = (rustPkgs pkgs).workspace.{{.CrateName}} {};
+	crateName = (rustPkgs.workspace.{{ .CrateName }} {});
     `
 )
 

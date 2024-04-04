@@ -55,6 +55,7 @@ const (
 	  packages = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
+		{{if eq .Language "PythonPoetry"}} rustPkgs, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		default = pkgs.callPackage ./default.nix {
@@ -62,7 +63,6 @@ const (
 			go = pkgs.go_1_22; {{end}}
 			{{if eq .Language "PythonPoetry"}} inherit mkPoetryApplication; {{end}}
 			{{if eq .Language "RustCargo"}}
-			 inherit default;
 			 inherit rustPkgs;
 			{{end}}
 		};
