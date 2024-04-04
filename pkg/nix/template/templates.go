@@ -63,6 +63,7 @@ const (
 			go = pkgs.go_1_22; {{end}}
 			{{if eq .Language "PythonPoetry"}} inherit mkPoetryApplication; {{end}}
 			{{if eq .Language "RustCargo"}}
+			 inherit CrateName;
 			 inherit rustPkgs;
 			{{end}}
 		};
