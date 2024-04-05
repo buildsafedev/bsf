@@ -3,6 +3,7 @@ package build
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -92,7 +93,7 @@ var BuildCmd = &cobra.Command{
 }
 
 // GenerateSBOM generates the Software Bill of Materials (SBOM)
-func GenerateSBOM(output string, lockFile *hcl2nix.LockFile, appDetails *nixcmd.App, graph *gographviz.Graph) error {
+func GenerateSBOM(w io.Writer, output string, lockFile *hcl2nix.LockFile, appDetails *nixcmd.App, graph *gographviz.Graph) error {
 	appNode := &sbom.Node{
 		Id:             bsbom.PurlFromNameVersion(appDetails.Name, appDetails.Version),
 		PrimaryPurpose: []sbom.Purpose{sbom.Purpose_APPLICATION},
@@ -109,7 +110,7 @@ func GenerateSBOM(output string, lockFile *hcl2nix.LockFile, appDetails *nixcmd.
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join(output, "spdx.json"), spdxBom, 0644)
+	_, err = w.Write(append(spdxBom, []byte("\n")...))
 	if err != nil {
 		return err
 	}
@@ -118,16 +119,15 @@ func GenerateSBOM(output string, lockFile *hcl2nix.LockFile, appDetails *nixcmd.
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join(output, "cdx.json"), cdxBom, 0644)
+	_, err = w.Write(append(cdxBom, []byte("\n")...))
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 // GenerateProvenance generates the provenance
-func GenerateProvenance(output string, appDetails *nixcmd.App, graph *gographviz.Graph) error {
+func GenerateProvenance(w io.Writer, output string, appDetails *nixcmd.App, graph *gographviz.Graph) error {
 	drvPath, err := nixcmd.GetDrvPathFromResult(output)
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func GenerateProvenance(output string, appDetails *nixcmd.App, graph *gographviz
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(output, "provenance.json"), provJ, 0644)
+	_, err = w.Write(provJ)
 	if err != nil {
 		return err
 	}
@@ -178,13 +178,21 @@ func GenerateArtifcats(output string) error {
 		os.Exit(1)
 	}
 
-	err = GenerateSBOM(output, lockFile, appDetails, graph)
+	attestationsPath := filepath.Join(output, "attestations.intoto.jsonl")
+	attFile, err := os.Create(attestationsPath)
+	if err != nil {
+		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+		os.Exit(1)
+	}
+	defer attFile.Close()
+
+	err = GenerateSBOM(attFile, output, lockFile, appDetails, graph)
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 		os.Exit(1)
 	}
 
-	err = GenerateProvenance(output, appDetails, graph)
+	err = GenerateProvenance(attFile, output, appDetails, graph)
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 		os.Exit(1)

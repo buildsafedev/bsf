@@ -117,5 +117,5 @@ func graphToResourceDes(graph *gographviz.Graph) []*slsav1.ResourceDescriptor {
 
 // ToJSON converts the provenance statement to JSON
 func (s *Statement) ToJSON() ([]byte, error) {
-	return json.MarshalIndent(s, "", "  ")
+	return json.Marshal(s)
 }
