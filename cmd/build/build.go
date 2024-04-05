@@ -99,7 +99,7 @@ func GenerateSBOM(w io.Writer, output string, lockFile *hcl2nix.LockFile, appDet
 		PrimaryPurpose: []sbom.Purpose{sbom.Purpose_APPLICATION},
 		Name:           appDetails.Name,
 		Hashes: map[int32]string{
-			int32(sbom.HashAlgorithm_SHA256): appDetails.Hash,
+			int32(sbom.HashAlgorithm_SHA256): appDetails.BinaryHash,
 		},
 	}
 

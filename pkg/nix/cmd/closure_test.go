@@ -16,9 +16,9 @@ func TestParseAppDetails(t *testing.T) {
 			name: "Test Case 1",
 			path: "/nix/store/1vng6wj07s51jsgj338m24m0c0mw2i3k-python3.11-app-0.1.0",
 			wantApp: &App{
-				Digest:  "1vng6wj07s51jsgj338m24m0c0mw2i3k",
-				Name:    "app",
-				Version: "0.1.0",
+				ResultDigest: "1vng6wj07s51jsgj338m24m0c0mw2i3k",
+				Name:         "app",
+				Version:      "0.1.0",
 			},
 			wantErr: false,
 		},
@@ -26,9 +26,9 @@ func TestParseAppDetails(t *testing.T) {
 			name: "Test Case 2",
 			path: "/nix/store/da66gxmm6wy8shkw93x5m6c1x8gfj63r-caddy-2.7.6",
 			wantApp: &App{
-				Digest:  "da66gxmm6wy8shkw93x5m6c1x8gfj63r",
-				Name:    "caddy",
-				Version: "2.7.6",
+				ResultDigest: "da66gxmm6wy8shkw93x5m6c1x8gfj63r",
+				Name:         "caddy",
+				Version:      "2.7.6",
 			},
 		},
 		{

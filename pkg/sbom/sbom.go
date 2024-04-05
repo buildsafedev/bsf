@@ -32,7 +32,13 @@ func NewStatement(appDetails *nixcmd.App) *Statement {
 		{
 			Name: appDetails.Name,
 			Digest: intotoCom.DigestSet{
-				"sha256": appDetails.Hash,
+				"sha256": appDetails.BinaryHash,
+			},
+		},
+		{
+			Name: "result-" + appDetails.Name,
+			Digest: intotoCom.DigestSet{
+				"sha256": appDetails.ResultHash,
 			},
 		},
 	}
