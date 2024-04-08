@@ -47,6 +47,7 @@ func genRustCargoConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 		},
 		RustApp: &hcl2nix.RustApp{
 			CrateName: CrateName,
+			RustVersion: "1.75.0",
 			Release:   true,
 		},
 	}
