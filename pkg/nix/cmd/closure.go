@@ -24,13 +24,13 @@ type App struct {
 
 // GetRuntimeClosureGraph returns the runtime closure graph for the project
 // TODO: we should look into adding metadata about licenses, homepage into the graph
-func GetRuntimeClosureGraph(output string) (*App, *gographviz.Graph, error) {
-	app, err := GetAppDetails(output)
+func GetRuntimeClosureGraph(output string, symlink string) (*App, *gographviz.Graph, error) {
+	app, err := GetAppDetails(output, symlink)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	cmd := exec.Command("nix-store", "-q", "--graph", output+"/result")
+	cmd := exec.Command("nix-store", "-q", "--graph", output+symlink)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -108,9 +108,9 @@ func CleanNameFromGraph(s string) string {
 	return s
 }
 
-// GetAppDetails checks if the result symlink exists
-func GetAppDetails(output string) (*App, error) {
-	target, err := os.Readlink(output + "/result")
+// GetAppDetails checks if the symlink exists
+func GetAppDetails(output string, symlink string) (*App, error) {
+	target, err := os.Readlink(output + symlink)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read symlink: %v", err)
 	}

@@ -52,15 +52,15 @@ const (
 		packageFun = import ./Cargo.nix;
 		workspaceSrc = ../.;
 		{{ if ne .RustArguments.RustVersion ""}}
-		rustVersion = {{ .RustArguments.RustVersion }}; {{ end }}
+		rustVersion = "{{ .RustArguments.RustVersion }}"; {{ end }}
 		{{ if ne .RustArguments.RustToolChain ""}}
-		rustToolchain = {{ .RustArguments.RustToolChain }}; {{ end }}
+		rustToolchain = "{{ .RustArguments.RustToolChain }}"; {{ end }}
 		{{ if ne .RustArguments.RustChannel ""}}
-		rustChannel = {{ .RustArguments.RustChannel }}; {{ end }}
+		rustChannel = "{{ .RustArguments.RustChannel }}"; {{ end }}
 		{{ if ne .RustArguments.RustProfile ""}}
-		rustProfile = {{ .RustArguments.RustProfile }}; {{ end }}
+		rustProfile = "{{ .RustArguments.RustProfile }}"; {{ end }}
 		{{ if gt (len .RustArguments.ExtraRustComponents) 0}}
-		extraRustComponenets = {{ .RustArguments.ExtraRustComponents }} {{ end }}
+		extraRustComponenets = [{{ range $value := .RustArguments.ExtraRustComponents }}"{{ $value }}",{{ end }}];{{ end }}
 		{{ if ne .RustArguments.Release true}}
 		release = {{ .RustArguments.Release }}; {{ end }}
 	  }; {{end}}
