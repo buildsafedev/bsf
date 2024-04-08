@@ -3,6 +3,8 @@ package template
 import (
 	"html/template"
 	"io"
+
+	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 )
 
 // Flake holds flake parameters
@@ -12,6 +14,7 @@ type Flake struct {
 	NixPackageRevisions []string
 	DevPackages         map[string]string
 	RuntimePackages     map[string]string
+	RustArguments       RustApp
 }
 
 // todo: maybe we could let power users inject their own templates
@@ -44,6 +47,23 @@ const (
 	{{range .NixPackageRevisions}} nixpkgs-{{ .}}, 
 	{{end}} }: let
 	  supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
+	  {{ if eq .Language "RustCargo"}}
+	  rustPkgs = pkgs: pkgs.rustBuilder.makePackageSet {
+		packageFun = import ./Cargo.nix;
+		workspaceSrc = ../.;
+		{{ if ne .RustArguments.RustVersion ""}}
+		rustVersion = {{ .RustArguments.RustVersion }}; {{ end }}
+		{{ if ne .RustArguments.RustToolChain ""}}
+		rustToolchain = {{ .RustArguments.RustToolChain }}; {{ end }}
+		{{ if ne .RustArguments.RustChannel ""}}
+		rustChannel = {{ .RustArguments.RustChannel }}; {{ end }}
+		{{ if ne .RustArguments.RustProfile ""}}
+		rustProfile = {{ .RustArguments.RustProfile }}; {{ end }}
+		{{ if gt (len .RustArguments.ExtraRustComponents) 0}}
+		extraRustComponenets = {{ .RustArguments.ExtraRustComponents }} {{ end }}
+		{{ if ne .RustArguments.Release true}}
+		release = {{ .RustArguments.Release }}; {{ end }}
+	  }; {{end}}
 	  forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs = import nixpkgs-{{ .}} { inherit system; };
 		{{ end }}
@@ -55,7 +75,6 @@ const (
 	  packages = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
-		{{if eq .Language "PythonPoetry"}} rustPkgs, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		default = pkgs.callPackage ./default.nix {
@@ -63,8 +82,8 @@ const (
 			go = pkgs.go_1_22; {{end}}
 			{{if eq .Language "PythonPoetry"}} inherit mkPoetryApplication; {{end}}
 			{{if eq .Language "RustCargo"}}
-			 inherit CrateName;
-			 inherit rustPkgs;
+			 inherit pkgs;
+             inherit rustPkgs;
 			{{end}}
 		};
 	  });
@@ -117,7 +136,18 @@ const (
 )
 
 // GenerateFlake generates default flake
-func GenerateFlake(fl Flake, wr io.Writer) error {
+func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
+	if conf.RustApp != nil {
+		fl.RustArguments = RustApp{
+			RustVersion:         conf.RustApp.RustVersion,
+			RustToolChain:       conf.RustApp.RustToolChain,
+			RustChannel:         conf.RustApp.RustChannel,
+			RustProfile:         conf.RustApp.RustProfile,
+			ExtraRustComponents: conf.RustApp.ExtraRustComponents,
+			Release:             conf.RustApp.Release,
+		}
+	}
+
 	t, err := template.New("main").Parse(mainTmpl)
 	if err != nil {
 		return err

@@ -54,7 +54,7 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 		DevPackages:         cr.Development,
 		RuntimePackages:     cr.Runtime,
 		Language:            string(lang),
-	}, fh.FlakeFile)
+	}, fh.FlakeFile, conf)
 	if err != nil {
 		return err
 	}
