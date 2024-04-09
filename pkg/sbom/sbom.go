@@ -32,7 +32,13 @@ func NewStatement(appDetails *nixcmd.App) *Statement {
 		{
 			Name: appDetails.Name,
 			Digest: intotoCom.DigestSet{
-				"sha256": appDetails.Hash,
+				"sha256": appDetails.BinaryHash,
+			},
+		},
+		{
+			Name: "result-" + appDetails.Name,
+			Digest: intotoCom.DigestSet{
+				"sha256": appDetails.ResultHash,
 			},
 		},
 	}
@@ -92,7 +98,7 @@ func (s *Statement) ToJSON(bom *sbom.Document, format formats.Format) ([]byte, e
 	}
 	s.Predicate = pred
 
-	return json.MarshalIndent(s, "", "  ")
+	return json.Marshal(s)
 }
 
 func parseLockfileToSBOMNodes(document *sbom.Document, appNode *sbom.Node, lf *hcl2nix.LockFile) {

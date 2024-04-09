@@ -3,7 +3,9 @@ package cmd
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -16,10 +18,11 @@ import (
 
 // App represents the application
 type App struct {
-	Name    string
-	Version string
-	Hash    string
-	Digest  string
+	Name         string
+	Version      string
+	ResultHash   string
+	ResultDigest string
+	BinaryHash   string
 }
 
 // GetRuntimeClosureGraph returns the runtime closure graph for the project
@@ -54,6 +57,16 @@ func GetRuntimeClosureGraph(output string, symlink string) (*App, *gographviz.Gr
 	}
 
 	addNarHashToGraph(graph)
+
+	binName, err := findResultBinary(output)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	app.BinaryHash, err = fileSHA256(output + "/result/bin/" + binName)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	return app, graph, nil
 }
@@ -97,6 +110,43 @@ func GetNarHashFromPath(path string) (string, error) {
 	return nixbase32.EncodeToString(h.Sum(nil)), nil
 }
 
+func findResultBinary(output string) (string, error) {
+	files, err := os.ReadDir(output + "/result/bin")
+	if err != nil {
+		return "", err
+	}
+
+	for _, file := range files {
+		// As of now, I've only encountered result/bin having a single file
+		return file.Name(), nil
+	}
+	return "", fmt.Errorf("no result binary found")
+}
+
+// fileSHA256 returns the sha256 hash of the file
+func fileSHA256(filePath string) (string, error) {
+	// Open the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Create a new SHA-256 hash
+	hash := sha256.New()
+
+	// Copy the file content to the hash
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", err
+	}
+
+	// Get the SHA-256 checksum
+	checksum := hash.Sum(nil)
+
+	// Return the checksum as a hex string
+	return hex.EncodeToString(checksum), nil
+}
+
 // CleanNameFromGraph removes leading and trailing double quotes and escape characters
 func CleanNameFromGraph(s string) string {
 	// Remove leading and trailing double quotes
@@ -123,7 +173,7 @@ func GetAppDetails(output string, symlink string) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse app details: %v", err)
 	}
-	app.Hash = hash
+	app.ResultHash = hash
 
 	return app, nil
 }
@@ -136,8 +186,8 @@ func parseAppDetails(path string) (*App, error) {
 	}
 
 	return &App{
-		Digest:  parts[0],
-		Name:    parts[len(parts)-2],
-		Version: parts[len(parts)-1],
+		ResultDigest: parts[0],
+		Name:         parts[len(parts)-2],
+		Version:      parts[len(parts)-1],
 	}, nil
 }
