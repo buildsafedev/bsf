@@ -25,12 +25,15 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 }
 
 func genRustCargoConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
-	content, err := os.ReadFile("Cargo.lock")
+	content, err := os.ReadFile("Cargo.toml")
 	if err != nil {
 		fmt.Println("Error reading file:", err)
 	}
 
-	packageNameRegex := regexp.MustCompile(`name = "(.*?)"`)
+	packageNameRegex, err := regexp.Compile(`name = "(.*?)"`)
+	if err != nil{
+		fmt.Println("Error fetching project name:", err)
+	}
 
 	match := packageNameRegex.FindStringSubmatch(string(content))
 
@@ -46,6 +49,7 @@ func genRustCargoConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 			Runtime:     []string{"cacert@3.95"},
 		},
 		RustApp: &hcl2nix.RustApp{
+			WorkspaceSrc: "../.",
 			CrateName: CrateName,
 			RustVersion: "1.75.0",
 			Release:   true,

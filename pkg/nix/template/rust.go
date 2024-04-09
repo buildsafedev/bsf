@@ -15,25 +15,40 @@ const (
 )
 
 type RustApp struct {
-	CrateName           string
-	RustVersion         string
-	RustToolChain       string
-	RustChannel         string
-	RustProfile         string
-	ExtraRustComponents []string
-	Release             bool
+	WorkspaceSrc                  string
+	CrateName                     string
+	RustVersion                   string
+	RustToolChain                 string
+	RustChannel                   string
+	RustProfile                   string
+	ExtraRustComponents           []string
+	Release                       bool
+	RootFeatures                  []string
+	FetchCrateAlternativeRegistry string
+	HostPlatformCpu               string
+	HostPlatformFeatures          []string
+	CargoUnstableFlags            []string
+	RustcLinkFlags                []string
+	RustcBuildFlags               []string
 }
 
 // GenerateRustApp generates default flake
 func GenerateRustApp(fl *hcl2nix.RustApp, wr io.Writer) error {
 	data := RustApp{
-		CrateName:           fl.CrateName,
-		RustVersion:         fl.RustVersion,
-		RustToolChain:       fl.RustToolChain,
-		RustChannel:         fl.RustChannel,
-		RustProfile:         fl.RustProfile,
-		ExtraRustComponents: fl.ExtraRustComponents,
-		Release:             fl.Release,
+		CrateName:                     fl.CrateName,
+		RustVersion:                   fl.RustVersion,
+		RustToolChain:                 fl.RustToolChain,
+		RustChannel:                   fl.RustChannel,
+		RustProfile:                   fl.RustProfile,
+		ExtraRustComponents:           fl.ExtraRustComponents,
+		Release:                       fl.Release,
+		RootFeatures:                  fl.RootFeatures,
+		FetchCrateAlternativeRegistry: fl.FetchCrateAlternativeRegistry,
+		HostPlatformCpu:               fl.HostPlatformCpu,
+		HostPlatformFeatures:          fl.HostPlatformFeatures,
+		CargoUnstableFlags:            fl.CargoUnstableFlags,
+		RustcLinkFlags:                fl.RustcLinkFlags,
+		RustcBuildFlags:               fl.RustcBuildFlags,
 	}
 	t, err := template.New("rust").Parse(rustTmpl)
 	if err != nil {

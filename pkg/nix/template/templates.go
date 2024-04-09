@@ -50,7 +50,7 @@ const (
 	  {{ if eq .Language "RustCargo"}}
 	  rustPkgs = pkgs: pkgs.rustBuilder.makePackageSet {
 		packageFun = import ./Cargo.nix;
-		workspaceSrc = ../.;
+		workspaceSrc = {{ .RustArguments.WorkspaceSrc }};
 		{{ if ne .RustArguments.RustVersion ""}}
 		rustVersion = "{{ .RustArguments.RustVersion }}"; {{ end }}
 		{{ if ne .RustArguments.RustToolChain ""}}
@@ -63,6 +63,20 @@ const (
 		extraRustComponenets = [{{ range $value := .RustArguments.ExtraRustComponents }}"{{ $value }}",{{ end }}];{{ end }}
 		{{ if ne .RustArguments.Release true}}
 		release = {{ .RustArguments.Release }}; {{ end }}
+		{{ if gt (len .RustArguments.RootFeatures) 0}}
+		rootFeatures = [{{ range $value := .RustArguments.RootFeatures }}"{{ $value }}",{{ end }}];{{ end }}
+		{{ if ne .RustArguments.FetchCrateAlternativeRegistry ""}}
+		fetchCrateAlternativeRegistry = "{{ .RustArguments.FetchCrateAlternativeRegistry }}"; {{ end }}
+		{{ if ne .RustArguments.HostPlatformCpu ""}}
+		hostPlatformCpu = "{{ .RustArguments.HostPlatformCpu }}"; {{ end }}
+		{{ if gt (len .RustArguments.HostPlatformFeatures) 0}}
+		hostPlatformFeatures = [{{ range $value := .RustArguments.HostPlatformFeatures }}"{{ $value }}",{{ end }}];{{ end }}
+		{{ if gt (len .RustArguments.CargoUnstableFlags) 0}}
+		cargoUnstableFlags = [{{ range $value := .RustArguments.CargoUnstableFlags }}"{{ $value }}",{{ end }}];{{ end }}
+		{{ if gt (len .RustArguments.RustcLinkFlags) 0}}
+		rustcLinkFlags = [{{ range $value := .RustArguments.RustcLinkFlags }}"{{ $value }}",{{ end }}];{{ end }}
+		{{ if gt (len .RustArguments.RustcBuildFlags) 0}}
+		rustcBuildFlags = [{{ range $value := .RustArguments.RustcBuildFlags }}"{{ $value }}",{{ end }}];{{ end }}
 	  }; {{end}}
 	  forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs = import nixpkgs-{{ .}} { inherit system; };
@@ -139,12 +153,20 @@ const (
 func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 	if conf.RustApp != nil {
 		fl.RustArguments = RustApp{
-			RustVersion:         conf.RustApp.RustVersion,
-			RustToolChain:       conf.RustApp.RustToolChain,
-			RustChannel:         conf.RustApp.RustChannel,
-			RustProfile:         conf.RustApp.RustProfile,
-			ExtraRustComponents: conf.RustApp.ExtraRustComponents,
-			Release:             conf.RustApp.Release,
+			WorkspaceSrc:                  conf.RustApp.WorkspaceSrc,
+			RustVersion:                   conf.RustApp.RustVersion,
+			RustToolChain:                 conf.RustApp.RustToolChain,
+			RustChannel:                   conf.RustApp.RustChannel,
+			RustProfile:                   conf.RustApp.RustProfile,
+			ExtraRustComponents:           conf.RustApp.ExtraRustComponents,
+			Release:                       conf.RustApp.Release,
+			RootFeatures:                  conf.RustApp.RootFeatures,
+			FetchCrateAlternativeRegistry: conf.RustApp.FetchCrateAlternativeRegistry,
+			HostPlatformCpu:               conf.RustApp.HostPlatformCpu,
+			HostPlatformFeatures:          conf.RustApp.HostPlatformFeatures,
+			CargoUnstableFlags:            conf.RustApp.CargoUnstableFlags,
+			RustcLinkFlags:                conf.RustApp.RustcLinkFlags,
+			RustcBuildFlags:               conf.RustApp.RustcBuildFlags,
 		}
 	}
 

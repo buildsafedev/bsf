@@ -70,6 +70,7 @@ var BuildCmd = &cobra.Command{
 		symlink, err := getSymLink()
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error fetching symlink: ", err.Error()))
+			os.Exit(1)
 		}
 		err = nixcmd.Build(output + "/result")
 		if err != nil {
