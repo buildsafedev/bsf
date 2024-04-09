@@ -58,12 +58,12 @@ func GetRuntimeClosureGraph(output string, symlink string) (*App, *gographviz.Gr
 
 	addNarHashToGraph(graph)
 
-	binName, err := findResultBinary(output)
+	binName, err := findResultBinary(output, symlink)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	app.BinaryHash, err = fileSHA256(output + "/result/bin/" + binName)
+	app.BinaryHash, err = fileSHA256(output + symlink + "/bin/" + binName)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -110,8 +110,8 @@ func GetNarHashFromPath(path string) (string, error) {
 	return nixbase32.EncodeToString(h.Sum(nil)), nil
 }
 
-func findResultBinary(output string) (string, error) {
-	files, err := os.ReadDir(output + "/result/bin")
+func findResultBinary(output string, symlink string) (string, error) {
+	files, err := os.ReadDir(output + symlink + "/bin")
 	if err != nil {
 		return "", err
 	}
