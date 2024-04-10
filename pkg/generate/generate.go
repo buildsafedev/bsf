@@ -10,6 +10,7 @@ import (
 
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	golang "github.com/buildsafedev/bsf/pkg/generate/golang"
+	rust "github.com/buildsafedev/bsf/pkg/generate/rust"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 	btemplate "github.com/buildsafedev/bsf/pkg/nix/template"
@@ -53,7 +54,7 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 		DevPackages:         cr.Development,
 		RuntimePackages:     cr.Runtime,
 		Language:            string(lang),
-	}, fh.FlakeFile)
+	}, fh.FlakeFile, conf)
 	if err != nil {
 		return err
 	}
@@ -76,6 +77,10 @@ func findLang(conf *hcl2nix.Config) langdetect.ProjectType {
 		lang = langdetect.PythonPoetry
 	}
 
+	if conf.RustApp != nil {
+		lang = langdetect.RustCargo
+	}
+
 	return lang
 }
 
@@ -95,8 +100,27 @@ func GenAppModule(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
 		}
 	}
 
+	if conf.RustApp != nil {
+		err := genRustApp(fh, conf)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 
+}
+
+func genRustApp(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
+	err := rust.GenCargoNix()
+	if err != nil {
+		return err
+	}
+	err = btemplate.GenerateRustApp(conf.RustApp, fh.DefFlakeFile)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func genPythonPoetryApp(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {

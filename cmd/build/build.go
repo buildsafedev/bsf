@@ -18,6 +18,7 @@ import (
 	"github.com/buildsafedev/bsf/pkg/generate"
 	bgit "github.com/buildsafedev/bsf/pkg/git"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
+	"github.com/buildsafedev/bsf/pkg/langdetect"
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 	"github.com/buildsafedev/bsf/pkg/provenance"
 	bsbom "github.com/buildsafedev/bsf/pkg/sbom"
@@ -67,7 +68,11 @@ var BuildCmd = &cobra.Command{
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
-
+		symlink, err := getSymLink()
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error fetching symlink: ", err.Error()))
+			os.Exit(1)
+		}
 		err = nixcmd.Build(output + "/result")
 		if err != nil {
 			if isNoFileError(err.Error()) {
@@ -81,7 +86,7 @@ var BuildCmd = &cobra.Command{
 
 		fmt.Println(styles.HighlightStyle.Render("Generating artifacts..."))
 
-		err = GenerateArtifcats(output)
+		err = GenerateArtifcats(output, symlink)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
@@ -127,8 +132,8 @@ func GenerateSBOM(w io.Writer, output string, lockFile *hcl2nix.LockFile, appDet
 }
 
 // GenerateProvenance generates the provenance
-func GenerateProvenance(w io.Writer, output string, appDetails *nixcmd.App, graph *gographviz.Graph) error {
-	drvPath, err := nixcmd.GetDrvPathFromResult(output)
+func GenerateProvenance(w io.Writer, output string, symlink string, appDetails *nixcmd.App, graph *gographviz.Graph) error {
+	drvPath, err := nixcmd.GetDrvPathFromResult(output, symlink)
 	if err != nil {
 		return err
 	}
@@ -157,7 +162,7 @@ func GenerateProvenance(w io.Writer, output string, appDetails *nixcmd.App, grap
 }
 
 // GenerateArtifcats generates remaining artifacts after build
-func GenerateArtifcats(output string) error {
+func GenerateArtifcats(output string, symlink string) error {
 	// Read the bsf.lock file
 	lockData, err := os.ReadFile("bsf.lock")
 	if err != nil {
@@ -172,7 +177,7 @@ func GenerateArtifcats(output string) error {
 		os.Exit(1)
 	}
 
-	appDetails, graph, err := nixcmd.GetRuntimeClosureGraph(output)
+	appDetails, graph, err := nixcmd.GetRuntimeClosureGraph(output, symlink)
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 		os.Exit(1)
@@ -192,7 +197,7 @@ func GenerateArtifcats(output string) error {
 		os.Exit(1)
 	}
 
-	err = GenerateProvenance(attFile, output, appDetails, graph)
+	err = GenerateProvenance(attFile, output, symlink, appDetails, graph)
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 		os.Exit(1)
@@ -203,4 +208,16 @@ func GenerateArtifcats(output string) error {
 
 func isNoFileError(err string) bool {
 	return strings.Contains(err, "No such file or directory") || strings.Contains(err, "does not contain a 'bsf/flake.nix' file")
+}
+
+func getSymLink() (string, error) {
+	projectType, _, err := langdetect.FindProjectType()
+	if err != nil {
+		return "", err
+	}
+	if projectType == "RustCargo" {
+		return "/result-bin", nil
+	} else {
+		return "/result", nil
+	}
 }
