@@ -115,7 +115,11 @@ func (m *model) processStages(stage int) error {
 		defer fh.FlakeFile.Close()
 		defer fh.DefFlakeFile.Close()
 
-		conf := generatehcl2NixConf(m.pt, m.pd)
+		conf, err := generatehcl2NixConf(m.pt, m.pd)
+		if err != nil {
+			m.stageMsg = errorStyle(err.Error())
+			return err
+		}
 		err = hcl2nix.WriteConfig(conf, fh.ModFile)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())

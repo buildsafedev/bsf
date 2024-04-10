@@ -35,6 +35,7 @@ type RustApp struct {
 // GenerateRustApp generates default flake
 func GenerateRustApp(fl *hcl2nix.RustApp, wr io.Writer) error {
 	data := RustApp{
+		WorkspaceSrc:                  fl.WorkspaceSrc,
 		CrateName:                     fl.CrateName,
 		RustVersion:                   fl.RustVersion,
 		RustToolChain:                 fl.RustToolChain,

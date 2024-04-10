@@ -9,30 +9,34 @@ import (
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 )
 
-func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails) hcl2nix.Config {
+func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
 	switch pt {
 	case langdetect.GoModule:
-		return genGoModuleConf(pd)
+		return genGoModuleConf(pd), nil
 	case langdetect.PythonPoetry:
-		return genPythonPoetryConf(pd)
+		return genPythonPoetryConf(pd), nil
 	case langdetect.RustCargo:
-		return genRustCargoConf(pd)
+		config, err := genRustCargoConf(pd)
+		if err != nil {
+			return hcl2nix.Config{}, err
+		}
+		return config, nil
 	default:
 		return hcl2nix.Config{
 			Packages: hcl2nix.Packages{},
-		}
+		}, nil
 	}
 }
 
-func genRustCargoConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
+func genRustCargoConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
 	content, err := os.ReadFile("Cargo.toml")
 	if err != nil {
-		fmt.Println("Error reading file:", err)
+		return hcl2nix.Config{}, fmt.Errorf("Error reading file:", err)
 	}
 
 	packageNameRegex, err := regexp.Compile(`name = "(.*?)"`)
-	if err != nil{
-		fmt.Println("Error fetching project name:", err)
+	if err != nil {
+		return hcl2nix.Config{}, fmt.Errorf("Error fetching project name:", err)
 	}
 
 	match := packageNameRegex.FindStringSubmatch(string(content))
@@ -49,12 +53,12 @@ func genRustCargoConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 			Runtime:     []string{"cacert@3.95"},
 		},
 		RustApp: &hcl2nix.RustApp{
-			WorkspaceSrc: "../.",
-			CrateName: CrateName,
-			RustVersion: "1.75.0",
-			Release:   true,
+			WorkspaceSrc: "./.",
+			CrateName:    CrateName,
+			RustVersion:  "1.75.0",
+			Release:      true,
 		},
-	}
+	}, nil
 }
 
 func genPythonPoetryConf(pd *langdetect.ProjectDetails) hcl2nix.Config {

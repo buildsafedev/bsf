@@ -153,7 +153,7 @@ const (
 func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 	if conf.RustApp != nil {
 		fl.RustArguments = RustApp{
-			WorkspaceSrc:                  conf.RustApp.WorkspaceSrc,
+			WorkspaceSrc:                  parentFolder(conf.RustApp.WorkspaceSrc),
 			RustVersion:                   conf.RustApp.RustVersion,
 			RustToolChain:                 conf.RustApp.RustToolChain,
 			RustChannel:                   conf.RustApp.RustChannel,
