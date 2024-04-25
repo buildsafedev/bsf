@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
 	bstrings "github.com/buildsafedev/bsf/pkg/strings"
+	"github.com/buildsafedev/bsf/pkg/update"
 )
 
 // Config for hcl2nix
@@ -76,9 +77,13 @@ func AddPackages(src []byte, packages Packages, wr io.Writer) error {
 		return err
 	}
 
-	// append new packages to existing packages
-	existingConfig.Packages.Development = bstrings.SliceToSet(append(existingConfig.Packages.Development, packages.Development...))
-	existingConfig.Packages.Runtime = bstrings.SliceToSet(append(existingConfig.Packages.Runtime, packages.Runtime...))
+	parse := func(s string) string {
+		name, _ := update.ParsePackage(s)
+		return name
+	}
+
+	existingConfig.Packages.Development = bstrings.PreferNewSliceElements(existingConfig.Packages.Development, packages.Development, parse)
+	existingConfig.Packages.Runtime = bstrings.PreferNewSliceElements(existingConfig.Packages.Runtime, packages.Runtime, parse)
 
 	err = WriteConfig(*existingConfig, wr)
 	if err != nil {

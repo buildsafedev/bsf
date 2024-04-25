@@ -1,6 +1,7 @@
 package strings
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -35,6 +36,46 @@ func TestSliceToSet(t *testing.T) {
 			if !equalIgnoreOrder {
 				t.Errorf("got %v, want %v", got, tt.expected)
 				t.Fail()
+			}
+		})
+	}
+}
+
+func TestPreferNewSliceElements(t *testing.T) {
+	parseFunc := func(s string) string {
+		return s
+	}
+
+	tests := []struct {
+		name     string
+		existing []string
+		new      []string
+		want     []string
+	}{
+		{
+			name:     "Test 1",
+			existing: []string{"a", "b", "c"},
+			new:      []string{"d", "e", "f"},
+			want:     []string{"a", "b", "c", "d", "e", "f"},
+		},
+		{
+			name:     "Test 2",
+			existing: []string{"a", "b", "c"},
+			new:      []string{"a", "b", "c"},
+			want:     []string{"a", "b", "c"},
+		},
+		{
+			name:     "Test 3",
+			existing: []string{"a", "b", "c"},
+			new:      []string{"a", "b", "d"},
+			want:     []string{"c", "a", "b", "d"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := PreferNewSliceElements(tt.existing, tt.new, parseFunc); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("PreferNewSliceElements() = %v, want %v", got, tt.want)
 			}
 		})
 	}
