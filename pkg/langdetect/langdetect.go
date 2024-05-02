@@ -21,6 +21,8 @@ const (
 	PythonPoetry ProjectType = "PythonPoetry"
 	// RustCargo is the project type for Rust Cargo projects
 	RustCargo ProjectType = "RustCargo"
+	// JsNpm is the project type for Javascript NPM projects
+	JsNpm ProjectType = "JsNpm"
 	// Unknown is the project type for unknown project types
 	Unknown ProjectType = "Unknown"
 )
@@ -59,6 +61,9 @@ func FindProjectType() (ProjectType, *ProjectDetails, error) {
 
 		case "Cargo.lock":
 			return RustCargo, &ProjectDetails{}, nil
+		
+		case "package-lock.json":
+			return JsNpm, &ProjectDetails{}, nil
 
 		default:
 			err = fmt.Errorf("unable to detect the language ,supported languages: " + (strings.Join(supportedLanguages, ",") + "."))
