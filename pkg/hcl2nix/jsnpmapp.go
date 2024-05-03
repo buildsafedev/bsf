@@ -1,6 +1,6 @@
 package hcl2nix
 
-// RustApp defines the parameters for a rust application.
+// JsNpmApp defines the parameters for a Javascript application.
 type JsNpmApp struct {
 	// PackageName: Name of the Package
 	PackageName string `hcl:"packageName"`
