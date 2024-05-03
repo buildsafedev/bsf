@@ -127,7 +127,7 @@ func genJsNpmConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
 	}
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: []string{"cargo@1.75.0"},
+			Development: []string{"nodejs@20.11.1"},
 			Runtime:     []string{"cacert@3.95"},
 		},
 		JsNpmApp: &hcl2nix.JsNpmApp{

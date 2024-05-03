@@ -117,6 +117,7 @@ const (
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{if eq .Language "RustCargo"}} rustPkgs, {{end}}
+		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		devShell = pkgs.mkShell {
