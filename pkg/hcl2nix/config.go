@@ -18,6 +18,7 @@ type Config struct {
 	GoModule  *GoModule      `hcl:"gomodule,block"`
 	PoetryApp *PoetryApp     `hcl:"poetryapp,block"`
 	RustApp   *RustApp       `hcl:"rustapp,block"`
+	JsNpmApp  *JsNpmApp      `hcl:"jsnpmapp,block"`
 	Export    []ExportConfig `hcl:"export,block"`
 }
 

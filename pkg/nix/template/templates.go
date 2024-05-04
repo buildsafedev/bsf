@@ -38,12 +38,19 @@ const (
 		{{if eq .Language "RustCargo"}}
 		 cargo2nix.url = "github:cargo2nix/cargo2nix/release-0.11.0";
     	 nixpkgs.follows = "cargo2nix/nixpkgs";{{end}}
+		
+		{{if eq .Language "JsNpm"}}
+		 buildNodeModules = {
+		  url = "github:adisbladis/buildNodeModules";
+		  inputs.nixpkgs.follows = "nixpkgs";
+		 };{{end}}
 	};
 	
 	outputs = { self, nixpkgs, 
 	{{if eq .Language "GoModule"}} gomod2nix, {{end}}
 	{{ if eq .Language "PythonPoetry"}} poetry2nix, {{end}}
 	{{ if eq .Language "RustCargo"}} cargo2nix, {{end}}
+	{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 	{{range .NixPackageRevisions}} nixpkgs-{{ .}}, 
 	{{end}} }: let
 	  supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
@@ -78,17 +85,20 @@ const (
 		{{ if gt (len .RustArguments.RustcBuildFlags) 0}}
 		rustcBuildFlags = [{{ range $value := .RustArguments.RustcBuildFlags }}"{{ $value }}",{{ end }}];{{ end }}
 	  }; {{end}}
+	  {{ if eq .Language "JsNpm"}} inherit (nixpkgs) lib; {{end}}
 	  forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs = import nixpkgs-{{ .}} { inherit system; };
 		{{ end }}
 		{{if eq .Language "GoModule"}} buildGoApplication = gomod2nix.legacyPackages.${system}.buildGoApplication;{{end}}
 		pkgs = import nixpkgs { inherit system; {{ if eq .Language "RustCargo"}} overlays = [cargo2nix.overlays.default]; {{end}} };
 		{{if eq .Language "PythonPoetry"}} inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs.legacyPackages.${system}; }) mkPoetryApplication; {{end}}
+		{{ if eq .Language "JsNpm"}} buildNodeModules = buildNodeModules.lib.${system}; {{end}}
 	  });
 	in {
 	  packages = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
+		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		default = pkgs.callPackage ./default.nix {
@@ -99,6 +109,7 @@ const (
 			 inherit pkgs;
              inherit rustPkgs;
 			{{end}}
+			{{ if eq .Language "JsNpm"}} inherit buildNodeModules; {{end}}
 		};
 	  });
 	
@@ -106,6 +117,7 @@ const (
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{if eq .Language "RustCargo"}} rustPkgs, {{end}}
+		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} }: {
 		devShell = pkgs.mkShell {
@@ -120,6 +132,7 @@ const (
 	  runtimeEnvs = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
+		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 		{{if eq .Language "RustCargo"}} rustPkgs, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
 		runtime = pkgs.buildEnv {
@@ -135,6 +148,7 @@ const (
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{if eq .Language "RustCargo"}} rustPkgs, {{end}}
+		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 	   {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
 		development = pkgs.buildEnv {
 		  name = "devenv";

@@ -81,6 +81,10 @@ func findLang(conf *hcl2nix.Config) langdetect.ProjectType {
 		lang = langdetect.RustCargo
 	}
 
+	if conf.JsNpmApp != nil {
+		lang = langdetect.JsNpm
+	}
+
 	return lang
 }
 
@@ -107,6 +111,13 @@ func GenAppModule(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
 		}
 	}
 
+	if conf.JsNpmApp != nil {
+		err := genJsNpmApp(fh, conf)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 
 }
@@ -125,6 +136,14 @@ func genRustApp(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
 
 func genPythonPoetryApp(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
 	err := btemplate.GeneratePoetryApp(conf.PoetryApp, fh.DefFlakeFile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func genJsNpmApp(fh *hcl2nix.FileHandlers, conf *hcl2nix.Config) error {
+	err := btemplate.GenerateNpmApp(conf.JsNpmApp, fh.DefFlakeFile)
 	if err != nil {
 		return err
 	}

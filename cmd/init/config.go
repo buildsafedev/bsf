@@ -1,6 +1,7 @@
 package init
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
@@ -17,6 +18,12 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 		return genPythonPoetryConf(pd), nil
 	case langdetect.RustCargo:
 		config, err := genRustCargoConf(pd)
+		if err != nil {
+			return hcl2nix.Config{}, err
+		}
+		return config, nil
+	case langdetect.JsNpm:
+		config, err := genJsNpmConf(pd)
 		if err != nil {
 			return hcl2nix.Config{}, err
 		}
@@ -101,4 +108,31 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 		},
 	}
 
+}
+
+func genJsNpmConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
+	data, err := os.ReadFile("package-lock.json")
+	if err != nil {
+		return hcl2nix.Config{}, fmt.Errorf("Error reading file:", err)
+	}
+	var jsonData map[string]interface{}
+	err = json.Unmarshal(data, &jsonData)
+	if err != nil {
+		return hcl2nix.Config{}, fmt.Errorf("Error parsing json data:", err)
+	}
+
+	name, ok := jsonData["name"].(string)
+	if !ok {
+		return hcl2nix.Config{}, fmt.Errorf("Error fetching project name:", err)
+	}
+	return hcl2nix.Config{
+		Packages: hcl2nix.Packages{
+			Development: []string{"nodejs@20.11.1"},
+			Runtime:     []string{"cacert@3.95"},
+		},
+		JsNpmApp: &hcl2nix.JsNpmApp{
+			PackageName: name,
+			PackageRoot: "./.",
+		},
+	}, nil
 }

@@ -97,3 +97,34 @@ func TestTemplateMainForPython(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestTemplateMainForJavacript(t *testing.T) {
+
+	flake := Flake{
+		Description: "Simple flake",
+		NixPackageRevisions: []string{
+			"a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
+			"a9bf124c46ef298113270b1f84a164865987a91c",
+		},
+		DevPackages: map[string]string{
+			"gotools": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
+			"go_1_19": "a89ba043dda559ebc57fc6f1fa8cf3a0b207f688",
+		},
+		RuntimePackages: map[string]string{
+			"bash": "a9bf124c46ef298113270b1f84a164865987a91c",
+		},
+	}
+
+	conf := &hcl2nix.Config{
+		JsNpmApp: &hcl2nix.JsNpmApp{
+			PackageName: "npm-project",
+			PackageRoot: "./.",
+		},
+	}
+
+	err := GenerateFlake(flake, os.Stdout, conf)
+	if err != nil {
+		t.Error()
+		t.FailNow()
+	}
+}
