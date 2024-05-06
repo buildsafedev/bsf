@@ -61,10 +61,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q", "esc":
-			err := CleanUp()
-			if err != nil {
-				fmt.Println(errorStyle("Error Cleaning up Configs..  ", err.Error()))
-			}
+			cleanUp()
 			return m, tea.Quit
 		}
 	}
@@ -76,10 +73,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 	err = m.processStages(m.stage)
 	if err != nil {
-		err = CleanUp()
-		if err != nil {
-			fmt.Println(errorStyle("Error Cleaning up Configs..  ", err.Error()))
-		}
+		 cleanUp()
 		return m, tea.Quit
 	}
 	m.stage++

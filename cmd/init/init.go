@@ -72,14 +72,10 @@ func GetBSFInitializers() (bsfv1.SearchServiceClient, *hcl2nix.FileHandlers, err
 }
 
 // CleanUp removes the bsf config if any error occurs in init process (ctrl+c or any init process stage)
-func CleanUp() error {
+func cleanUp(){
 	configs := []string{"bsf", "bsf.hcl", "bsf.lock"}
 
 	for _, f := range configs {
-		err := os.RemoveAll(f)
-		if err != nil {
-			return fmt.Errorf("error: %s", err.Error())
-		}
+		os.RemoveAll(f)
 	}
-	return nil
 }
