@@ -1,4 +1,4 @@
-package generate
+package nixgenerate
 
 import (
 	"fmt"
@@ -12,12 +12,12 @@ import (
 	"github.com/buildsafedev/bsf/pkg/clients/search"
 )
 
-// GenCmd represents the generate command
-var GenCmd = &cobra.Command{
-	Use:     "generate",
+// NixGenCmd represents the generate command
+var NixGenCmd = &cobra.Command{
+	Use:     "nix-generate",
 	Short:   "generate resolves dependencies and generates the Nix files",
-	Aliases: []string{"gen"},
-	Long: `generate resolves dependencies and generates the Nix files. It is similiar to "go mod tidy"
+	Aliases: []string{"nix-gen"},
+	Long: `nix-generate resolves dependencies and generates the Nix files.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		conf, err := configure.PreCheckConf()
