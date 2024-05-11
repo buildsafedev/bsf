@@ -43,10 +43,10 @@ var ExportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		envNames := make([]string, 0, len(conf.Export))
+		envNames := make([]string, 0, len(conf.OCIArtifact))
 		var found bool
-		env := hcl2nix.ExportConfig{}
-		for _, ec := range conf.Export {
+		env := hcl2nix.OCIArtifact{}
+		for _, ec := range conf.OCIArtifact {
 			errStr := ec.Validate()
 			if errStr != nil {
 				fmt.Println(styles.ErrorStyle.Render(fmt.Sprintf("Config for export block %s is invalid\n Error: %s", ec.Name, *errStr)))

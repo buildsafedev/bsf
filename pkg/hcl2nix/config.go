@@ -14,12 +14,13 @@ import (
 
 // Config for hcl2nix
 type Config struct {
-	Packages  Packages       `hcl:"packages,block"`
-	GoModule  *GoModule      `hcl:"gomodule,block"`
-	PoetryApp *PoetryApp     `hcl:"poetryapp,block"`
-	RustApp   *RustApp       `hcl:"rustapp,block"`
-	JsNpmApp  *JsNpmApp      `hcl:"jsnpmapp,block"`
-	Export    []ExportConfig `hcl:"export,block"`
+	Packages    Packages      `hcl:"packages,block"`
+	GoModule    *GoModule     `hcl:"gomodule,block"`
+	PoetryApp   *PoetryApp    `hcl:"poetryapp,block"`
+	RustApp     *RustApp      `hcl:"rustapp,block"`
+	JsNpmApp    *JsNpmApp     `hcl:"jsnpmapp,block"`
+	OCIArtifact []OCIArtifact `hcl:"export,block"`
+	ConfigFiles []ConfigFiles `hcl:"config,block"`
 }
 
 // Packages holds package parameters

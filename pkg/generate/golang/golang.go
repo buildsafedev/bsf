@@ -59,7 +59,8 @@ func resolveDeps(directory string) ([]*goModDownload, map[string]string, error) 
 	{
 
 		cmd := exec.Command(
-			"nix-shell", "-p", "go_1_22", "--run", "go mod download --json",
+			// nix run nixpkgs#go_1_22 -- mod download --json
+			"nix", "run", "nixpkgs#go_1_22", "--", "mod", "download", "--json",
 		)
 		cmd.Dir = directory
 		stdout, err := cmd.Output()

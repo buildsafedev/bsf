@@ -1,8 +1,8 @@
 package template
 
 import (
-	"html/template"
 	"io"
+	"text/template"
 
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 )
@@ -15,6 +15,8 @@ type Flake struct {
 	DevPackages         map[string]string
 	RuntimePackages     map[string]string
 	RustArguments       RustApp
+	OCIAttribute        *string
+	ConfigAttribute     *string
 }
 
 // todo: maybe we could let power users inject their own templates
@@ -158,6 +160,9 @@ const (
 		   ];
 		};
 	   });
+       
+	{{.ConfigAttribute}}
+
 	};
 }
 `
@@ -184,7 +189,23 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 		}
 	}
 
-	t, err := template.New("main").Parse(mainTmpl)
+	if conf.ConfigFiles != nil {
+		confFiles := hclConfFilesToConfFiles(conf.ConfigFiles)
+		confAttr, err := GenerateConfigAttr(confFiles)
+		if err != nil {
+			return err
+		}
+		fl.ConfigAttribute = confAttr
+	}
+
+	if conf.OCIArtifact != nil {
+
+	}
+
+	t, err := template.New("main").Funcs(template.FuncMap{
+		"quote": quote,
+	}).
+		Parse(mainTmpl)
 	if err != nil {
 		return err
 	}
