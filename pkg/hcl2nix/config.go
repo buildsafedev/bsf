@@ -19,7 +19,7 @@ type Config struct {
 	PoetryApp   *PoetryApp    `hcl:"poetryapp,block"`
 	RustApp     *RustApp      `hcl:"rustapp,block"`
 	JsNpmApp    *JsNpmApp     `hcl:"jsnpmapp,block"`
-	OCIArtifact []OCIArtifact `hcl:"export,block"`
+	OCIArtifact []OCIArtifact `hcl:"oci,block"`
 	ConfigFiles []ConfigFiles `hcl:"config,block"`
 }
 

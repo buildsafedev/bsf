@@ -22,7 +22,7 @@ type OCIArtifact struct {
 	// DevDeps defines if development dependencies should be present in the image. By default, it is false.
 	DevDeps bool `hcl:"devDeps,optional"`
 
-	Platform string `hcl:"platform"`
+	Platform string `hcl:"platform,optional"`
 }
 
 // Validate validates ExportConfig

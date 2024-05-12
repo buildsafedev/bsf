@@ -38,5 +38,4 @@ func TestGenerateConfigAttr(t *testing.T) {
 	}
 
 	fmt.Println(*result)
-	t.Fail()
 }
