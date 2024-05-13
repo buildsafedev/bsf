@@ -9,12 +9,17 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/buildsafedev/bsf/cmd/build"
+	binit "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/styles"
+	"github.com/buildsafedev/bsf/pkg/generate"
+	bgit "github.com/buildsafedev/bsf/pkg/git"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
+	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 )
 
 var (
-	platform string
+	platform, output string
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
@@ -84,15 +89,66 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// err = build.Build(env)
-		// if err != nil {
-		// 	fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-		// 	os.Exit(1)
-		// }
+		sc, fh, err := binit.GetBSFInitializers()
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		err = generate.Generate(fh, sc)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		if output == "" {
+			output = "bsf-result"
+		}
+
+		err = bgit.Add("bsf/")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		err = bgit.Ignore(output + "/")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		err = nixcmd.Build(output+"/result", genOCIAttrName(env.Environment, platform))
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+		fmt.Println(styles.HighlightStyle.Render("Generating artifacts..."))
+
+		err = build.GenerateArtifcats(output, "/result")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Build completed successfully, please check the %s directory", output)))
 
 	},
 }
 
+func genOCIAttrName(env, platform string) string {
+	// .#ociImages.x86_64-linux.ociImage_caddy-as-dir
+	tostarch := ""
+	switch platform {
+	case "linux/amd64":
+		tostarch = "x86_64-linux"
+	case "linux/arm64":
+		tostarch = "aarch64-linux"
+	}
+	return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s-as-dir", tostarch, env)
+}
+
 func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
+	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
+
 }
