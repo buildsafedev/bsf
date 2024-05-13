@@ -1,6 +1,7 @@
 package hcl2nix
 
 import (
+	"strconv"
 	"strings"
 )
 
@@ -21,35 +22,76 @@ type OCIArtifact struct {
 	ImportConfigs []string `hcl:"importConfigs,optional"`
 	// DevDeps defines if development dependencies should be present in the image. By default, it is false.
 	DevDeps bool `hcl:"devDeps,optional"`
-
-	Platform string `hcl:"platform,optional"`
 }
 
 // Validate validates ExportConfig
-func (c *OCIArtifact) Validate() *string {
-	// todo: maybe we should return hcl.Diagnostic to be consistent
-	if !validatePlatform(c.Platform) {
-		return pointerTo("Invalid platform. Platform cannot contain spaces, commas, or semicolons. Note: multi-platform support will be added in future")
-	}
-
+func (c *OCIArtifact) Validate(conf *Config) *string {
 	if len(c.EnvVars) != 0 {
 		if !validateEnvVars((c.EnvVars)) {
 			return pointerTo("Invalid environment variables, please use 'key=value' format")
 		}
 	}
 
-	return nil
-}
-
-func validatePlatform(platform string) bool {
-	if strings.Contains(platform, ",") || strings.Contains(platform, " ") || strings.Contains(platform, ";") {
-		return false
+	if len(c.ImportConfigs) != 0 {
+		if !validateImportConfigs(c.ImportConfigs, conf) {
+			return pointerTo("Invalid import configs, please specify a valid config name")
+		}
 	}
-	return true
+
+	if len(c.ExposedPorts) != 0 {
+		if !validateExposedPorts(c.ExposedPorts) {
+			return pointerTo("Invalid exposed ports, please specify a valid port/protocol. Ex: 80/tcp ")
+		}
+	}
+
+	return nil
 }
 
 func pointerTo[T any](value T) *T {
 	return &value
+}
+
+func validateExposedPorts(ports []string) bool {
+	for _, port := range ports {
+		pp := strings.Split(port, "/")
+		if len(pp) != 2 {
+			return false
+		}
+
+		if pp[1] != "tcp" && pp[1] != "udp" && pp[1] != "icmp" {
+			return false
+		}
+
+		if pp[0] == "" {
+			return false
+		}
+
+		pn, err := strconv.Atoi(pp[0])
+		if err != nil {
+			return false
+		}
+
+		if pn < 0 || pn > 65535 {
+			return false
+		}
+
+	}
+	return true
+}
+
+func validateImportConfigs(configs []string, conf *Config) bool {
+	validConfigs := make(map[string]bool)
+	for _, configName := range conf.ConfigFiles {
+		validConfigs[configName.Name] = true
+	}
+
+	for _, config := range configs {
+		if _, ok := validConfigs[config]; !ok {
+			return false
+		}
+
+	}
+	return true
 }
 
 func validateEnvVars(envVars []string) bool {

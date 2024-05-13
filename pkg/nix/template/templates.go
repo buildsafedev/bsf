@@ -191,7 +191,7 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 			Release:                       conf.RustApp.Release,
 			RootFeatures:                  conf.RustApp.RootFeatures,
 			FetchCrateAlternativeRegistry: conf.RustApp.FetchCrateAlternativeRegistry,
-			HostPlatformCpu:               conf.RustApp.HostPlatformCpu,
+			HostPlatformCPU:               conf.RustApp.HostPlatformCPU,
 			HostPlatformFeatures:          conf.RustApp.HostPlatformFeatures,
 			CargoUnstableFlags:            conf.RustApp.CargoUnstableFlags,
 			RustcLinkFlags:                conf.RustApp.RustcLinkFlags,

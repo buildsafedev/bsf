@@ -1,4 +1,4 @@
-package build
+package builddocker
 
 import (
 	"context"
@@ -74,16 +74,16 @@ func GenerateDockerfile(w io.Writer, env hcl2nix.OCIArtifact) error {
 }
 
 func convertExportCfgToDockerfileCfg(env hcl2nix.OCIArtifact) dockerfileCfg {
-	switch env.Platform {
-	case "linux/amd64":
-		env.Platform = "x86_64-linux"
-	case "linux/arm64":
-		env.Platform = "aarch64-linux"
-	}
+	// switch env.Platform {
+	// case "linux/amd64":
+	// 	env.Platform = "x86_64-linux"
+	// case "linux/arm64":
+	// 	env.Platform = "aarch64-linux"
+	// }
 	envVarsMap := convertEnvsToMap(env.EnvVars)
 
 	return dockerfileCfg{
-		Platform:   env.Platform,
+		// Platform:   env.Platform,
 		Cmd:        env.Cmd,
 		Entrypoint: env.Entrypoint,
 		EnvVars:    envVarsMap,

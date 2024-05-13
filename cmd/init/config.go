@@ -15,15 +15,15 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 	case langdetect.GoModule:
 		return genGoModuleConf(pd), nil
 	case langdetect.PythonPoetry:
-		return genPythonPoetryConf(pd), nil
+		return genPythonPoetryConf(), nil
 	case langdetect.RustCargo:
-		config, err := genRustCargoConf(pd)
+		config, err := genRustCargoConf()
 		if err != nil {
 			return hcl2nix.Config{}, err
 		}
 		return config, nil
 	case langdetect.JsNpm:
-		config, err := genJsNpmConf(pd)
+		config, err := genJsNpmConf()
 		if err != nil {
 			return hcl2nix.Config{}, err
 		}
@@ -35,15 +35,15 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 	}
 }
 
-func genRustCargoConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
+func genRustCargoConf() (hcl2nix.Config, error) {
 	content, err := os.ReadFile("Cargo.toml")
 	if err != nil {
-		return hcl2nix.Config{}, fmt.Errorf("Error reading file:", err)
+		return hcl2nix.Config{}, fmt.Errorf("error reading file: %v", err)
 	}
 
 	packageNameRegex, err := regexp.Compile(`name = "(.*?)"`)
 	if err != nil {
-		return hcl2nix.Config{}, fmt.Errorf("Error fetching project name:", err)
+		return hcl2nix.Config{}, fmt.Errorf("error fetching project name: %v", err)
 	}
 
 	match := packageNameRegex.FindStringSubmatch(string(content))
@@ -68,7 +68,7 @@ func genRustCargoConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
 	}, nil
 }
 
-func genPythonPoetryConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
+func genPythonPoetryConf() hcl2nix.Config {
 	// TODO: maybe we should note down the path of the poetry.lock file and use it here.
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
@@ -110,20 +110,20 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 
 }
 
-func genJsNpmConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
+func genJsNpmConf() (hcl2nix.Config, error) {
 	data, err := os.ReadFile("package-lock.json")
 	if err != nil {
-		return hcl2nix.Config{}, fmt.Errorf("Error reading file:", err)
+		return hcl2nix.Config{}, fmt.Errorf("error reading file: %v", err)
 	}
 	var jsonData map[string]interface{}
 	err = json.Unmarshal(data, &jsonData)
 	if err != nil {
-		return hcl2nix.Config{}, fmt.Errorf("Error parsing json data:", err)
+		return hcl2nix.Config{}, fmt.Errorf("error parsing json data: %v", err)
 	}
 
 	name, ok := jsonData["name"].(string)
 	if !ok {
-		return hcl2nix.Config{}, fmt.Errorf("Error fetching project name:", err)
+		return hcl2nix.Config{}, fmt.Errorf("error fetching project name: %v", err)
 	}
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{

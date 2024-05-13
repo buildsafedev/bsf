@@ -6,8 +6,8 @@ type JsNpmApp struct {
 	PackageName string `hcl:"packageName"`
 	// PackageRoot: Source path to root file.
 	PackageRoot string `hcl:"packageRoot"`
-	// PackageJsonPath: Path to package.json file.
-	PackageJsonPath string `hcl:"packageJsonPath,optional"`
+	// PackageJSONPath: Path to package.json file.
+	PackageJSONPath string `hcl:"packageJsonPath,optional"`
 	// PackageLockPath: Path to package-lock.json file.
 	PackageLockPath string `hcl:"packageLockPath,optional"`
 }

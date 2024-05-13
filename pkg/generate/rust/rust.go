@@ -4,6 +4,7 @@ import (
 	"os/exec"
 )
 
+// GenCargoNix - Generates the Cargo.nix file
 func GenCargoNix() error {
 	// Run the command
 	cmd := exec.Command(

@@ -217,7 +217,7 @@ func getSymLink() (string, error) {
 	}
 	if projectType == "RustCargo" {
 		return "/result-bin", nil
-	} else {
-		return "/result", nil
 	}
+	return "/result", nil
+
 }

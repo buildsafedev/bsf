@@ -13,7 +13,6 @@ type OCIArtifact struct {
 	Name          string
 	Cmd           []string
 	Entrypoint    []string
-	Platform      string
 	EnvVars       []string
 	ImportConfigs []string
 	ExposedPorts  []string
@@ -74,7 +73,6 @@ func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
 			Name:          ociArtifact.Name,
 			Cmd:           ociArtifact.Cmd,
 			Entrypoint:    ociArtifact.Entrypoint,
-			Platform:      ociArtifact.Platform,
 			EnvVars:       ociArtifact.EnvVars,
 			ImportConfigs: ociArtifact.ImportConfigs,
 			ExposedPorts:  ociArtifact.ExposedPorts,
