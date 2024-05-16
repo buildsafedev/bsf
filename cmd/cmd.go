@@ -13,6 +13,7 @@ import (
 	"github.com/elewis787/boa"
 	"github.com/spf13/cobra"
 
+	"github.com/buildsafedev/bsf/cmd/attestation"
 	"github.com/buildsafedev/bsf/cmd/build"
 	"github.com/buildsafedev/bsf/cmd/configure"
 	"github.com/buildsafedev/bsf/cmd/develop"
@@ -60,6 +61,7 @@ func Execute() {
 	rootCmd.AddCommand(build.BuildCmd)
 	rootCmd.AddCommand(scan.ScanCmd)
 	rootCmd.AddCommand(update.UpdateCmd)
+	rootCmd.AddCommand(attestation.AttCmd)
 
 	if os.Getenv("BSF_DEBUG_MODE") == "true" {
 		rootCmd.AddCommand(configure.ConfigureCmd)
