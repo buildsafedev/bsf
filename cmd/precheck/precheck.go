@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
-	"github.com/buildsafedev/bsf/pkg/build"
 	"github.com/buildsafedev/bsf/pkg/nix/cmd"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
@@ -72,29 +71,6 @@ func IsFlakesEnabled() {
 	}
 }
 
-// IsContainerDStoreEnabled checks is containerd storage is enabled
-func IsContainerDStoreEnabled() {
-	conf, err := build.GetSnapshotter()
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("err:", err.Error()))
-		os.Exit(1)
-	}
-	resp := isSnapshotterEnabled(conf)
-	if resp {
-		fmt.Println(styles.HelpStyle.Render(" ✅ containerd-snapshotter is set to true"))
-	} else {
-		fmt.Println(styles.HelpStyle.Render(" ⚠️  Export functionality might not work as containerd image store is not enabled . To enable it, refer https://docs.docker.com/storage/containerd/ "))
-	}
-}
-
-func isSnapshotterEnabled(conf string) bool {
-	expectedOutput := " '[[driver-type io.containerd.snapshotter.v1]]' "
-	if strings.Compare(strings.TrimSpace(expectedOutput), strings.TrimSpace(conf)) == 0 {
-		return true
-	}
-	return false
-}
-
 // AllPrechecks runs all the prechecks
 func AllPrechecks() {
 	fmt.Println(styles.TextStyle.Render("Running prechecks..."))
@@ -110,7 +86,6 @@ func AllPrechecks() {
 
 	}()
 	go func() {
-		IsContainerDStoreEnabled()
 		wg.Done()
 
 	}()

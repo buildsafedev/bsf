@@ -73,7 +73,7 @@ var BuildCmd = &cobra.Command{
 			fmt.Println(styles.ErrorStyle.Render("error fetching symlink: ", err.Error()))
 			os.Exit(1)
 		}
-		err = nixcmd.Build(output + "/result")
+		err = nixcmd.Build(output+"/result", "bsf/.")
 		if err != nil {
 			if isNoFileError(err.Error()) {
 				fmt.Println(styles.ErrorStyle.Render(err.Error() + "\n Please ensure all necessary files are added/committed in your version control system"))
@@ -217,7 +217,7 @@ func getSymLink() (string, error) {
 	}
 	if projectType == "RustCargo" {
 		return "/result-bin", nil
-	} else {
-		return "/result", nil
 	}
+	return "/result", nil
+
 }

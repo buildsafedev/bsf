@@ -1,8 +1,8 @@
 package template
 
 import (
-	"html/template"
 	"io"
+	"text/template"
 
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 )
@@ -15,6 +15,8 @@ type Flake struct {
 	DevPackages         map[string]string
 	RuntimePackages     map[string]string
 	RustArguments       RustApp
+	OCIAttribute        *string
+	ConfigAttribute     *string
 }
 
 // todo: maybe we could let power users inject their own templates
@@ -44,13 +46,17 @@ const (
 		  url = "github:adisbladis/buildNodeModules";
 		  inputs.nixpkgs.follows = "nixpkgs";
 		 };{{end}}
+
+		 {{if .OCIAttribute}}
+		 nix2container.url = "github:nlewo/nix2container";{{end}}
 	};
 	
-	outputs = { self, nixpkgs, 
+	outputs = inputs@{ self, nixpkgs, 
 	{{if eq .Language "GoModule"}} gomod2nix, {{end}}
 	{{ if eq .Language "PythonPoetry"}} poetry2nix, {{end}}
 	{{ if eq .Language "RustCargo"}} cargo2nix, {{end}}
 	{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
+	{{if .OCIAttribute}} nix2container , {{end}}
 	{{range .NixPackageRevisions}} nixpkgs-{{ .}}, 
 	{{end}} }: let
 	  supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
@@ -87,6 +93,8 @@ const (
 	  }; {{end}}
 	  {{ if eq .Language "JsNpm"}} inherit (nixpkgs) lib; {{end}}
 	  forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
+		inherit system;
+		{{if .OCIAttribute}} nix2containerPkgs = nix2container.packages.${system}; {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs = import nixpkgs-{{ .}} { inherit system; };
 		{{ end }}
 		{{if eq .Language "GoModule"}} buildGoApplication = gomod2nix.legacyPackages.${system}.buildGoApplication;{{end}}
@@ -100,7 +108,7 @@ const (
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
-		{{ end }} }: {
+		{{ end }} ... }: {
 		default = pkgs.callPackage ./default.nix {
 			{{if eq .Language "GoModule"}} inherit buildGoApplication;
 			go = pkgs.go_1_22; {{end}}
@@ -119,7 +127,7 @@ const (
 		{{if eq .Language "RustCargo"}} rustPkgs, {{end}}
 		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
-		{{ end }} }: {
+		{{ end }} ... }: {
 		devShell = pkgs.mkShell {
 		  # The Nix packages provided in the environment
 		  packages =  [
@@ -134,7 +142,7 @@ const (
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 		{{if eq .Language "RustCargo"}} rustPkgs, {{end}}
-		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
+		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} ... }: {
 		runtime = pkgs.buildEnv {
 		  name = "runtimeenv";
 		  paths = [ 
@@ -149,7 +157,7 @@ const (
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{if eq .Language "RustCargo"}} rustPkgs, {{end}}
 		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
-	   {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} }: {
+	   {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} ... }: {
 		development = pkgs.buildEnv {
 		  name = "devenv";
 		  paths = [ 
@@ -158,6 +166,13 @@ const (
 		   ];
 		};
 	   });
+       
+	   {{if .ConfigAttribute}}
+	   {{.ConfigAttribute}}
+	   {{end}}
+	   {{if .OCIAttribute}}
+	   {{.OCIAttribute}}
+	   {{end}}
 	};
 }
 `
@@ -176,7 +191,7 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 			Release:                       conf.RustApp.Release,
 			RootFeatures:                  conf.RustApp.RootFeatures,
 			FetchCrateAlternativeRegistry: conf.RustApp.FetchCrateAlternativeRegistry,
-			HostPlatformCpu:               conf.RustApp.HostPlatformCpu,
+			HostPlatformCPU:               conf.RustApp.HostPlatformCPU,
 			HostPlatformFeatures:          conf.RustApp.HostPlatformFeatures,
 			CargoUnstableFlags:            conf.RustApp.CargoUnstableFlags,
 			RustcLinkFlags:                conf.RustApp.RustcLinkFlags,
@@ -184,7 +199,28 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 		}
 	}
 
-	t, err := template.New("main").Parse(mainTmpl)
+	if conf.ConfigFiles != nil {
+		confFiles := hclConfFilesToConfFiles(conf.ConfigFiles)
+		confAttr, err := GenerateConfigAttr(confFiles)
+		if err != nil {
+			return err
+		}
+		fl.ConfigAttribute = confAttr
+	}
+
+	if conf.OCIArtifact != nil {
+		artifacts := hclOCIToOCIArtifact(conf.OCIArtifact)
+		artifacttAttr, err := GenerateOCIAttr(artifacts)
+		if err != nil {
+			return err
+		}
+		fl.OCIAttribute = artifacttAttr
+	}
+
+	t, err := template.New("main").Funcs(template.FuncMap{
+		"quote": quote,
+	}).
+		Parse(mainTmpl)
 	if err != nil {
 		return err
 	}

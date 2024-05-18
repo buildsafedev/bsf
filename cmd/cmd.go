@@ -17,9 +17,9 @@ import (
 	"github.com/buildsafedev/bsf/cmd/build"
 	"github.com/buildsafedev/bsf/cmd/configure"
 	"github.com/buildsafedev/bsf/cmd/develop"
-	"github.com/buildsafedev/bsf/cmd/export"
-	"github.com/buildsafedev/bsf/cmd/generate"
 	initCmd "github.com/buildsafedev/bsf/cmd/init"
+	"github.com/buildsafedev/bsf/cmd/nixgenerate"
+	"github.com/buildsafedev/bsf/cmd/oci"
 	"github.com/buildsafedev/bsf/cmd/precheck"
 	"github.com/buildsafedev/bsf/cmd/scan"
 	"github.com/buildsafedev/bsf/cmd/search"
@@ -65,10 +65,10 @@ func Execute() {
 
 	if os.Getenv("BSF_DEBUG_MODE") == "true" {
 		rootCmd.AddCommand(configure.ConfigureCmd)
-		rootCmd.AddCommand(generate.GenCmd)
+		rootCmd.AddCommand(nixgenerate.NixGenCmd)
 		rootCmd.AddCommand(precheck.PreCheckCmd)
 	}
-	rootCmd.AddCommand(export.ExportCmd)
+	rootCmd.AddCommand(oci.OCICmd)
 
 	err := rootCmd.ExecuteContext(context.Background())
 	if err != nil {

@@ -42,8 +42,8 @@ type npmApp struct {
 	PackageName string
 	// PackageJsonPath: Source path to the package.json and package-lock.json file.
 	PackageRoot string
-	// PackageJsonPath: Path to package.json file.
-	PackageJsonPath string
+	// PackageJSONPath: Path to package.json file.
+	PackageJSONPath string
 	// PackageLockPath: Path to package-lock.json file.
 	PackageLockPath string
 }
@@ -55,8 +55,8 @@ func GenerateNpmApp(fl *hcl2nix.JsNpmApp, wr io.Writer) error {
 		PackageRoot: parentFolder(fl.PackageRoot),
 	}
 
-	if fl.PackageJsonPath != "" {
-		data.PackageJsonPath = modifyPath(parentFolder(fl.PackageJsonPath), "packagejson")
+	if fl.PackageJSONPath != "" {
+		data.PackageJSONPath = modifyPath(parentFolder(fl.PackageJSONPath), "packagejson")
 	}
 
 	if fl.PackageLockPath != "" {

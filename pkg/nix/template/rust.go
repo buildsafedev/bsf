@@ -14,6 +14,7 @@ const (
     `
 )
 
+// RustApp is the representation of a Rust application
 type RustApp struct {
 	WorkspaceSrc                  string
 	CrateName                     string
@@ -25,7 +26,7 @@ type RustApp struct {
 	Release                       bool
 	RootFeatures                  []string
 	FetchCrateAlternativeRegistry string
-	HostPlatformCpu               string
+	HostPlatformCPU               string
 	HostPlatformFeatures          []string
 	CargoUnstableFlags            []string
 	RustcLinkFlags                []string
@@ -45,7 +46,7 @@ func GenerateRustApp(fl *hcl2nix.RustApp, wr io.Writer) error {
 		Release:                       fl.Release,
 		RootFeatures:                  fl.RootFeatures,
 		FetchCrateAlternativeRegistry: fl.FetchCrateAlternativeRegistry,
-		HostPlatformCpu:               fl.HostPlatformCpu,
+		HostPlatformCPU:               fl.HostPlatformCPU,
 		HostPlatformFeatures:          fl.HostPlatformFeatures,
 		CargoUnstableFlags:            fl.CargoUnstableFlags,
 		RustcLinkFlags:                fl.RustcLinkFlags,

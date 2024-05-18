@@ -1,4 +1,4 @@
-package build
+package builddocker
 
 import (
 	"context"
@@ -25,7 +25,7 @@ type dockerfileCfg struct {
 }
 
 // Build builds the environment
-func Build(env hcl2nix.ExportConfig) error {
+func Build(env hcl2nix.OCIArtifact) error {
 	tmpDir, err := createTempDir()
 	if err != nil {
 		return err
@@ -54,7 +54,7 @@ func quote(s string) string {
 }
 
 // GenerateDockerfile generates Dockerfile
-func GenerateDockerfile(w io.Writer, env hcl2nix.ExportConfig) error {
+func GenerateDockerfile(w io.Writer, env hcl2nix.OCIArtifact) error {
 	dfc := convertExportCfgToDockerfileCfg(env)
 
 	dftmpl, err := template.New("Dockerfile").Funcs(template.FuncMap{
@@ -73,22 +73,21 @@ func GenerateDockerfile(w io.Writer, env hcl2nix.ExportConfig) error {
 	return nil
 }
 
-func convertExportCfgToDockerfileCfg(env hcl2nix.ExportConfig) dockerfileCfg {
-	switch env.Platform {
-	case "linux/amd64":
-		env.Platform = "x86_64-linux"
-	case "linux/arm64":
-		env.Platform = "aarch64-linux"
-	}
+func convertExportCfgToDockerfileCfg(env hcl2nix.OCIArtifact) dockerfileCfg {
+	// switch env.Platform {
+	// case "linux/amd64":
+	// 	env.Platform = "x86_64-linux"
+	// case "linux/arm64":
+	// 	env.Platform = "aarch64-linux"
+	// }
 	envVarsMap := convertEnvsToMap(env.EnvVars)
 
 	return dockerfileCfg{
-		Platform:   env.Platform,
+		// Platform:   env.Platform,
 		Cmd:        env.Cmd,
 		Entrypoint: env.Entrypoint,
 		EnvVars:    envVarsMap,
 		DevDeps:    env.DevDeps,
-		Config:     env.Config,
 	}
 }
 

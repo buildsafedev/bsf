@@ -1,4 +1,4 @@
-package build
+package builddocker
 
 // source for this file- https://github.com/project-copacetic/copacetic/blob/main/pkg/buildkit/drivers.go
 import (

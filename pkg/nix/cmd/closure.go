@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/awalterschulze/gographviz"
+	imgv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"zombiezen.com/go/nix/nar"
 	"zombiezen.com/go/nix/nixbase32"
 )
@@ -58,17 +60,53 @@ func GetRuntimeClosureGraph(output string, symlink string) (*App, *gographviz.Gr
 
 	addNarHashToGraph(graph)
 
-	binName, err := findResultBinary(output, symlink)
+	app.BinaryHash, err = artifactHash(output, symlink)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	app.BinaryHash, err = fileSHA256(output + symlink + "/bin/" + binName)
-	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to get artifact hash: %s", err)
 	}
 
 	return app, graph, nil
+}
+
+func artifactHash(output, symlink string) (string, error) {
+	files, err := os.ReadDir(output + symlink)
+	if err != nil {
+		return "", err
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		if file.Name() == "bin" {
+			binName, err := findResultBinary(output, symlink)
+			if err != nil {
+				return "", err
+			}
+			hash, err := fileSHA256(output + symlink + "/bin/" + binName)
+			if err != nil {
+				return "", err
+			}
+			return hash, nil
+		}
+		if file.Name() == "mainfest.json" {
+			fbytes, err := os.ReadFile(output + symlink + "/mainfest.json")
+			if err != nil {
+				return "", err
+			}
+
+			manifest := &imgv1.Manifest{}
+			err = json.Unmarshal(fbytes, manifest)
+			if err != nil {
+				return "", err
+			}
+
+			return strings.TrimPrefix(manifest.Config.Digest.String(), "sha256:"), nil
+
+		}
+	}
+
+	return "", nil
 }
 
 func addNarHashToGraph(graph *gographviz.Graph) {
