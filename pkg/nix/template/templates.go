@@ -80,8 +80,8 @@ const (
 		rootFeatures = [{{ range $value := .RustArguments.RootFeatures }}"{{ $value }}",{{ end }}];{{ end }}
 		{{ if ne .RustArguments.FetchCrateAlternativeRegistry ""}}
 		fetchCrateAlternativeRegistry = "{{ .RustArguments.FetchCrateAlternativeRegistry }}"; {{ end }}
-		{{ if ne .RustArguments.HostPlatformCpu ""}}
-		hostPlatformCpu = "{{ .RustArguments.HostPlatformCpu }}"; {{ end }}
+		{{ if ne .RustArguments.HostPlatformCPU ""}}
+		hostPlatformCpu = "{{ .RustArguments.HostPlatformCPU }}"; {{ end }}
 		{{ if gt (len .RustArguments.HostPlatformFeatures) 0}}
 		hostPlatformFeatures = [{{ range $value := .RustArguments.HostPlatformFeatures }}"{{ $value }}",{{ end }}];{{ end }}
 		{{ if gt (len .RustArguments.CargoUnstableFlags) 0}}
