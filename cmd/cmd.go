@@ -17,6 +17,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/build"
 	"github.com/buildsafedev/bsf/cmd/configure"
 	"github.com/buildsafedev/bsf/cmd/develop"
+	"github.com/buildsafedev/bsf/cmd/dockerfile"
 	initCmd "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/nixgenerate"
 	"github.com/buildsafedev/bsf/cmd/oci"
@@ -69,6 +70,7 @@ func Execute() {
 		rootCmd.AddCommand(precheck.PreCheckCmd)
 	}
 	rootCmd.AddCommand(oci.OCICmd)
+	rootCmd.AddCommand(dockerfile.DFCmd)
 
 	err := rootCmd.ExecuteContext(context.Background())
 	if err != nil {

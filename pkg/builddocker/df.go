@@ -57,21 +57,21 @@ FROM busybox
 FROM scratch
 {{ end }}
 
-WORKDIR /result
+WORKDIR /bin
 {{ if ne .Config ""}}
 COPY {{ .Config }} /result/app
 {{ end }}
 # Copy /nix/store
 COPY --from=builder /tmp/nix-store-closure /nix/store
 # Add symlink to result
-COPY --from=builder /tmp/build/bsf/result /result
-COPY --from=builder /tmp/build/bsf/runtimeEnv /result/env
+COPY --from=builder /tmp/build/bsf/result/bin /bin
+COPY --from=builder /tmp/build/bsf/runtimeEnv /bin
 {{ if (.DevDeps)}}
-COPY --from=builder /tmp/build/bsf/devEnv /result/env
+COPY --from=builder /tmp/build/bsf/devEnv /bin
 {{ end }}
 # Add /result/env to the PATH
-ENV SSL_CERT_FILE="/result/env/etc/ssl/certs/ca-bundle.crt"
-ENV PATH="/result/env/bin:${PATH}"
+ENV SSL_CERT_FILE="/bin/etc/ssl/certs/ca-bundle.crt"
+ENV PATH="/bin:${PATH}"
 {{ if gt (len .EnvVars) 0 }}ENV {{ range $key, $value := .EnvVars }}{{ $key }}={{ quote $value }} {{ end }}{{ end }}
 {{ if gt (len .Cmd) 0 }}CMD [{{ range $index, $element := .Cmd }} {{if $index}}, {{end}} "{{ quote $element }}" {{ end }}]{{ end }}
 {{ if gt (len .Entrypoint) 0 }} ENTRYPOINT [{{ range $index, $element := .Entrypoint }}{{if $index}}, {{end}} "{{ quote $element }}" {{ end }}]{{ end }}
