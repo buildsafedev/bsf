@@ -21,7 +21,7 @@ type RustApp struct {
 	// FetchCrateAlternativeRegistry: A fetcher for crates on alternative registries.
 	FetchCrateAlternativeRegistry string `hcl:"fetchCrateAlternativeRegistry,optional"`
 	// HostPlatformCPU: Equivalent to rust's target-cpu codegen option.
-	HostPlatformCPU string `hcl:"hostPlatformCpu,optional"`
+	HostPlatformCPU string `hcl:"hostPlatformCPU,optional"`
 	// HostPlatformFeatures: Equivalent to rust's target-feature codegen option.
 	HostPlatformFeatures []string `hcl:"hostPlatformFeatures,optional"`
 	// ExtraRustComponents: Extra rust components to be added with the build process
