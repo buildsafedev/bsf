@@ -1,25 +1,12 @@
 package attestation
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
+
+	"github.com/buildsafedev/bsf/pkg/provenance"
 )
-
-// InTotoStatement represents the structure of an in-toto attestation
-type InTotoStatement struct {
-	Type          string      `json:"_type"`
-	PredicateType string      `json:"predicateType"`
-	Subject       []Subject   `json:"subject"`
-	Predicate     interface{} `json:"Predicate"`
-}
-
-type Subject struct {
-	Name   string            `json:"name"`
-	Digest map[string]string `json:"digest"`
-}
 
 var PredicateTypes = []string{
 	"SLSA Provenance",
@@ -47,31 +34,9 @@ var predicateURIs = []string{
 	"https://in-toto.io/attestation/test-result/v0.1",
 }
 
-func IsInToto(filePath string) (bool, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return false, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if err := validateInTotoStatement(line); err != nil {
-			return false, err
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
-
-func validateInTotoStatement(line string) error {
-	var statement InTotoStatement
-	if err := json.Unmarshal([]byte(line), &statement); err != nil {
+func ValidateInTotoStatement(line []byte) error {
+	var statement provenance.Statement
+	if err := json.Unmarshal(line, &statement); err != nil {
 		return fmt.Errorf("invalid JSON: %v", err)
 	}
 
@@ -91,20 +56,12 @@ func validateInTotoStatement(line string) error {
 		if subject.Name == "" {
 			return fmt.Errorf("subject name is empty")
 		}
-		if len(subject.Digest) == 0 {
-			return fmt.Errorf("subject digest is empty")
-		}
-		for algo, digest := range subject.Digest {
-			if strings.TrimSpace(algo) == "" || strings.TrimSpace(digest) == "" {
-				return fmt.Errorf("subject digest has invalid algorithm or value")
-			}
-		}
 	}
 
 	return nil
 }
 
-func validatePredicateType(statement InTotoStatement) error {
+func validatePredicateType(statement provenance.Statement) error {
 	if statement.PredicateType == "" {
 		return fmt.Errorf("predicateType is empty")
 	}

@@ -2,12 +2,12 @@ package attestation
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/attestation"
+	"github.com/buildsafedev/bsf/pkg/jsonl"
 	"github.com/spf13/cobra"
 )
 
@@ -33,14 +33,14 @@ var listCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		isValidJSONL, err := isJSONL(filePath)
+		isValidJSONL, err := validateFile(filePath, jsonl.ValidateIsJSONL)
 		if !isValidJSONL {
 			fmt.Println(styles.ErrorStyle.Render("error parsing JSONL:", err.Error()))
 			os.Exit(1)
 		}
 		fmt.Println(styles.SucessStyle.Render("✅ JSONL is valid"))
 
-		isValidInToto, err := attestation.IsInToto(filePath)
+		isValidInToto, err := validateFile(filePath, attestation.ValidateInTotoStatement)
 		if !isValidInToto {
 			fmt.Println(styles.ErrorStyle.Render("error validating intoto attestation:", err.Error()))
 			os.Exit(1)
@@ -54,19 +54,17 @@ var listCmd = &cobra.Command{
 	},
 }
 
-func isJSONL(filePath string) (bool, error) {
+func validateFile(filePath string, validateFunc func([]byte) error) (bool, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return false, err
 	}
 	defer file.Close()
 
-	// Read the file line by line and validate each line as JSON
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		var data interface{}
-		if err := json.Unmarshal([]byte(line), &data); err != nil {
+		if err := validateFunc([]byte(line)); err != nil {
 			return false, err
 		}
 	}
