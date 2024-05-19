@@ -29,7 +29,7 @@ var listCmd = &cobra.Command{
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if filePath == "" {
-			fmt.Println(styles.ErrorStyle.Render("Usage: bsf att ls -f <path.to.JSONL_file>"))
+			fmt.Println(styles.HintStyle.Render("hint: bsf att ls -f <path.to.JSONL_file>"))
 			os.Exit(1)
 		}
 
