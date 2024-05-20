@@ -1,11 +1,13 @@
 package attestation
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
 
-	"github.com/buildsafedev/bsf/pkg/provenance"
+	intoto "github.com/in-toto/in-toto-golang/in_toto"
 )
 
 var PredicateTypes = []string{
@@ -23,45 +25,47 @@ var PredicateTypes = []string{
 
 var predicateURIs = []string{
 	"https://slsa.dev/provenance/",
-	"https://in-toto.io/attestation/link/v0.3",
-	"https://in-toto.io/attestation/scai/attribute-report",
-	"https://in-toto.io/attestation/runtime-trace/v0.1",
+	"https://in-toto.io/attestation/",
 	"https://slsa.dev/verification_summary/v1",
 	"https://spdx.github.io/spdx-spec/v2.3/",
 	"https://cyclonedx.org/specification/overview/",
-	"https://in-toto.io/attestation/vulns",
-	"https://in-toto.io/attestation/release",
-	"https://in-toto.io/attestation/test-result/v0.1",
 }
 
-func ValidateInTotoStatement(line []byte) error {
-	var statement provenance.Statement
-	if err := json.Unmarshal(line, &statement); err != nil {
-		return fmt.Errorf("invalid JSON: %v", err)
-	}
+func ValidateInTotoStatement(file []byte) error {
 
-	if statement.Type != "https://in-toto.io/Statement/v1" {
-		return fmt.Errorf("invalid _type: %s", statement.Type)
-	}
+	scanner := bufio.NewScanner(bytes.NewReader(file))
+	for scanner.Scan() {
+		line := scanner.Text()
+		var statement intoto.StatementHeader
+		if err := json.Unmarshal([]byte(line), &statement); err != nil {
+			return fmt.Errorf("invalid JSON: %v", err)
+		}
 
-	if err := validatePredicateType(statement); err != nil {
-		return err
-	}
+		if statement.Type != "https://in-toto.io/Statement/v1" {
+			return fmt.Errorf("invalid _type: %s", statement.Type)
+		}
 
-	if len(statement.Subject) == 0 {
-		return fmt.Errorf("subject is empty")
-	}
+		if err := validatePredicateType(statement); err != nil {
+			return err
+		}
 
-	for _, subject := range statement.Subject {
-		if subject.Name == "" {
-			return fmt.Errorf("subject name is empty")
+		if len(statement.Subject) == 0 {
+			return fmt.Errorf("subject is empty")
+		}
+
+		for _, subject := range statement.Subject {
+			if subject.Name == "" {
+				return fmt.Errorf("subject name is empty")
+			}
 		}
 	}
-
+	if err := scanner.Err(); err != nil {
+		return err
+	}
 	return nil
 }
 
-func validatePredicateType(statement provenance.Statement) error {
+func validatePredicateType(statement intoto.StatementHeader) error {
 	if statement.PredicateType == "" {
 		return fmt.Errorf("predicateType is empty")
 	}

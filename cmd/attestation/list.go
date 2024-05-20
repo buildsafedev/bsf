@@ -1,7 +1,6 @@
 package attestation
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 
@@ -55,21 +54,12 @@ var listCmd = &cobra.Command{
 }
 
 func validateFile(filePath string, validateFunc func([]byte) error) (bool, error) {
-	file, err := os.Open(filePath)
+	file, err := os.ReadFile(filePath)
 	if err != nil {
 		return false, err
 	}
-	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if err := validateFunc([]byte(line)); err != nil {
-			return false, err
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
+	if err := validateFunc([]byte(file)); err != nil {
 		return false, err
 	}
 
