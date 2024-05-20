@@ -10,6 +10,8 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 )
 
+var predicateSubjectMap = make(map[string][]string)
+
 var PredicateTypes = []string{
 	"SLSA Provenance",
 	"Link",
@@ -57,6 +59,7 @@ func ValidateInTotoStatement(file []byte) error {
 			if subject.Name == "" {
 				return fmt.Errorf("subject name is empty")
 			}
+			predicateSubjectMap[statement.PredicateType] = append(predicateSubjectMap[statement.PredicateType], subject.Name)
 		}
 	}
 	if err := scanner.Err(); err != nil {
@@ -77,4 +80,8 @@ func validatePredicateType(statement intoto.StatementHeader) error {
 	}
 
 	return fmt.Errorf("predicateType %s is invalid", statement.PredicateType)
+}
+
+func GetPredicateSubjectMap() map[string][]string {
+	return predicateSubjectMap
 }

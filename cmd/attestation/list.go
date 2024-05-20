@@ -46,9 +46,16 @@ var listCmd = &cobra.Command{
 		}
 		fmt.Println(styles.SucessStyle.Render("✅ intoto attestations are valid"))
 
-		fmt.Println(styles.TextStyle.Render("List of available predicates:"))
-		for _, predicateType := range attestation.PredicateTypes {
-			fmt.Println(styles.TextStyle.Render(predicateType))
+		// Get the predicate-subject map
+		psMap := attestation.GetPredicateSubjectMap()
+
+		// Loop over the map and print the predicate and its subjects
+		fmt.Println(styles.TextStyle.Render("List of avaialble predicates and their subjects:"))
+		for predicate, subjects := range psMap {
+			fmt.Println(styles.TextStyle.Render(fmt.Sprintf("Predicate: %s", predicate)))
+			for _, subject := range subjects {
+				fmt.Println(styles.TextStyle.Render(fmt.Sprintf("  Subject: %s", subject)))
+			}
 		}
 	},
 }
