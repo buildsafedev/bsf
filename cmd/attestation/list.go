@@ -7,6 +7,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/attestation"
 	"github.com/buildsafedev/bsf/pkg/jsonl"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
@@ -49,13 +50,10 @@ var listCmd = &cobra.Command{
 		// Get the predicate-subject map
 		psMap := attestation.GetPredicateSubjectMap()
 
-		// Loop over the map and print the predicate and its subjects
-		fmt.Println(styles.TextStyle.Render("List of avaialble predicates and their subjects:"))
-		for predicate, subjects := range psMap {
-			fmt.Println(styles.TextStyle.Render(fmt.Sprintf("Predicate: %s", predicate)))
-			for _, subject := range subjects {
-				fmt.Println(styles.TextStyle.Render(fmt.Sprintf("  Subject: %s", subject)))
-			}
+		m := initPredSubTable(psMap)
+		if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
+			fmt.Println(styles.ErrorStyle.Render(fmt.Errorf("error: %v", err).Error()))
+			os.Exit(1)
 		}
 	},
 }
