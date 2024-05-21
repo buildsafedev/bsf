@@ -7,7 +7,6 @@ import (
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/attestation"
 	"github.com/buildsafedev/bsf/pkg/jsonl"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
@@ -49,12 +48,7 @@ var listCmd = &cobra.Command{
 
 		// Get the predicate-subject map
 		psMap := attestation.GetPredicateSubjectMap()
-
-		m := initPredSubTable(psMap)
-		if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
-			fmt.Println(styles.ErrorStyle.Render(fmt.Errorf("error: %v", err).Error()))
-			os.Exit(1)
-		}
+		printPredSubjTable(psMap)
 	},
 }
 
