@@ -10,8 +10,6 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 )
 
-var predicateSubjectMap = make(map[string][]string)
-
 var PredicateTypes = []string{
 	"SLSA Provenance",
 	"Link",
@@ -33,42 +31,45 @@ var predicateURIs = []string{
 	"https://cyclonedx.org/specification/overview/",
 }
 
-func ValidateInTotoStatement(file []byte) error {
+func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error) {
+	var predStatementMap = make(map[string][]intoto.Statement)
 
 	scanner := bufio.NewScanner(bytes.NewReader(file))
 	for scanner.Scan() {
 		line := scanner.Text()
-		var statement intoto.StatementHeader
+		var statement intoto.Statement
 		if err := json.Unmarshal([]byte(line), &statement); err != nil {
-			return fmt.Errorf("invalid JSON: %v", err)
+			return nil, fmt.Errorf("invalid JSON: %v", err)
 		}
 
-		if statement.Type != "https://in-toto.io/Statement/v1" {
-			return fmt.Errorf("invalid _type: %s", statement.Type)
-		}
-
-		if err := validatePredicateType(statement); err != nil {
-			return err
+		if err := validatePredicateType(statement.StatementHeader); err != nil {
+			return nil, err
 		}
 
 		if len(statement.Subject) == 0 {
-			return fmt.Errorf("subject is empty")
+			return nil, fmt.Errorf("subject is empty")
 		}
 
 		for _, subject := range statement.Subject {
 			if subject.Name == "" {
-				return fmt.Errorf("subject name is empty")
+				return nil, fmt.Errorf("subject name is empty")
 			}
-			predicateSubjectMap[statement.PredicateType] = append(predicateSubjectMap[statement.PredicateType], subject.Name)
 		}
+		predStatementMap[statement.PredicateType] = append(predStatementMap[statement.PredicateType], statement)
+
 	}
 	if err := scanner.Err(); err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return predStatementMap, nil
 }
 
 func validatePredicateType(statement intoto.StatementHeader) error {
+
+	if strings.Contains("https://in-toto.io/Statement/v1", statement.Type) {
+		return fmt.Errorf("invalid _type: %s", statement.Type)
+	}
+
 	if statement.PredicateType == "" {
 		return fmt.Errorf("predicateType is empty")
 	}
@@ -80,8 +81,4 @@ func validatePredicateType(statement intoto.StatementHeader) error {
 	}
 
 	return fmt.Errorf("predicateType %s is invalid", statement.PredicateType)
-}
-
-func GetPredicateSubjectMap() map[string][]string {
-	return predicateSubjectMap
 }

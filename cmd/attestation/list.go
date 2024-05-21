@@ -7,6 +7,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/attestation"
 	"github.com/buildsafedev/bsf/pkg/jsonl"
+	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 )
 
@@ -32,35 +33,44 @@ var listCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		isValidJSONL, err := validateFile(filePath, jsonl.ValidateIsJSONL)
+		isValidJSONL, _, err := validateFile(filePath, "JSON")
 		if !isValidJSONL {
 			fmt.Println(styles.ErrorStyle.Render("error parsing JSONL:", err.Error()))
 			os.Exit(1)
 		}
 		fmt.Println(styles.SucessStyle.Render("✅ JSONL is valid"))
 
-		isValidInToto, err := validateFile(filePath, attestation.ValidateInTotoStatement)
+		isValidInToto, psMap, err := validateFile(filePath, "inToto")
 		if !isValidInToto {
 			fmt.Println(styles.ErrorStyle.Render("error validating intoto attestation:", err.Error()))
 			os.Exit(1)
 		}
 		fmt.Println(styles.SucessStyle.Render("✅ intoto attestations are valid"))
 
-		// Get the predicate-subject map
-		psMap := attestation.GetPredicateSubjectMap()
+		// Print the predicate-subject map
 		printPredSubjTable(psMap)
 	},
 }
 
-func validateFile(filePath string, validateFunc func([]byte) error) (bool, error) {
+func validateFile(filePath string, fileType string) (bool, map[string][]intoto.Statement, error) {
 	file, err := os.ReadFile(filePath)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
-
-	if err := validateFunc([]byte(file)); err != nil {
-		return false, err
+	// Check the fileType
+	switch fileType {
+	case "JSON":
+		if err := jsonl.ValidateIsJSONL([]byte(file)); err != nil {
+			return false, nil, err
+		} else {
+			return true, nil, nil
+		}
+	case "inToto":
+		if psMap, err := attestation.ValidateInTotoStatement([]byte(file)); err != nil {
+			return false, nil, err
+		} else {
+			return true, psMap, nil
+		}
 	}
-
-	return true, nil
+	return false, nil, nil
 }
