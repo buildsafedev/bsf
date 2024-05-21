@@ -10,19 +10,6 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 )
 
-var PredicateTypes = []string{
-	"SLSA Provenance",
-	"Link",
-	"SCAI Report",
-	"Runtime Traces",
-	"SLSA Verification Summary",
-	"SPDX",
-	"CycloneDX",
-	"Vulnerability",
-	"Release",
-	"Test Result",
-}
-
 var predicateURIs = []string{
 	"https://slsa.dev/provenance/",
 	"https://in-toto.io/attestation/",
