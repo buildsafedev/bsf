@@ -53,7 +53,7 @@ func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error)
 
 func validatePredicateType(statement intoto.StatementHeader) error {
 
-	if strings.Contains("https://in-toto.io/Statement/v1", statement.Type) {
+	if !strings.Contains("https://in-toto.io/Statement/v1", statement.Type) {
 		return fmt.Errorf("invalid _type: %s", statement.Type)
 	}
 
