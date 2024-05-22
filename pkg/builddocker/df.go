@@ -69,7 +69,6 @@ COPY --from=builder /tmp/build/bsf/runtimeEnv /bin
 {{ if (.DevDeps)}}
 COPY --from=builder /tmp/build/bsf/devEnv /bin
 {{ end }}
-# Add /result/env to the PATH
 ENV SSL_CERT_FILE="/bin/etc/ssl/certs/ca-bundle.crt"
 ENV PATH="/bin:${PATH}"
 {{ if gt (len .EnvVars) 0 }}ENV {{ range $key, $value := .EnvVars }}{{ $key }}={{ quote $value }} {{ end }}{{ end }}
