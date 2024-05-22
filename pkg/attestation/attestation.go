@@ -11,13 +11,18 @@ import (
 )
 
 var ValidPreds = map[string][]string{
-	"https://slsa.dev/provenance/":                  {"SLSA Provenance", "Provenance"},
-	"https://in-toto.io/attestation/":               {"Link", "SCAI Report", "Runtime Traces", "Vulnerability", "Release", "Test Result"},
-	"https://slsa.dev/verification_summary/v1":      {"SLSA Verification Summary"},
-	"https://spdx.dev/Document":                     {"SPDX"},
-	"https://spdx.github.io/spdx-spec":              {"SPDX"},
-	"https://cyclonedx.org/bom":                     {"CycloneDX"},
-	"https://cyclonedx.org/specification/overview/": {"CycloneDX"},
+	"https://slsa.dev/provenance/":                         {"SLSA Provenance", "Provenance"},
+	"https://in-toto.io/attestation/vulns":                 {"Vulnerability", "vuln"},
+	"https://slsa.dev/verification_summary/v1":             {"SLSA Verification Summary", "vsa"},
+	"https://in-toto.io/attestation/test-result/v0.1":      {"Test Result", "test-result"},
+	"https://spdx.dev/Document":                            {"SPDX"},
+	"https://spdx.github.io/spdx-spec":                     {"SPDX"},
+	"https://in-toto.io/attestation/scai/attribute-report": {"SCAI Report", "scai"},
+	"https://in-toto.io/attestation/runtime-trace/":        {"Runtime Traces", "runtime-trace"},
+	"https://in-toto.io/attestation/release":               {"Release"},
+	"https://in-toto.io/attestation/link":                  {"Link"},
+	"https://cyclonedx.org/bom":                            {"CycloneDX", "CDX"},
+	"https://cyclonedx.org/specification/overview/":        {"CycloneDX", "CDX"},
 }
 
 var predicateURIs = []string{
@@ -82,31 +87,37 @@ func validatePredicateType(statement intoto.StatementHeader) error {
 	return fmt.Errorf("predicateType %s is invalid", statement.PredicateType)
 }
 
-func GetPredicate(psMap map[string][]intoto.Statement, predtype string, subject string) intoto.StatementHeader {
-	var keyToFind string
+func GetPredicate(psMap map[string][]intoto.Statement, predtype string, subject string) ([]intoto.Statement) {
+	var keysToFind []string
+	var predsFound []intoto.Statement
 
 	// Find the key in ValidPreds based on the predtype
 	for key, values := range ValidPreds {
 		for _, value := range values {
-			if value == predtype {
-				keyToFind = key
+			if strings.EqualFold(value, predtype) {
+				keysToFind = append(keysToFind, key)
 				break
 			}
-		}
-		if keyToFind != "" {
-			break
 		}
 	}
 
 	// Loop over the psMap and find the matching key
 	for key, statements := range psMap {
-		if key == keyToFind {
-			for _, statement := range statements {
-				// Assuming you need to return the first matching statement's header
-				return statement.StatementHeader
+		for _, keyToFind := range keysToFind {
+			if strings.Contains(key, keyToFind) {
+				for _, statement := range statements {
+					if subject != "" {
+						for _, predSub := range statement.StatementHeader.Subject {
+							if predSub.Name == subject {
+								predsFound = append(predsFound, statement)
+							}
+						}
+					} else {
+						predsFound = append(predsFound, statement)
+					}
+				}
 			}
 		}
 	}
-
-	return intoto.StatementHeader{}
+	return predsFound
 }
