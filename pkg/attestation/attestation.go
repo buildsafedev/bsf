@@ -15,7 +15,9 @@ var predicateURIs = []string{
 	"https://in-toto.io/attestation/",
 	"https://slsa.dev/verification_summary/v1",
 	"https://spdx.github.io/spdx-spec/v2.3/",
+	"https://spdx.dev/Document",
 	"https://cyclonedx.org/specification/overview/",
+	"https://cyclonedx.org/bom",
 }
 
 func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error) {
