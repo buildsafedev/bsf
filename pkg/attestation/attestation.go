@@ -10,6 +10,16 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 )
 
+var ValidPreds = map[string][]string{
+	"https://slsa.dev/provenance/":                  {"SLSA Provenance", "Provenance"},
+	"https://in-toto.io/attestation/":               {"Link", "SCAI Report", "Runtime Traces", "Vulnerability", "Release", "Test Result"},
+	"https://slsa.dev/verification_summary/v1":      {"SLSA Verification Summary"},
+	"https://spdx.dev/Document":                     {"SPDX"},
+	"https://spdx.github.io/spdx-spec":              {"SPDX"},
+	"https://cyclonedx.org/bom":                     {"CycloneDX"},
+	"https://cyclonedx.org/specification/overview/": {"CycloneDX"},
+}
+
 var predicateURIs = []string{
 	"https://slsa.dev/provenance/",
 	"https://in-toto.io/attestation/",
@@ -70,4 +80,33 @@ func validatePredicateType(statement intoto.StatementHeader) error {
 	}
 
 	return fmt.Errorf("predicateType %s is invalid", statement.PredicateType)
+}
+
+func GetPredicate(psMap map[string][]intoto.Statement, predtype string, subject string) intoto.StatementHeader {
+	var keyToFind string
+
+	// Find the key in ValidPreds based on the predtype
+	for key, values := range ValidPreds {
+		for _, value := range values {
+			if value == predtype {
+				keyToFind = key
+				break
+			}
+		}
+		if keyToFind != "" {
+			break
+		}
+	}
+
+	// Loop over the psMap and find the matching key
+	for key, statements := range psMap {
+		if key == keyToFind {
+			for _, statement := range statements {
+				// Assuming you need to return the first matching statement's header
+				return statement.StatementHeader
+			}
+		}
+	}
+
+	return intoto.StatementHeader{}
 }

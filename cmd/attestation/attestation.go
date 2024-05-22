@@ -22,4 +22,6 @@ var AttCmd = &cobra.Command{
 func init() {
 	// add subcommand to list predicates
 	AttCmd.AddCommand(listCmd)
+	// add subcommand to print predicates
+	AttCmd.AddCommand(catCmd)
 }
