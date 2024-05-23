@@ -81,8 +81,8 @@ func GetPredicateType(statement intoto.StatementHeader) (string, error) {
 	return "", fmt.Errorf("predicateType %s is invalid", statement.PredicateType)
 }
 
-// GetPredicate returns the predicate for the given predicate type and subject
-func GetPredicate(psMap map[string][]intoto.Statement, predType string, subject string) []intoto.Statement {
+// GetRelevantStatements returns the predicate for the given predicate type and subject
+func GetRelevantStatements(psMap map[string][]intoto.Statement, predType string, subject string) []intoto.Statement {
 	// Filter out the allSts based on the predicate type
 	allSts := psMap[predType]
 

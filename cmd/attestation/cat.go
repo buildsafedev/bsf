@@ -68,15 +68,20 @@ var catCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		preds := attestation.GetPredicate(psMap, predicateType, subject)
-		for _, pred := range preds {
-			jsonData, err := json.MarshalIndent(pred, "", "  ")
-			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error marshalling predicate to JSON:", err.Error()))
-				os.Exit(1)
-			}
-			fmt.Println(string(jsonData))
+		relSts := attestation.GetRelevantStatements(psMap, predicateType, subject)
 
+		if len(relSts) == 0 {
+			fmt.Println(styles.ErrorStyle.Render("no relevant statements found"))
+			os.Exit(1)
+		}
+
+		for _, relSt := range relSts {
+			pred := relSt.Predicate
+			predJSON, err := json.MarshalIndent(pred, "", " ")
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(string(predJSON))
 		}
 	},
 }
