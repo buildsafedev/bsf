@@ -13,14 +13,12 @@ import (
 )
 
 var (
-	fileName      string
 	predicateType string
 	predicate     bool
 	subject       string
 )
 
 func init() {
-	catCmd.Flags().StringVarP(&fileName, "filePath", "f", "", "path to the JSONL file")
 	catCmd.Flags().StringVarP(&predicateType, "predicate-type", "t", "", "type of the predicate")
 	catCmd.Flags().StringVarP(&subject, "subject", "s", "", "subject of the predicate")
 	catCmd.Flags().BoolVarP(&predicate, "predicate", "p", false, "print predicate")
@@ -44,12 +42,12 @@ var catCmd = &cobra.Command{
 	Use:   "cat",
 	Short: "prints out the predicate type in JSON",
 	Long: `
-	bsf att cat -f <path-to-file> --predicate-type <predicate-type>
-	bsf att cat -f <path-to-file> --predicate-type <predicate-type> --subject <subject>
+	bsf att cat <path-to-file> --predicate-type <predicate-type>
+	bsf att cat <path-to-file> --predicate-type <predicate-type> --subject <subject>
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if fileName == "" || predicateType == "" {
-			fmt.Println(styles.HintStyle.Render("hint: bsf att cat -f <path-to-file> --predicate-type <predicate-type"))
+		if args[0] == "" || predicateType == "" {
+			fmt.Println(styles.HintStyle.Render("hint: bsf att cat <path-to-file> --predicate-type <predicate-type"))
 			os.Exit(1)
 		}
 
@@ -57,6 +55,8 @@ var catCmd = &cobra.Command{
 			fmt.Print(styles.HintStyle.Render("Hint: validate predicate types:", strings.Join(validPredArgs, ", ")))
 			os.Exit(1)
 		}
+
+		fileName := args[0]
 
 		isValidJSONL, _, err := validateFile(fileName, "JSON")
 		if !isValidJSONL {
@@ -78,18 +78,15 @@ var catCmd = &cobra.Command{
 		}
 
 		for _, relSt := range relSts {
-			predJSON, err := json.MarshalIndent(relSt, "", " ")
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Println(string(predJSON))
-			os.Exit(0)
-		}
-
-		if predicate {
-			for _, relSt := range relSts {
+			if predicate {
 				pred := relSt.Predicate
 				predJSON, err := json.MarshalIndent(pred, "", " ")
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(string(predJSON))
+			} else {
+				predJSON, err := json.MarshalIndent(relSt, "", " ")
 				if err != nil {
 					fmt.Println(err)
 				}

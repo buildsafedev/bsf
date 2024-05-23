@@ -11,14 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	filePath string
-)
-
-func init() {
-	listCmd.Flags().StringVarP(&filePath, "filePath", "f", "", "path to the JSONL file")
-}
-
 // AttCmd represents the attestation command
 var listCmd = &cobra.Command{
 	Use:   "ls",
@@ -28,10 +20,11 @@ var listCmd = &cobra.Command{
 	available.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if filePath == "" {
-			fmt.Println(styles.HintStyle.Render("hint: bsf att ls -f <path.to.JSONL_file>"))
+		if args[0] == "" {
+			fmt.Println(styles.HintStyle.Render("hint: bsf att ls <path.to.JSONL_file>"))
 			os.Exit(1)
 		}
+		filePath := args[0]
 
 		isValidJSONL, _, err := validateFile(filePath, "JSON")
 		if !isValidJSONL {
