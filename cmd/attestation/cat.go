@@ -61,23 +61,22 @@ var catCmd = &cobra.Command{
 			fmt.Println(styles.ErrorStyle.Render("error parsing JSONL:", err.Error()))
 			os.Exit(1)
 		}
-		fmt.Println(styles.SucessStyle.Render("✅ JSONL is valid"))
 
 		isValidInToto, psMap, err := validateFile(fileName, "inToto")
 		if !isValidInToto {
 			fmt.Println(styles.ErrorStyle.Render("error validating intoto attestation:", err.Error()))
 			os.Exit(1)
 		}
-		fmt.Println(styles.SucessStyle.Render("✅ intoto attestations are valid"))
 
 		preds := attestation.GetPredicate(psMap, predicateType, subject)
 		for _, pred := range preds {
 			jsonData, err := json.MarshalIndent(pred, "", "  ")
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error marshalling predicate to JSON:", err.Error()))
-			} else {
-				fmt.Println(string(jsonData))
+				os.Exit(1)
 			}
+			fmt.Println(string(jsonData))
+
 		}
 	},
 }

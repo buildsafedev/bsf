@@ -10,7 +10,8 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 )
 
-var ValidPreds = map[string]string{
+// PredicateURIType is a map of predicate URIs to the type of predicate they are
+var PredicateURIType = map[string]string{
 	"https://slsa.dev/provenance/":                         "provenance",
 	"https://in-toto.io/attestation/vulns":                 "vuln",
 	"https://slsa.dev/verification_summary/v1":             "vsa",
@@ -25,6 +26,7 @@ var ValidPreds = map[string]string{
 	"https://cyclonedx.org/specification/overview/":        "cdx",
 }
 
+// ValidateInTotoStatement validates the in-toto statement in the byte array
 func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error) {
 	var predStatementMap = make(map[string][]intoto.Statement)
 
@@ -36,7 +38,7 @@ func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error)
 			return nil, fmt.Errorf("invalid JSON: %v", err)
 		}
 
-		gotPredType, err := validatePredicateType(statement.StatementHeader)
+		gotPredType, err := GetPredicateType(statement.StatementHeader)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +61,8 @@ func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error)
 	return predStatementMap, nil
 }
 
-func validatePredicateType(statement intoto.StatementHeader) (string, error) {
+// GetPredicateType returns the predicate type for the given statement
+func GetPredicateType(statement intoto.StatementHeader) (string, error) {
 
 	if !strings.Contains("https://in-toto.io/Statement/v1", statement.Type) {
 		return "", fmt.Errorf("invalid _type: %s", statement.Type)
@@ -69,7 +72,7 @@ func validatePredicateType(statement intoto.StatementHeader) (string, error) {
 		return "", fmt.Errorf("predicateType is empty")
 	}
 
-	for pred, shortName := range ValidPreds {
+	for pred, shortName := range PredicateURIType {
 		if strings.Contains(statement.PredicateType, pred) {
 			return shortName, nil
 		}
@@ -78,47 +81,69 @@ func validatePredicateType(statement intoto.StatementHeader) (string, error) {
 	return "", fmt.Errorf("predicateType %s is invalid", statement.PredicateType)
 }
 
-func GetPredicate(psMap map[string][]intoto.Statement, predtype string, subject string) []intoto.Statement {
-	// There can be multiple valid keys for the predType.
-	// Such as, for spdx value, we have multiple keys.
-	// Once we store them in a slice, we can later loop
-	// over this to find the key that matches ps
-	var keysToFind []string
-	// If a user does not provides a subject, there can be
-	// scenarios when multiple preds of same type can be 
-	// available. This slice is going to store all of them.
-	var predsFound []intoto.Statement
+// GetPredicate returns the predicate for the given predicate type and subject
+func GetPredicate(psMap map[string][]intoto.Statement, predType string, subject string) []intoto.Statement {
+	// Filter out the allSts based on the predicate type
+	allSts := psMap[predType]
 
-	// Find the preds in ValidPreds based on the predtype
-	for key, value := range ValidPreds {
-		if strings.EqualFold(value, predtype) {
-			keysToFind = append(keysToFind, key)
-			break
-		}
+	if subject == "" {
+		return allSts
 	}
 
-	// 1. Loop over the psMap to first fetch all intoto.Statement
-	// 2. Loop over keysToFind to check if the key and statement match
-	// 3. Check if subject is defined, if yes, match the subject.
-	// 4. If the subject is found, append the statement to predsFound and break.
-	// 5. If subject is not found, keep appending the matched statement to predsFound.
-	for _, statements := range psMap {
-		for _, statement := range statements {
-			for _, keyToFind := range keysToFind {
-				if strings.Contains(statement.PredicateType, keyToFind) {
-					if subject != "" {
-						for _, predSub := range statement.StatementHeader.Subject {
-							if predSub.Name == subject {
-								predsFound = append(predsFound, statement)
-								break
-							}
-						}
-					} else {
-						predsFound = append(predsFound, statement)
-					}
-				}
+	subSts := make([]intoto.Statement, 0, len(allSts))
+	for _, stmt := range allSts {
+		for _, subj := range stmt.Subject {
+			if subj.Name == subject {
+				subSts = append(subSts, stmt)
 			}
 		}
 	}
-	return predsFound
+
+	return subSts
 }
+
+// // GetPredicate returns the predicate for the given predicate type and subject
+// func GetPredicate(psMap map[string][]intoto.Statement, predtype string, subject string) []intoto.Statement {
+// 	// There can be multiple valid keys for the predType.
+// 	// Such as, for spdx value, we have multiple keys.
+// 	// Once we store them in a slice, we can later loop
+// 	// over this to find the key that matches ps
+// 	var keysToFind []string
+// 	// If a user does not provides a subject, there can be
+// 	// scenarios when multiple preds of same type can be
+// 	// available. This slice is going to store all of them.
+// 	var predsFound []intoto.Statement
+
+// 	// Find the preds in ValidPreds based on the predtype
+// 	for key, value := range PredicateURIType {
+// 		if strings.EqualFold(value, predtype) {
+// 			keysToFind = append(keysToFind, key)
+// 			break
+// 		}
+// 	}
+
+// 	// 1. Loop over the psMap to first fetch all intoto.Statement
+// 	// 2. Loop over keysToFind to check if the key and statement match
+// 	// 3. Check if subject is defined, if yes, match the subject.
+// 	// 4. If the subject is found, append the statement to predsFound and break.
+// 	// 5. If subject is not found, keep appending the matched statement to predsFound.
+// 	for _, statements := range psMap {
+// 		for _, statement := range statements {
+// 			for _, keyToFind := range keysToFind {
+// 				if strings.Contains(statement.PredicateType, keyToFind) {
+// 					if subject != "" {
+// 						for _, predSub := range statement.StatementHeader.Subject {
+// 							if predSub.Name == subject {
+// 								predsFound = append(predsFound, statement)
+// 								break
+// 							}
+// 						}
+// 					} else {
+// 						predsFound = append(predsFound, statement)
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return predsFound
+// }
