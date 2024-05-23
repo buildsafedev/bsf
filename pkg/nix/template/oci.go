@@ -76,6 +76,7 @@ func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
 			EnvVars:       ociArtifact.EnvVars,
 			ImportConfigs: ociArtifact.ImportConfigs,
 			ExposedPorts:  ociArtifact.ExposedPorts,
+			DevDeps:       ociArtifact.DevDeps,
 		}
 	}
 

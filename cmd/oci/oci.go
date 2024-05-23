@@ -30,6 +30,9 @@ var OCICmd = &cobra.Command{
 	Use:   "oci",
 	Short: "Builds an OCI image",
 	Long: `
+	bsf oci <environment name> 
+	bsf oci <environment name> --platform <platform>
+	bsf oci <environment name> --platform <platform> --output <output directory>
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// todo: we could provide a TUI list dropdown to select
@@ -38,54 +41,9 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if platform == "" {
-			tos := runtime.GOOS
-			tarch := runtime.GOARCH
-			platform = fmt.Sprintf("%s/%s", tos, tarch)
-		}
-
-		for _, sp := range supportedPlatforms {
-			if strings.Contains(platform, sp) {
-				break
-			}
-			fmt.Println(styles.ErrorStyle.Render(fmt.Sprintf("Platform %s is not supported. Supported platforms are %s", platform, strings.Join(supportedPlatforms, ", "))))
-			os.Exit(1)
-		}
-
-		data, err := os.ReadFile("bsf.hcl")
+		env, err := ProcessPlatformAndConfig(platform, args[0])
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-			os.Exit(1)
-		}
-
-		var dstErr bytes.Buffer
-		conf, err := hcl2nix.ReadConfig(data, &dstErr)
-		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render(dstErr.String()))
-			os.Exit(1)
-		}
-
-		envNames := make([]string, 0, len(conf.OCIArtifact))
-		var found bool
-		env := hcl2nix.OCIArtifact{}
-		for _, ec := range conf.OCIArtifact {
-			errStr := ec.Validate(conf)
-			if errStr != nil {
-				fmt.Println(styles.ErrorStyle.Render(fmt.Sprintf("Config for export block %s is invalid\n Error: %s", ec.Name, *errStr)))
-				os.Exit(1)
-			}
-
-			if ec.Environment == args[0] {
-				found = true
-				env = ec
-				break
-			}
-			envNames = append(envNames, ec.Environment)
-		}
-
-		if !found {
-			fmt.Println(styles.ErrorStyle.Render("error:", "No such environment found. Valid oci environment that can be built are:", strings.Join(envNames, ", ")))
-			fmt.Println(styles.HintStyle.Render("hint:", "run `bsf oci <environment name>` to build the environment"))
 			os.Exit(1)
 		}
 
@@ -133,6 +91,59 @@ var OCICmd = &cobra.Command{
 		fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Build completed successfully, please check the %s directory", output)))
 
 	},
+}
+
+// ProcessPlatformAndConfig processes the platform and config file
+func ProcessPlatformAndConfig(platform string, envName string) (hcl2nix.OCIArtifact, error) {
+	if platform == "" {
+		tos := runtime.GOOS
+		tarch := runtime.GOARCH
+		platform = fmt.Sprintf("%s/%s", tos, tarch)
+	}
+
+	pfound := false
+	for _, sp := range supportedPlatforms {
+		if strings.Contains(platform, sp) {
+			pfound = true
+			break
+		}
+	}
+	if !pfound {
+		return hcl2nix.OCIArtifact{}, fmt.Errorf("Platform %s is not supported. Supported platforms are %s", platform, strings.Join(supportedPlatforms, ", "))
+	}
+	data, err := os.ReadFile("bsf.hcl")
+	if err != nil {
+		return hcl2nix.OCIArtifact{}, fmt.Errorf("error: %s", err.Error())
+	}
+
+	var dstErr bytes.Buffer
+	conf, err := hcl2nix.ReadConfig(data, &dstErr)
+	if err != nil {
+		return hcl2nix.OCIArtifact{}, fmt.Errorf(dstErr.String())
+	}
+
+	envNames := make([]string, 0, len(conf.OCIArtifact))
+	var found bool
+	env := hcl2nix.OCIArtifact{}
+	for _, ec := range conf.OCIArtifact {
+		errStr := ec.Validate(conf)
+		if errStr != nil {
+			return hcl2nix.OCIArtifact{}, fmt.Errorf("Config for export block %s is invalid\n Error: %s", ec.Name, *errStr)
+		}
+
+		if ec.Environment == envName {
+			found = true
+			env = ec
+			break
+		}
+		envNames = append(envNames, ec.Environment)
+	}
+
+	if !found {
+		return hcl2nix.OCIArtifact{}, fmt.Errorf("error: No such environment found. Valid oci environment that can be built are: %s", strings.Join(envNames, ", "))
+	}
+
+	return env, nil
 }
 
 func genOCIAttrName(env, platform string) string {
