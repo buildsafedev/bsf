@@ -16,11 +16,13 @@ var (
 	predicateType string
 	predicate     bool
 	subject       string
+	output        string
 )
 
 func init() {
 	catCmd.Flags().StringVarP(&predicateType, "predicate-type", "t", "", "type of the predicate")
 	catCmd.Flags().StringVarP(&subject, "subject", "s", "", "subject of the predicate")
+	catCmd.Flags().StringVarP(&output, "output", "o", "", "name of the output file")
 	catCmd.Flags().BoolVarP(&predicate, "predicate", "p", false, "print predicate")
 }
 
@@ -78,18 +80,25 @@ var catCmd = &cobra.Command{
 		}
 
 		for _, relSt := range relSts {
+			var data interface{}
 			if predicate {
-				pred := relSt.Predicate
-				predJSON, err := json.MarshalIndent(pred, "", " ")
-				if err != nil {
-					fmt.Println(err)
-				}
-				fmt.Println(string(predJSON))
+				data = relSt.Predicate
 			} else {
-				predJSON, err := json.MarshalIndent(relSt, "", " ")
-				if err != nil {
+				data = relSt
+			}
+
+			predJSON, err := json.MarshalIndent(data, " ", "  ")
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			if output != "" {
+				if err := os.WriteFile(output, predJSON, 0644); err != nil {
 					fmt.Println(err)
+					os.Exit(1)
 				}
+			} else {
 				fmt.Println(string(predJSON))
 			}
 		}
