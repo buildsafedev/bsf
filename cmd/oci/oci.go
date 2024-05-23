@@ -12,14 +12,17 @@ import (
 	"github.com/buildsafedev/bsf/cmd/build"
 	binit "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/styles"
+	"github.com/buildsafedev/bsf/pkg/builddocker"
 	"github.com/buildsafedev/bsf/pkg/generate"
 	bgit "github.com/buildsafedev/bsf/pkg/git"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
+	"github.com/buildsafedev/bsf/pkg/oci"
 )
 
 var (
 	platform, output string
+	push, loadDocker bool
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
@@ -89,6 +92,47 @@ var OCICmd = &cobra.Command{
 		}
 
 		fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Build completed successfully, please check the %s directory", output)))
+
+		if loadDocker {
+			fmt.Println(styles.HighlightStyle.Render("Loading image to docker daemon..."))
+
+			currentContext, err := builddocker.GetCurrentContext()
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+			contextEP, err := builddocker.ReadContextEndpoints()
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+			if currentContext == "" {
+				currentContext = "default"
+			}
+			if _, ok := contextEP[currentContext]; !ok {
+				contextEP[currentContext] = "unix:///var/run/docker.sock"
+			}
+			_ = currentContext
+
+			err = oci.LoadDocker(contextEP[currentContext], output+"/result", env.Name)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+
+			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to docker daemon", env.Name)))
+
+		}
+
+		if push {
+			fmt.Println(styles.HighlightStyle.Render("Pushing image to registry..."))
+			err = oci.Push(output+"/result", env.Name)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", env.Name)))
+		}
 
 	},
 }
@@ -161,5 +205,7 @@ func genOCIAttrName(env, platform string) string {
 func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
 	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
+	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
+	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
 
 }
