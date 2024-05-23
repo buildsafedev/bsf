@@ -15,13 +15,15 @@ import (
 var (
 	fileName      string
 	predicateType string
+	predicate     bool
 	subject       string
 )
 
 func init() {
 	catCmd.Flags().StringVarP(&fileName, "filePath", "f", "", "path to the JSONL file")
-	catCmd.Flags().StringVarP(&predicateType, "predicate-type", "p", "", "type of the predicate")
+	catCmd.Flags().StringVarP(&predicateType, "predicate-type", "t", "", "type of the predicate")
 	catCmd.Flags().StringVarP(&subject, "subject", "s", "", "subject of the predicate")
+	catCmd.Flags().BoolVarP(&predicate, "predicate", "p", false, "print predicate")
 }
 
 var validPredArgs = []string{
@@ -76,12 +78,23 @@ var catCmd = &cobra.Command{
 		}
 
 		for _, relSt := range relSts {
-			pred := relSt.Predicate
-			predJSON, err := json.MarshalIndent(pred, "", " ")
+			predJSON, err := json.MarshalIndent(relSt, "", " ")
 			if err != nil {
 				fmt.Println(err)
 			}
 			fmt.Println(string(predJSON))
+			os.Exit(0)
+		}
+
+		if predicate {
+			for _, relSt := range relSts {
+				pred := relSt.Predicate
+				predJSON, err := json.MarshalIndent(pred, "", " ")
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(string(predJSON))
+			}
 		}
 	},
 }
