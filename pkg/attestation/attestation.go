@@ -38,7 +38,7 @@ func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error)
 			return nil, fmt.Errorf("invalid JSON: %v", err)
 		}
 
-		gotPredType, err := GetPredicateType(statement.StatementHeader)
+		gotPredType, err := getPredicateType(statement.StatementHeader)
 		if err != nil {
 			return nil, err
 		}
@@ -62,7 +62,7 @@ func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error)
 }
 
 // GetPredicateType returns the predicate type for the given statement
-func GetPredicateType(statement intoto.StatementHeader) (string, error) {
+func getPredicateType(statement intoto.StatementHeader) (string, error) {
 
 	if !strings.Contains("https://in-toto.io/Statement/v1", statement.Type) {
 		return "", fmt.Errorf("invalid _type: %s", statement.Type)
