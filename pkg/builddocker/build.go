@@ -1,7 +1,6 @@
 package builddocker
 
 import (
-	"context"
 	"fmt"
 	"html/template"
 	"io"
@@ -22,31 +21,6 @@ type dockerfileCfg struct {
 	EnvVars    map[string]string
 	DevDeps    bool
 	Config     string
-}
-
-// Build builds the environment
-func Build(env hcl2nix.OCIArtifact, platform string) error {
-	tmpDir, err := createTempDir()
-	if err != nil {
-		return err
-	}
-	fh, err := os.Create(tmpDir + "/" + "Dockerfile" + env.Environment + "." + generateRandomFilename())
-	if err != nil {
-		return err
-	}
-	defer fh.Close()
-
-	err = GenerateDockerfile(fh, env, platform)
-	if err != nil {
-		return err
-	}
-
-	err = dockerbuild(context.Background(), buildOpts{
-		DockerFileLoc: fh.Name(),
-		Name:          env.Name,
-	})
-
-	return err
 }
 
 func quote(s string) string {
