@@ -18,7 +18,7 @@ func TestParseAppDetails(t *testing.T) {
 			wantApp: &App{
 				ResultDigest: "1vng6wj07s51jsgj338m24m0c0mw2i3k",
 				Name:         "app",
-				Version:      "0.1.0",
+				// Version:      "0.1.0",
 			},
 			wantErr: false,
 		},
@@ -28,7 +28,7 @@ func TestParseAppDetails(t *testing.T) {
 			wantApp: &App{
 				ResultDigest: "da66gxmm6wy8shkw93x5m6c1x8gfj63r",
 				Name:         "caddy",
-				Version:      "2.7.6",
+				// Version:      "2.7.6",
 			},
 		},
 		{

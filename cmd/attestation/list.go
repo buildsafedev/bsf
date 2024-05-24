@@ -55,15 +55,16 @@ func validateFile(filePath string, fileType string) (bool, map[string][]intoto.S
 	case "JSON":
 		if err := jsonl.ValidateIsJSONL([]byte(file)); err != nil {
 			return false, nil, err
-		} else {
-			return true, nil, nil
 		}
+		return true, nil, nil
+
 	case "inToto":
-		if psMap, err := attestation.ValidateInTotoStatement([]byte(file)); err != nil {
+		psMap, err := attestation.ValidateInTotoStatement([]byte(file))
+		if err != nil {
 			return false, nil, err
-		} else {
-			return true, psMap, nil
 		}
+		return true, psMap, nil
+
 	}
 	return false, nil, nil
 }

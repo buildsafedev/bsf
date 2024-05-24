@@ -104,10 +104,10 @@ func (s *Statement) ToJSON(bom *sbom.Document, format formats.Format) ([]byte, e
 func parseLockfileToSBOMNodes(document *sbom.Document, appNode *sbom.Node, lf *hcl2nix.LockFile) {
 	for _, pkg := range lf.Packages {
 		snode := sbom.Node{
-			Id: PurlFromNameVersion(pkg.Package.Name, pkg.Package.Version),
+			Id: GeneratePurl(pkg.Package.Name, pkg.Package.Version, "", ""),
 			Identifiers: map[int32]string{
 				int32(sbom.SoftwareIdentifierType_CPE23): pkg.Package.Cpe,
-				int32(sbom.SoftwareIdentifierType_PURL):  PurlFromNameVersion(pkg.Package.Name, pkg.Package.Version),
+				int32(sbom.SoftwareIdentifierType_PURL):  GeneratePurl(pkg.Package.Name, pkg.Package.Version, "", ""),
 			},
 			Type:             sbom.Node_PACKAGE,
 			Name:             pkg.Package.Name,
@@ -136,18 +136,18 @@ func parseDotGraph(document *sbom.Document, appNode *sbom.Node, graph *gographvi
 	for _, node := range graph.Nodes.Nodes {
 		name := node.Attrs["name"]
 		version := node.Attrs["version"]
-		if name == appNode.Name {
+		if name == "" || name == appNode.Name {
 			continue
 		}
 
 		snode := sbom.Node{
 			Name:           name,
 			Type:           sbom.Node_PACKAGE,
-			Id:             PurlFromNameVersion(name, version),
+			Id:             GeneratePurl(name, version, "", ""),
 			Version:        version,
 			PrimaryPurpose: []sbom.Purpose{sbom.Purpose_DATA},
 			Identifiers: map[int32]string{
-				int32(sbom.SoftwareIdentifierType_PURL): PurlFromNameVersion(name, version),
+				int32(sbom.SoftwareIdentifierType_PURL): GeneratePurl(name, version, "", ""),
 			},
 			Hashes: map[int32]string{
 				int32(sbom.HashAlgorithm_SHA256): node.Attrs["hash"],
@@ -160,7 +160,12 @@ func parseDotGraph(document *sbom.Document, appNode *sbom.Node, graph *gographvi
 	return
 }
 
-// PurlFromNameVersion returns a package url for the given name and version
-func PurlFromNameVersion(name, version string) string {
-	return "pkg:" + "nix/" + name + "@v" + version
+// GeneratePurl returns a package url for the given name and version
+func GeneratePurl(name, version, os, arch string) string {
+	purl := "pkg:" + "nix/" + name + "@v" + version
+	if os != "" && arch != "" {
+		purl += "?os=" + os + "&arch=" + arch
+	}
+
+	return purl
 }

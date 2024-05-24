@@ -2,6 +2,7 @@ package oci
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime"
@@ -78,14 +79,37 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		err = nixcmd.Build(output+"/result", genOCIAttrName(env.Environment, platform))
+		symlink := "/result"
+
+		err = nixcmd.Build(output+symlink, genOCIAttrName(env.Environment, platform))
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
 		fmt.Println(styles.HighlightStyle.Render("Generating artifacts..."))
 
-		err = build.GenerateArtifcats(output, "/result")
+		lockData, err := os.ReadFile("bsf.lock")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		lockFile := &hcl2nix.LockFile{}
+		err = json.Unmarshal(lockData, lockFile)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		appDetails, graph, err := nixcmd.GetRuntimeClosureGraph(lockFile.App.Name, output, symlink)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+		appDetails.Name = env.Name
+
+		tos, tarch := findPlatform(platform)
+		err = build.GenerateArtifcats(output, symlink, lockFile, appDetails, graph, tos, tarch)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
@@ -137,12 +161,24 @@ var OCICmd = &cobra.Command{
 	},
 }
 
+func findPlatform(platform string) (string, string) {
+	if platform == "" {
+		return runtime.GOOS, runtime.GOARCH
+	}
+	osarch := strings.Split(platform, "/")
+	if len(osarch) != 2 {
+		return runtime.GOOS, runtime.GOARCH
+	}
+
+	return osarch[0], osarch[1]
+
+}
+
 // ProcessPlatformAndConfig processes the platform and config file
 func ProcessPlatformAndConfig(platform string, envName string) (hcl2nix.OCIArtifact, error) {
 	if platform == "" {
-		tos := runtime.GOOS
-		tarch := runtime.GOARCH
-		platform = fmt.Sprintf("%s/%s", tos, tarch)
+		tos, tarch := findPlatform(platform)
+		platform = tos + "/" + tarch
 	}
 
 	pfound := false

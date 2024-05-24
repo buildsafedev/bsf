@@ -7,12 +7,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"strings"
 	"sync"
 
 	"github.com/awalterschulze/gographviz"
+	"github.com/bom-squad/protobom/pkg/sbom"
 	imgv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"zombiezen.com/go/nix/nar"
 	"zombiezen.com/go/nix/nixbase32"
@@ -22,6 +24,7 @@ import (
 type App struct {
 	Name         string
 	Version      string
+	AppType      sbom.Purpose
 	ResultHash   string
 	ResultDigest string
 	BinaryHash   string
@@ -29,11 +32,14 @@ type App struct {
 
 // GetRuntimeClosureGraph returns the runtime closure graph for the project
 // TODO: we should look into adding metadata about licenses, homepage into the graph
-func GetRuntimeClosureGraph(output string, symlink string) (*App, *gographviz.Graph, error) {
+func GetRuntimeClosureGraph(appName, output string, symlink string) (*App, *gographviz.Graph, error) {
 	app, err := GetAppDetails(output, symlink)
 	if err != nil {
 		return nil, nil, err
 	}
+	app.Name = appName
+	// todo: maybe we should get version from user.
+	app.Version = "0.0.0"
 
 	cmd := exec.Command("nix-store", "-q", "--graph", output+symlink)
 
@@ -75,9 +81,6 @@ func artifactHash(output, symlink string) (string, error) {
 	}
 
 	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
 		if file.Name() == "bin" {
 			binName, err := findResultBinary(output, symlink)
 			if err != nil {
@@ -89,8 +92,8 @@ func artifactHash(output, symlink string) (string, error) {
 			}
 			return hash, nil
 		}
-		if file.Name() == "mainfest.json" {
-			fbytes, err := os.ReadFile(output + symlink + "/mainfest.json")
+		if file.Name() == "manifest.json" {
+			fbytes, err := os.ReadFile(output + symlink + "/manifest.json")
 			if err != nil {
 				return "", err
 			}
@@ -124,7 +127,7 @@ func addNarHashToGraph(graph *gographviz.Graph) {
 			}
 
 			node.Attrs["hash"] = hash
-			app, err := parseAppDetails(path)
+			app, err := parseAppDetails("/nix/store/" + path)
 			if err != nil {
 				return
 			}
@@ -217,6 +220,13 @@ func GetAppDetails(output string, symlink string) (*App, error) {
 }
 
 func parseAppDetails(path string) (*App, error) {
+	fs, err := os.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+
+	purpose := findAppType(fs)
+
 	path = strings.TrimPrefix(path, "/nix/store/")
 	parts := strings.Split(path, "-")
 	if len(parts) < 3 {
@@ -225,7 +235,21 @@ func parseAppDetails(path string) (*App, error) {
 
 	return &App{
 		ResultDigest: parts[0],
-		Name:         parts[len(parts)-2],
 		Version:      parts[len(parts)-1],
+		AppType:      purpose,
 	}, nil
+}
+
+func findAppType(fs []fs.DirEntry) sbom.Purpose {
+	for _, f := range fs {
+		if f.Name() == "bin" {
+			return sbom.Purpose_EXECUTABLE
+		}
+
+		if f.Name() == "manifest.json" {
+			return sbom.Purpose_CONTAINER
+		}
+	}
+
+	return sbom.Purpose_UNKNOWN_PURPOSE
 }

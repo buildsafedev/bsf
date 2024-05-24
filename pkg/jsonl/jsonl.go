@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 )
 
+// ValidateIsJSONL validates if the file is JSONL
 func ValidateIsJSONL(file []byte) error {
 	scanner := bufio.NewScanner(bytes.NewReader(file))
 	for scanner.Scan() {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"slices"
 	"strings"
 	"sync"
@@ -55,6 +56,27 @@ func GenerateLockFile(conf *Config, packages []LockPackage, wr io.Writer) error 
 	// In future, when we have more languages, we can check all of them and pick the one that is used.
 	if conf.GoModule != nil {
 		la.Name = conf.GoModule.Name
+	}
+
+	if conf.RustApp != nil {
+		la.Name = conf.RustApp.CrateName
+	}
+
+	if conf.PoetryApp != nil {
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		pc, err := parsePyProject(currentDir + "/" + conf.PoetryApp.Pyproject)
+		if err != nil {
+			return err
+		}
+
+		la.Name = pc.Tool.Poetry.Name
+	}
+
+	if conf.JsNpmApp != nil {
+		la.Name = conf.JsNpmApp.PackageName
 	}
 
 	lf := LockFile{

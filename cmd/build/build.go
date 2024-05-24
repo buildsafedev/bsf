@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/awalterschulze/gographviz"
@@ -86,7 +87,26 @@ var BuildCmd = &cobra.Command{
 
 		fmt.Println(styles.HighlightStyle.Render("Generating artifacts..."))
 
-		err = GenerateArtifcats(output, symlink)
+		lockData, err := os.ReadFile("bsf.lock")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		lockFile := &hcl2nix.LockFile{}
+		err = json.Unmarshal(lockData, lockFile)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		appDetails, graph, err := nixcmd.GetRuntimeClosureGraph(lockFile.App.Name, output, symlink)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		err = GenerateArtifcats(output, symlink, lockFile, appDetails, graph, runtime.GOOS, runtime.GOARCH)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
@@ -98,10 +118,10 @@ var BuildCmd = &cobra.Command{
 }
 
 // GenerateSBOM generates the Software Bill of Materials (SBOM)
-func GenerateSBOM(w io.Writer, output string, lockFile *hcl2nix.LockFile, appDetails *nixcmd.App, graph *gographviz.Graph) error {
+func GenerateSBOM(w io.Writer, lockFile *hcl2nix.LockFile, appDetails *nixcmd.App, graph *gographviz.Graph, os, arch string) error {
 	appNode := &sbom.Node{
-		Id:             bsbom.PurlFromNameVersion(appDetails.Name, appDetails.Version),
-		PrimaryPurpose: []sbom.Purpose{sbom.Purpose_APPLICATION},
+		Id:             bsbom.GeneratePurl(appDetails.Name, "0.0.0", os, arch),
+		PrimaryPurpose: []sbom.Purpose{sbom.Purpose_APPLICATION, appDetails.AppType},
 		Name:           appDetails.Name,
 		Hashes: map[int32]string{
 			int32(sbom.HashAlgorithm_SHA256): appDetails.BinaryHash,
@@ -162,27 +182,7 @@ func GenerateProvenance(w io.Writer, output string, symlink string, appDetails *
 }
 
 // GenerateArtifcats generates remaining artifacts after build
-func GenerateArtifcats(output string, symlink string) error {
-	// Read the bsf.lock file
-	lockData, err := os.ReadFile("bsf.lock")
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-		os.Exit(1)
-	}
-
-	lockFile := &hcl2nix.LockFile{}
-	err = json.Unmarshal(lockData, lockFile)
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-		os.Exit(1)
-	}
-
-	appDetails, graph, err := nixcmd.GetRuntimeClosureGraph(output, symlink)
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-		os.Exit(1)
-	}
-
+func GenerateArtifcats(output string, symlink string, lockFile *hcl2nix.LockFile, appDetails *nixcmd.App, graph *gographviz.Graph, tos, tarch string) error {
 	attestationsPath := filepath.Join(output, "attestations.intoto.jsonl")
 	attFile, err := os.Create(attestationsPath)
 	if err != nil {
@@ -191,7 +191,7 @@ func GenerateArtifcats(output string, symlink string) error {
 	}
 	defer attFile.Close()
 
-	err = GenerateSBOM(attFile, output, lockFile, appDetails, graph)
+	err = GenerateSBOM(attFile, lockFile, appDetails, graph, tos, tarch)
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 		os.Exit(1)
