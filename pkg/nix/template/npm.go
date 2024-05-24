@@ -14,8 +14,8 @@ const (
     { stdenv, buildNodeModules, lib, nodejs, npmHooks }:
 	  let
 	    packageRoot = {{ .PackageRoot }};
-		{{ if ne .PackageJsonPath ""}}
-	    package = lib.importJSON {{ .PackageJsonPath }}; {{ end }}
+		{{ if ne .PackageJSONPath ""}}
+	    package = lib.importJSON {{ .PackageJSONPath }}; {{ end }}
 		{{ if ne .PackageLockPath ""}}
 		packageLock = lib.importJSON {{ .PackageLockPath }}; {{ end }}
       in
@@ -31,7 +31,7 @@ const (
 	  ];
 
 	  nodeModules = buildNodeModules.fetchNodeModules {
-		inherit packageRoot {{ if ne .PackageJsonPath ""}}package{{ end }} {{ if ne .PackageLockPath ""}}packageLock{{ end }} ;
+		inherit packageRoot {{ if ne .PackageJSONPath ""}}package{{ end }} {{ if ne .PackageLockPath ""}}packageLock{{ end }} ;
 	  };
 	}
     `
