@@ -11,7 +11,7 @@ import (
 func convPredSubtoRows(psMap map[string][]intoto.Statement) []table.Row {
 	items := make([]table.Row, 0, len(psMap))
 
-	for pred, statements := range psMap {
+	for _, statements := range psMap {
 		for _, statement := range statements {
 			var subjects []string
 			for _, s := range statement.Subject {
@@ -19,7 +19,7 @@ func convPredSubtoRows(psMap map[string][]intoto.Statement) []table.Row {
 			}
 			subjectsString := strings.Join(subjects, ", ")
 			items = append(items, table.Row{
-				pred,
+				statement.PredicateType,
 				subjectsString,
 			})
 		}

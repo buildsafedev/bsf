@@ -10,16 +10,23 @@ import (
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 )
 
-var predicateURIs = []string{
-	"https://slsa.dev/provenance/",
-	"https://in-toto.io/attestation/",
-	"https://slsa.dev/verification_summary/v1",
-	"https://spdx.github.io/spdx-spec/v2.3/",
-	"https://spdx.dev/Document",
-	"https://cyclonedx.org/specification/overview/",
-	"https://cyclonedx.org/bom",
+// PredicateURIType is a map of predicate URIs to the type of predicate they are
+var PredicateURIType = map[string]string{
+	"https://slsa.dev/provenance/":                         "provenance",
+	"https://in-toto.io/attestation/vulns":                 "vuln",
+	"https://slsa.dev/verification_summary/v1":             "vsa",
+	"https://in-toto.io/attestation/test-result/":          "test-result",
+	"https://spdx.dev/Document":                            "spdx",
+	"https://spdx.github.io/spdx-spec":                     "spdx",
+	"https://in-toto.io/attestation/scai/attribute-report": "scai",
+	"https://in-toto.io/attestation/runtime-trace/":        "runtime-trace",
+	"https://in-toto.io/attestation/release":               "release",
+	"https://in-toto.io/attestation/link":                  "link",
+	"https://cyclonedx.org/bom":                            "cdx",
+	"https://cyclonedx.org/specification/overview/":        "cdx",
 }
 
+// ValidateInTotoStatement validates the in-toto statement in the byte array
 func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error) {
 	var predStatementMap = make(map[string][]intoto.Statement)
 
@@ -31,7 +38,8 @@ func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error)
 			return nil, fmt.Errorf("invalid JSON: %v", err)
 		}
 
-		if err := validatePredicateType(statement.StatementHeader); err != nil {
+		gotPredType, err := getPredicateType(statement.StatementHeader)
+		if err != nil {
 			return nil, err
 		}
 
@@ -44,7 +52,7 @@ func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error)
 				return nil, fmt.Errorf("subject name is empty")
 			}
 		}
-		predStatementMap[statement.PredicateType] = append(predStatementMap[statement.PredicateType], statement)
+		predStatementMap[gotPredType] = append(predStatementMap[gotPredType], statement)
 
 	}
 	if err := scanner.Err(); err != nil {
@@ -53,21 +61,43 @@ func ValidateInTotoStatement(file []byte) (map[string][]intoto.Statement, error)
 	return predStatementMap, nil
 }
 
-func validatePredicateType(statement intoto.StatementHeader) error {
+// GetPredicateType returns the predicate type for the given statement
+func getPredicateType(statement intoto.StatementHeader) (string, error) {
 
 	if !strings.Contains("https://in-toto.io/Statement/v1", statement.Type) {
-		return fmt.Errorf("invalid _type: %s", statement.Type)
+		return "", fmt.Errorf("invalid _type: %s", statement.Type)
 	}
 
 	if statement.PredicateType == "" {
-		return fmt.Errorf("predicateType is empty")
+		return "", fmt.Errorf("predicateType is empty")
 	}
 
-	for _, uri := range predicateURIs {
-		if strings.Contains(statement.PredicateType, uri) {
-			return nil
+	for pred, shortName := range PredicateURIType {
+		if strings.Contains(statement.PredicateType, pred) {
+			return shortName, nil
 		}
 	}
 
-	return fmt.Errorf("predicateType %s is invalid", statement.PredicateType)
+	return "", fmt.Errorf("predicateType %s is invalid", statement.PredicateType)
+}
+
+// GetRelevantStatements returns the predicate for the given predicate type and subject
+func GetRelevantStatements(psMap map[string][]intoto.Statement, predType string, subject string) []intoto.Statement {
+	// Filter out the allSts based on the predicate type
+	allSts := psMap[predType]
+
+	if subject == "" {
+		return allSts
+	}
+
+	subSts := make([]intoto.Statement, 0, len(allSts))
+	for _, stmt := range allSts {
+		for _, subj := range stmt.Subject {
+			if subj.Name == subject {
+				subSts = append(subSts, stmt)
+			}
+		}
+	}
+
+	return subSts
 }
