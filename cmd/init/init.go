@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
 	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
@@ -12,7 +11,11 @@ import (
 	"github.com/buildsafedev/bsf/cmd/precheck"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/clients/search"
+	"github.com/buildsafedev/bsf/pkg/generate"
+	bgit "github.com/buildsafedev/bsf/pkg/git"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
+	"github.com/buildsafedev/bsf/pkg/langdetect"
+	"github.com/buildsafedev/bsf/pkg/nix/cmd"
 )
 
 // InitCmd represents the init command
@@ -35,15 +38,76 @@ var InitCmd = &cobra.Command{
 
 		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
 		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
 
-		m := model{sc: sc}
-		m.resetSpinner()
-		if _, err := tea.NewProgram(m).Run(); err != nil {
+		err = initializeProject(sc)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			cleanUp()
 			os.Exit(1)
 		}
+
+		fmt.Println(styles.SucessStyle.Render("Initialized successfully!"))
 	},
+}
+
+func initializeProject(sc bsfv1.SearchServiceClient) error {
+	fmt.Println(styles.TextStyle.Render("Initializing project, detecting project language..."))
+
+	pt, pd, err := langdetect.FindProjectType()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(styles.TextStyle.Render("Detected language as " + string(pt)))
+	if pt == langdetect.Unknown {
+		return fmt.Errorf("project language isn't currently supported, some features might not work")
+	}
+
+	fmt.Println(styles.TextStyle.Render("Resolving dependencies..."))
+
+	fh, err := hcl2nix.NewFileHandlers(false)
+	if err != nil {
+		return err
+	}
+	defer fh.ModFile.Close()
+	defer fh.LockFile.Close()
+	defer fh.FlakeFile.Close()
+	defer fh.DefFlakeFile.Close()
+
+	conf, err := generatehcl2NixConf(pt, pd)
+	if err != nil {
+		return err
+	}
+
+	err = hcl2nix.WriteConfig(conf, fh.ModFile)
+	if err != nil {
+		return err
+	}
+
+	err = generate.Generate(fh, sc)
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Lock()
+	if err != nil {
+		return err
+	}
+
+	err = bgit.Add("bsf/")
+	if err != nil {
+		return err
+	}
+
+	err = bgit.Ignore("bsf-result/")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetBSFInitializers generates the nix files
@@ -72,7 +136,7 @@ func GetBSFInitializers() (bsfv1.SearchServiceClient, *hcl2nix.FileHandlers, err
 }
 
 // CleanUp removes the bsf config if any error occurs in init process (ctrl+c or any init process stage)
-func cleanUp(){
+func cleanUp() {
 	configs := []string{"bsf", "bsf.hcl", "bsf.lock"}
 
 	for _, f := range configs {
