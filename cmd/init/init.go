@@ -3,7 +3,9 @@ package init
 import (
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/jedib0t/go-pretty/v6/progress"
 	"github.com/spf13/cobra"
 
 	bsfv1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
@@ -54,20 +56,33 @@ var InitCmd = &cobra.Command{
 }
 
 func initializeProject(sc bsfv1.SearchServiceClient) error {
-	fmt.Println(styles.TextStyle.Render("Initializing project, detecting project language..."))
+	// Set up the progress writer
+	pw, steps := setupProgressTracker()
 
+	trackers := make([]*progress.Tracker, len(steps))
+	for i, step := range steps {
+		trackers[i] = &progress.Tracker{Message: step, Total: 100}
+		pw.AppendTracker(trackers[i])
+	}
+
+	go pw.Render()
+
+	// Initialize progress tracking
+	updateProgress := func(tracker *progress.Tracker, progress int64) {
+		tracker.SetValue(progress)
+		if progress >= 100 {
+			tracker.MarkAsDone()
+		}
+	}
+
+	// Detect project language
 	pt, pd, err := langdetect.FindProjectType()
 	if err != nil {
 		return err
 	}
+	updateProgress(trackers[0], 100)
 
-	fmt.Println(styles.TextStyle.Render("Detected language as " + string(pt)))
-	if pt == langdetect.Unknown {
-		return fmt.Errorf("project language isn't currently supported, some features might not work")
-	}
-
-	fmt.Println(styles.TextStyle.Render("Resolving dependencies..."))
-
+	// Resolve dependencies
 	fh, err := hcl2nix.NewFileHandlers(false)
 	if err != nil {
 		return err
@@ -76,32 +91,40 @@ func initializeProject(sc bsfv1.SearchServiceClient) error {
 	defer fh.LockFile.Close()
 	defer fh.FlakeFile.Close()
 	defer fh.DefFlakeFile.Close()
+	updateProgress(trackers[1], 100)
 
+	// Write configuration
 	conf, err := generatehcl2NixConf(pt, pd)
 	if err != nil {
 		return err
 	}
-
 	err = hcl2nix.WriteConfig(conf, fh.ModFile)
 	if err != nil {
 		return err
 	}
+	updateProgress(trackers[2], 100)
 
+	// Generate files
 	err = generate.Generate(fh, sc)
 	if err != nil {
 		return err
 	}
+	updateProgress(trackers[3], 100)
 
+	// Lock dependencies
 	err = cmd.Lock()
 	if err != nil {
 		return err
 	}
+	updateProgress(trackers[4], 100)
 
+	// Add to git
 	err = bgit.Add("bsf/")
 	if err != nil {
 		return err
 	}
 
+	// Set up git ignore
 	err = bgit.Ignore("bsf-result/")
 	if err != nil {
 		return err
@@ -142,4 +165,28 @@ func cleanUp() {
 	for _, f := range configs {
 		os.RemoveAll(f)
 	}
+}
+
+func setupProgressTracker() (progress.Writer, []string) {
+	pw := progress.NewWriter()
+	pw.SetAutoStop(true)
+	pw.SetTrackerLength(25)
+	pw.SetMessageLength(50)
+	pw.SetUpdateFrequency(time.Millisecond * 100)
+	pw.Style().Colors = progress.StyleColorsExample
+	pw.Style().Options.PercentFormat = "%4.1f%%"
+	pw.Style().Visibility.ETA = true
+	pw.Style().Visibility.Percentage = true
+	pw.Style().Visibility.Time = true
+
+	// Define the steps and create trackers for each
+	steps := []string{
+		"Detecting project language...",
+		"Resolving dependencies...",
+		"Writing configuration...",
+		"Generating files...",
+		"Locking dependencies...",
+	}
+	
+	return pw, steps
 }
