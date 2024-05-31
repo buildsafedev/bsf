@@ -39,6 +39,8 @@ github.com/bom-squad/protobom v0.3.0 h1:1kdKbTmnhigxCQK3f0BJZWeevE+Z0bSGy0o76CFm
 github.com/bom-squad/protobom v0.3.0/go.mod h1:IhdpGUnU5LTI5E7blHlGY9SDwJewK0xZd/YdW+ESKY0=
 github.com/bradleyjkemp/cupaloy/v2 v2.8.0 h1:any4BmKE+jGIaMpnU8YgH/I2LPiLBufr6oMMlVBbn9M=
 github.com/bradleyjkemp/cupaloy/v2 v2.8.0/go.mod h1:bm7JXdkRd4BHJk9HpwqAI8BoAY1lps46Enkdqw6aRX0=
+github.com/buildsafedev/bsf-apis v0.0.0-20240301225559-0cabfd4c881d h1:hyC3JnSoXo/K5f7zb8E0biS5N6RuEusWuUlVJUPe4eY=
+github.com/buildsafedev/bsf-apis v0.0.0-20240301225559-0cabfd4c881d/go.mod h1:WLgt/WslzSJsoFmFwiRqZDIDFTlBVL+qXIwqt2NaKqg=
 github.com/bwesterb/go-ristretto v1.2.3/go.mod h1:fUIoIZaG73pV5biE2Blr2xEzDoMj7NFEuV9ekS419A0=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=

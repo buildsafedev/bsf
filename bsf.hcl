@@ -6,17 +6,7 @@ packages {
 
 gomodule {
   name       = "bsf"
-  src        = "../."
+  src        = "./."
   doCheck = false
 }
 
-export "dev" {
-  artifactType = "oci"
-  name         = "ttl.sh/bsfdev/bsf:dev"
-  cmd          = ["/result/bin/bsf \n"]
-  entrypoint   = null
-  platform     = "linux/arm64"
-  envVars      = null
-  devDeps      = false
-  config       = ""
-}

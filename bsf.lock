@@ -5,13 +5,13 @@
   "packages": [
     {
       "package": {
-        "name": "goreleaser",
+        "name": "go",
         "revision": "5a7b241264578c55cd25aa7422121aef072ce588",
-        "version": "1.24.0",
-        "description": "Deliver Go binaries as fast and easily as possible",
-        "homepage": "https://goreleaser.com",
+        "version": "1.22.0",
+        "description": "The Go Programming language",
+        "homepage": "https://go.dev/",
         "free": true,
-        "spdx_id": "MIT",
+        "spdx_id": "BSD-3-Clause",
         "epoch_seconds": 1707509006,
         "platforms": [
           "x86_64-darwin",
@@ -39,7 +39,8 @@
           "s390-linux",
           "s390x-linux",
           "x86_64-linux"
-        ]
+        ],
+        "attr_name": "go_1_22"
       },
       "runtime": false
     },
@@ -175,14 +176,14 @@
     },
     {
       "package": {
-        "name": "go",
-        "revision": "5a7b241264578c55cd25aa7422121aef072ce588",
+        "name": "delve",
+        "revision": "a731d0cb71c58f56895f71a5b02eda2962a46746",
         "version": "1.22.0",
-        "description": "The Go Programming language",
-        "homepage": "https://go.dev/",
+        "description": "debugger for the Go programming language",
+        "homepage": "https://github.com/go-delve/delve",
         "free": true,
-        "spdx_id": "BSD-3-Clause",
-        "epoch_seconds": 1707509006,
+        "spdx_id": "MIT",
+        "epoch_seconds": 1705066566,
         "platforms": [
           "x86_64-darwin",
           "i686-darwin",
@@ -209,21 +210,20 @@
           "s390-linux",
           "s390x-linux",
           "x86_64-linux"
-        ],
-        "attr_name": "go_1_22"
+        ]
       },
       "runtime": false
     },
     {
       "package": {
-        "name": "delve",
-        "revision": "a731d0cb71c58f56895f71a5b02eda2962a46746",
-        "version": "1.22.0",
-        "description": "debugger for the Go programming language",
-        "homepage": "https://github.com/go-delve/delve",
+        "name": "goreleaser",
+        "revision": "5a7b241264578c55cd25aa7422121aef072ce588",
+        "version": "1.24.0",
+        "description": "Deliver Go binaries as fast and easily as possible",
+        "homepage": "https://goreleaser.com",
         "free": true,
         "spdx_id": "MIT",
-        "epoch_seconds": 1705066566,
+        "epoch_seconds": 1707509006,
         "platforms": [
           "x86_64-darwin",
           "i686-darwin",

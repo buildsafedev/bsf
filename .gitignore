@@ -3,3 +3,5 @@ result
 dist/
 debug.log
 bin/
+
+bsf-result/

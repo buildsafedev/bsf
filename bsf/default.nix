@@ -19,7 +19,7 @@
 	  inherit go;
 	  version = "0.1";
 	  pwd = ./.;
-	  src = .../.;  
+	  src = ../.;  
 	  modules = ./gomod2nix.toml;
 	  doCheck = false;
 	  
