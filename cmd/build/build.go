@@ -121,7 +121,7 @@ var BuildCmd = &cobra.Command{
 func GenerateSBOM(w io.Writer, lockFile *hcl2nix.LockFile, appDetails *nixcmd.App, graph *gographviz.Graph, os, arch string) error {
 	appNode := &sbom.Node{
 		Id:             bsbom.GeneratePurl(appDetails.Name, "0.0.0", os, arch),
-		PrimaryPurpose: []sbom.Purpose{sbom.Purpose_APPLICATION, appDetails.AppType},
+		PrimaryPurpose: []sbom.Purpose{sbom.Purpose_APPLICATION},
 		Name:           appDetails.Name,
 		Hashes: map[int32]string{
 			int32(sbom.HashAlgorithm_SHA256): appDetails.BinaryHash,
