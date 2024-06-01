@@ -227,17 +227,28 @@ func parseAppDetails(path string) (*App, error) {
 
 	purpose := findAppType(fs)
 
-	path = strings.TrimPrefix(path, "/nix/store/")
-	parts := strings.Split(path, "-")
-	if len(parts) < 3 {
+	resultDigest, version, name, err := parseNixStorePath(path)
+	if err != nil {
 		return nil, fmt.Errorf("invalid path: %s", path)
 	}
 
 	return &App{
-		ResultDigest: parts[0],
-		Version:      parts[len(parts)-1],
+		ResultDigest: resultDigest,
+		Name:         name,
+		Version:      version,
 		AppType:      purpose,
 	}, nil
+}
+
+// parseNixStorePath returns the digest ,  version, name from the nix store path
+func parseNixStorePath(path string) (string, string, string, error) {
+	path = strings.TrimPrefix(path, "/nix/store/")
+	parts := strings.Split(path, "-")
+	if len(parts) < 3 {
+		return "", "", "", fmt.Errorf("invalid path: %s", path)
+	}
+
+	return parts[0], parts[len(parts)-1], strings.Join(parts[1:len(parts)-1], "-"), nil
 }
 
 func findAppType(fs []fs.DirEntry) sbom.Purpose {
