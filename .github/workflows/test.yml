@@ -15,10 +15,9 @@ jobs:
         uses: cachix/install-nix-action@v17
 
       - name: Install Task
-        uses: arduino/setup-task@v1
+        uses: nicknovitski/nix-develop@v1
+        with:
+          arguments: "bsf/.#devShell"
 
       - name: go test
-        run: nix develop bsf/.#devShell --command task test
-
-      - name: go lint
-        run: nix develop bsf/.#devShell --command task lint
+        run: task test
