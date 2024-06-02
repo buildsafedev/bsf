@@ -18,8 +18,7 @@ You can engage with the BuildSafe community by:
 
 * Helping other users on [Discord](https://discord.gg/ka2ZgRaP)
 * Improving documentation
-* Participating in general discussions about technology and DevOps
-* Authoring new Assets and sharing Modules
+* Participating in general discussions about technology and Supply Chain Security.
 
 ## Contributing Code
 
