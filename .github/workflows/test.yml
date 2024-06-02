@@ -1,0 +1,24 @@
+name: Taskfile CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: cachix/install-nix-action@v17
+
+      - name: Install Task
+        uses: arduino/setup-task@v1
+
+      - name: go test
+        run: nix develop bsf/.#devShell --command task test
+
+      - name: go lint
+        run: nix develop bsf/.#devShell --command task lint
