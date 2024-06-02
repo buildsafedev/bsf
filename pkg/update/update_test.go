@@ -23,7 +23,7 @@ func TestGetLatestPatchVersion(t *testing.T) {
 				},
 			},
 			version: "1.2.0",
-			want:    "v1.2.3",
+			want:    "1.2.3",
 		},
 		{
 			name: "Test Case 2",
@@ -35,7 +35,7 @@ func TestGetLatestPatchVersion(t *testing.T) {
 				},
 			},
 			version: "1.3.0",
-			want:    "v1.3.3",
+			want:    "1.3.3",
 		},
 		{
 			name:     "Test Case 3",
@@ -54,7 +54,7 @@ func TestGetLatestPatchVersion(t *testing.T) {
 				},
 			},
 			version: "1.4.0",
-			want:    "v1.4.0",
+			want:    "1.4.0",
 		},
 
 		{
@@ -67,7 +67,7 @@ func TestGetLatestPatchVersion(t *testing.T) {
 				},
 			},
 			version: "1.3.3",
-			want:    "v1.3.3",
+			want:    "1.3.3",
 		},
 	}
 
@@ -97,7 +97,7 @@ func TestGetLatestMinorVersion(t *testing.T) {
 				},
 			},
 			version: "1.2.0",
-			want:    "v1.4.3",
+			want:    "1.4.3",
 		},
 		{
 			name: "Test Case 2",
@@ -111,7 +111,7 @@ func TestGetLatestMinorVersion(t *testing.T) {
 				},
 			},
 			version: "1.3.0",
-			want:    "v1.4.1",
+			want:    "1.4.1",
 		},
 	}
 

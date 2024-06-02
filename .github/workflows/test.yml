@@ -1,0 +1,27 @@
+name: Taskfile Ci
+
+on:
+  push:
+    branches:
+      - main
+      - task-ci
+
+jobs:
+  test_all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Check Nixpkgs inputs
+        uses: DeterminateSystems/flake-checker-action@main
+        with:
+          fail-mode: true
+          flake-lock-path: ./bsf/flake.lock
+      - uses: nicknovitski/nix-develop@v1
+        with:
+          arguments: bsf/.#devShell
+      - name: run tests
+        run: task test

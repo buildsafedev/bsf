@@ -55,35 +55,19 @@
         "type": "github"
       }
     },
-    "nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7": {
+    "nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4": {
       "locked": {
-        "lastModified": 1702939464,
-        "narHash": "sha256-mZqoH5fXxh8UxjUKpqi09UBXEPpz4w+2Ef0AVTLuF+g=",
+        "lastModified": 1716993062,
+        "narHash": "sha256-Q7+8FPD2V8OoGAe0d5LoE8HZ5KYJMyb80klPyrZj2hw=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "1ebb7d7bba2953a4223956cfb5f068b0095f84a7",
+        "rev": "7445ccd775d8b892fc56448d17345443a05f7fb4",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "1ebb7d7bba2953a4223956cfb5f068b0095f84a7",
-        "type": "github"
-      }
-    },
-    "nixpkgs-5a7b241264578c55cd25aa7422121aef072ce588": {
-      "locked": {
-        "lastModified": 1707509006,
-        "narHash": "sha256-aqLiIgNEZ6Fy96QXmeQaMK/E3lmmiS0qkRZ0arvHoj4=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "5a7b241264578c55cd25aa7422121aef072ce588",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "5a7b241264578c55cd25aa7422121aef072ce588",
+        "rev": "7445ccd775d8b892fc56448d17345443a05f7fb4",
         "type": "github"
       }
     },
@@ -123,8 +107,7 @@
       "inputs": {
         "gomod2nix": "gomod2nix",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7": "nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7",
-        "nixpkgs-5a7b241264578c55cd25aa7422121aef072ce588": "nixpkgs-5a7b241264578c55cd25aa7422121aef072ce588",
+        "nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4": "nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4",
         "nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746": "nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746",
         "nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14": "nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14"
       }
