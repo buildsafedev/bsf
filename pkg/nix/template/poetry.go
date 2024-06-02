@@ -10,7 +10,7 @@ import (
 const (
 	poetryTmpl = `
     { pkgs, mkPoetryApplication }:
-    mkPoetryApplication {
+     let app = mkPoetryApplication {
             projectDir = {{.ProjectDir}};
             src = {{.Src}};
             pyproject = {{.Pyproject}};
@@ -22,7 +22,8 @@ const (
 		      {{ range $value := .CheckGroups }}"{{ $value }}" {{ end }}
 	       ];
 		   {{ end }}
-    }
+    };
+	in app.dependencyEnv
     `
 )
 
