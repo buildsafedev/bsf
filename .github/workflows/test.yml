@@ -1,10 +1,9 @@
 name: Taskfile Ci
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-      - task-ci
 
 jobs:
   test_all:
