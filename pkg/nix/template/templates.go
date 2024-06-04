@@ -124,7 +124,6 @@ const (
 	  devShells = forEachSupportedSystem ({ pkgs, 
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
-		{{if eq .Language "RustCargo"}} rustPkgs, {{end}}
 		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, 
 		{{ end }} ... }: {
@@ -141,7 +140,6 @@ const (
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
-		{{if eq .Language "RustCargo"}} rustPkgs, {{end}}
 		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} ... }: {
 		runtime = pkgs.buildEnv {
 		  name = "runtimeenv";
@@ -155,7 +153,6 @@ const (
 	   devEnvs = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
-		{{if eq .Language "RustCargo"}} rustPkgs, {{end}}
 		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
 	   {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} ... }: {
 		development = pkgs.buildEnv {
