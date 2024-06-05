@@ -46,8 +46,11 @@ var InitCmd = &cobra.Command{
 
 		err = initializeProject(sc)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-			cleanUp()
+			errorMessage := err.Error()
+			fmt.Println(styles.ErrorStyle.Render("Error:", errorMessage))
+			if errorMessage != "project already initialised. bsf.hcl found" {
+				cleanUp()
+			}
 			os.Exit(1)
 		}
 
