@@ -112,11 +112,12 @@ func initializeProject(sc bsfv1.SearchServiceClient) error {
 	updateProgress(trackers[3], 100)
 
 	// Lock dependencies
-	err = cmd.Lock()
+	err = cmd.Lock(func(progress int) {
+		updateProgress(trackers[4], int64(progress))
+	})
 	if err != nil {
 		return err
 	}
-	updateProgress(trackers[4], 100)
 
 	// Add to git
 	err = bgit.Add("bsf/")
@@ -187,6 +188,6 @@ func setupProgressTracker() (progress.Writer, []string) {
 		"Generating files...",
 		"Locking dependencies...",
 	}
-	
+
 	return pw, steps
 }

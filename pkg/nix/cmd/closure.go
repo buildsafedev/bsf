@@ -137,7 +137,6 @@ func addNarHashToGraph(graph *gographviz.Graph) {
 	}
 
 	wg.Wait()
-	return
 }
 
 // GetNarHashFromPath returns the sha256 hash of the nar
