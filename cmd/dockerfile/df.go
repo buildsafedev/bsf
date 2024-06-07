@@ -40,11 +40,12 @@ var DFCmd = &cobra.Command{
 			fmt.Println(styles.HintStyle.Render("hint:", "run `bsf dockerfile <environment name>` to export the environment"))
 			os.Exit(1)
 		}
-		env, err := ocicmd.ProcessPlatformAndConfig(platform, args[0])
+		env, p, err := ocicmd.ProcessPlatformAndConfig(platform, args[0])
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
+		platform = p
 
 		sc, fh, err := binit.GetBSFInitializers()
 		if err != nil {

@@ -45,11 +45,12 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		env, err := ProcessPlatformAndConfig(platform, args[0])
+		env, p, err := ProcessPlatformAndConfig(platform, args[0])
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
+		platform = p
 
 		sc, fh, err := binit.GetBSFInitializers()
 		if err != nil {
@@ -180,31 +181,31 @@ func findPlatform(platform string) (string, string) {
 }
 
 // ProcessPlatformAndConfig processes the platform and config file
-func ProcessPlatformAndConfig(platform string, envName string) (hcl2nix.OCIArtifact, error) {
-	if platform == "" {
-		tos, tarch := findPlatform(platform)
-		platform = tos + "/" + tarch
+func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact, string, error) {
+	if plat == "" {
+		tos, tarch := findPlatform(plat)
+		plat = tos + "/" + tarch
 	}
 
 	pfound := false
 	for _, sp := range supportedPlatforms {
-		if strings.Contains(platform, sp) {
+		if strings.Contains(plat, sp) {
 			pfound = true
 			break
 		}
 	}
 	if !pfound {
-		return hcl2nix.OCIArtifact{}, fmt.Errorf("Platform %s is not supported. Supported platforms are %s", platform, strings.Join(supportedPlatforms, ", "))
+		return hcl2nix.OCIArtifact{}, "", fmt.Errorf("Platform %s is not supported. Supported platforms are %s", platform, strings.Join(supportedPlatforms, ", "))
 	}
 	data, err := os.ReadFile("bsf.hcl")
 	if err != nil {
-		return hcl2nix.OCIArtifact{}, fmt.Errorf("error: %s", err.Error())
+		return hcl2nix.OCIArtifact{}, "", fmt.Errorf("error: %s", err.Error())
 	}
 
 	var dstErr bytes.Buffer
 	conf, err := hcl2nix.ReadConfig(data, &dstErr)
 	if err != nil {
-		return hcl2nix.OCIArtifact{}, fmt.Errorf(dstErr.String())
+		return hcl2nix.OCIArtifact{}, "", fmt.Errorf(dstErr.String())
 	}
 
 	envNames := make([]string, 0, len(conf.OCIArtifact))
@@ -213,7 +214,7 @@ func ProcessPlatformAndConfig(platform string, envName string) (hcl2nix.OCIArtif
 	for _, ec := range conf.OCIArtifact {
 		errStr := ec.Validate(conf)
 		if errStr != nil {
-			return hcl2nix.OCIArtifact{}, fmt.Errorf("Config for export block %s is invalid\n Error: %s", ec.Name, *errStr)
+			return hcl2nix.OCIArtifact{}, "", fmt.Errorf("Config for export block %s is invalid\n Error: %s", ec.Name, *errStr)
 		}
 
 		if ec.Environment == envName {
@@ -225,10 +226,10 @@ func ProcessPlatformAndConfig(platform string, envName string) (hcl2nix.OCIArtif
 	}
 
 	if !found {
-		return hcl2nix.OCIArtifact{}, fmt.Errorf("error: No such environment found. Valid oci environment that can be built are: %s", strings.Join(envNames, ", "))
+		return hcl2nix.OCIArtifact{}, "", fmt.Errorf("error: No such environment found. Valid oci environment that can be built are: %s", strings.Join(envNames, ", "))
 	}
 
-	return env, nil
+	return env, plat, nil
 }
 
 func genOCIAttrName(env, platform string) string {
