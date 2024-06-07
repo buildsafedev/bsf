@@ -120,27 +120,32 @@ var OCICmd = &cobra.Command{
 		if loadDocker {
 			fmt.Println(styles.HighlightStyle.Render("Loading image to docker daemon..."))
 
+			expectedInstall := true
 			currentContext, err := builddocker.GetCurrentContext()
 			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-				os.Exit(1)
+				expectedInstall = false
 			}
 			contextEP, err := builddocker.ReadContextEndpoints()
 			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-				os.Exit(1)
+				expectedInstall = false
 			}
 			if currentContext == "" {
 				currentContext = "default"
 			}
+			if contextEP == nil {
+				contextEP = make(map[string]string)
+			}
+
 			if _, ok := contextEP[currentContext]; !ok {
 				contextEP[currentContext] = "unix:///var/run/docker.sock"
 			}
-			_ = currentContext
 
 			err = oci.LoadDocker(contextEP[currentContext], output+"/result", env.Name)
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				if !expectedInstall {
+					fmt.Println(styles.ErrorStyle.Render("error:", "Is Docker installed?"))
+				}
 				os.Exit(1)
 			}
 

@@ -2,7 +2,6 @@ package builddocker
 
 // source for this file- https://github.com/project-copacetic/copacetic/blob/main/pkg/buildkit/drivers.go
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -13,7 +12,7 @@ import (
 func GetCurrentContext() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Println("Error getting user home directory:", err)
+
 		return "", err
 	}
 
@@ -21,14 +20,12 @@ func GetCurrentContext() (string, error) {
 
 	data, err := os.ReadFile(dockerConfigPath)
 	if err != nil {
-		fmt.Println("Error reading Docker config file:", err)
 		return "", err
 	}
 
 	// Get the current context from the Docker config file
 	currentContext := gjson.GetBytes(data, "currentContext").String()
 	if currentContext == "" {
-		fmt.Println("No current Docker context found")
 		return "", err
 	}
 
@@ -40,13 +37,11 @@ func GetCurrentContext() (string, error) {
 func ReadContextEndpoints() (map[string]string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Println("Error getting user home directory:", err)
 		return nil, err
 	}
 
 	files, err := os.ReadDir(homeDir + "/.docker/contexts/meta")
 	if err != nil {
-		fmt.Println("Error reading Docker context meta directory:", err)
 		return nil, err
 	}
 
@@ -57,7 +52,6 @@ func ReadContextEndpoints() (map[string]string, error) {
 		}
 		data, err := os.ReadFile(homeDir + "/.docker/contexts/meta/" + file.Name() + "/meta.json")
 		if err != nil {
-			fmt.Println("Error reading Docker context meta file:", err)
 			return nil, err
 		}
 		contextName := gjson.GetBytes(data, "Name").String()
