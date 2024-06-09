@@ -2,7 +2,7 @@
   description = "bsf";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    # nixpkgs.url = "github:NixOS/nixpkgs";
   };
 
   outputs = { self, nixpkgs }:
@@ -26,7 +26,7 @@
         getBinaryHash = { system }:
           let 
           hash = {
-            "aarch64-darwin" = "sha256-+YyISheyhsS2b9p5d74wERhTFnGwTb85GOxN8eLlXKA=";
+            "aarch64-darwin" = "sha256-+YyISheyhsS2b9p5d74wERhTFnGwTb8AGOxN8eLlXKA=";
             "x86_64-linux" = "sha256-8DMc6C1zpxFwe/xfEw07L45RrvH++fngbDfYDSSdBtk=";
             "x86_64-darwin" = "sha256-+VhpKDyC/OPXc2H1J2mwc7A9ItIoh5i9ixmdLG5jh2E=";
             "aarch64-linux" = "sha256-qxGYtGXHOBXrDwXLzsHrbPL2GpBTOQ9p0ynjLCO5aC0=";
