@@ -7,6 +7,11 @@
         "mode": "auto",
         "program": "${workspaceFolder}/main.go",
         "args": ["build"],
+        "env": {
+            "BSF_DEBUG": "true",
+            "BSF_DEBUG_DIR": "/Users/house/Desktop/buildsafe/examples/go-server-example",
+        },
+        "console": "integratedTerminal"
     }
     ]
 }
