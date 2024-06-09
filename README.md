@@ -1,6 +1,6 @@
 # BuildSafe
 
-[![Discord Server](https://img.shields.io/badge/discord-gray?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/ka2ZgRaP)
+[![Discord Server](https://img.shields.io/badge/discord-gray?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/xrwYkuFT)
 
 ## About
 
@@ -16,7 +16,7 @@ Follow [Quickstart](https://buildsafe.dev/guides/getting-started/)
 ## Where Do I Learn More?
 
 For more information on how to use and develop the BuildSafe software, talk to us on
-[our Discord](https://discord.gg/ka2ZgRaP) and see our website [docs](https://buildsafe.dev/guides/manual/).
+[our Discord](https://discord.gg/xrwYkuFT) and see our website [docs](https://buildsafe.dev/guides/manual/).
 
 ## How Can I Contribute?
 
