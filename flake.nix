@@ -36,7 +36,7 @@
     in
     {
       packages = forEachSystem ({ pkgs, ... }: {
-        default = pkgs.stdenv.mkDerivation rec {
+        default = pkgs.stdenvNoCC.mkDerivation  rec {
           name = "bsf";
           version = "0.1";
 
