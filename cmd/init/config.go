@@ -98,7 +98,7 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 	}
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: []string{"go@1.22.3", "gotools@0.16.1", "delve@1.22.0"},
+			Development: []string{"go@1.22.3", "gotools@0.18.0", "delve@1.22.1"},
 			// todo: maybe we should dynamically inject the latest version of such runtime packages(cacert)?
 			Runtime: []string{"cacert@3.95"},
 		},
