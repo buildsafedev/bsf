@@ -12,7 +12,13 @@ import (
 func Add(path string) error {
 	var r *git.Repository
 	var err error
-	r, err = git.PlainOpen(".")
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	r, err = git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
 	if err == git.ErrRepositoryNotExists {
 		// If it's not a Git repository, initialize it
 		r, err = git.PlainInit(".", false)
@@ -29,12 +35,27 @@ func Add(path string) error {
 		return err
 	}
 
+	root := w.Filesystem.Root()
+	leafDir := getLeafDir(root+"/", cwd)
+	if leafDir != "" {
+		path = leafDir + "/" + path
+	}
+
 	// Add all changes to the working directory
-	_, err = w.Add(path)
+	err = w.AddWithOptions(&git.AddOptions{
+		Path: path,
+	})
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func getLeafDir(root string, path string) string {
+	if strings.Compare(root, path+"/") == 0 {
+		return ""
+	}
+	return strings.TrimPrefix(path, root)
 }
 
 // Ignore adds the path to the .gitignore file
