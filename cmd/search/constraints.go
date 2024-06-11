@@ -71,7 +71,7 @@ func (m *versionConstraintsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, KeyMap.Back):
 			return m.pkgoption.Update(msg)
-		case key.Matches(msg, KeyMap.Space):
+		case key.Matches(msg, KeyMap.Enter):
 			if m.constraint[m.choices[m.cursor]] {
 				m.constraint[m.choices[m.cursor]] = false
 			} else {
@@ -80,8 +80,6 @@ func (m *versionConstraintsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.constraint[m.choices[m.cursor]] = true
 			}
-
-		case key.Matches(msg, KeyMap.Enter):
 			return m.updateVersionConstraint()
 		}
 	}
@@ -95,9 +93,7 @@ func (m versionConstraintsModel) View() string {
 	s.WriteString(styles.TitleStyle.Render(fmt.Sprintf("What type of updates would you like for %s-%s?", m.name, m.version)))
 	s.WriteString("\n\n")
 	for i, choice := range m.choices {
-		if m.constraint[choice] {
-			s.WriteString(styles.SelectedOptionStyle.Render("✔ " + choice))
-		} else if m.cursor == i {
+		if m.cursor == i {
 			s.WriteString(styles.CursorOptionStyle.Render("-> " + choice))
 		} else {
 			s.WriteString(styles.OptionStyle.Render("  " + choice))
@@ -105,7 +101,7 @@ func (m versionConstraintsModel) View() string {
 		s.WriteString("\n")
 
 	}
-	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor, space to select/unselect, enter to submit)\n"))
+	s.WriteString(styles.HelpStyle.Render("\n(↑↓ to move cursor & enter to submit )\n"))
 
 	return s.String()
 }
