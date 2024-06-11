@@ -1,9 +1,11 @@
 package direnv
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
@@ -31,6 +33,12 @@ var Direnv = &cobra.Command{
 				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 				os.Exit(1)
 			}
+		}
+
+		cmD := exec.Command("direnv", "allow")
+		err = cmD.Run()
+		if err != nil {
+			os.Exit(1)
 		}
 	},
 }
@@ -66,7 +74,6 @@ func generateEnvrc() error {
 			}
 			return nil
 		}
-		fmt.Println(styles.HelpStyle.Render(" ✅ .envrc already exists"))
 
 	} else {
 		file, err := os.Create(".envrc")
@@ -81,13 +88,6 @@ func generateEnvrc() error {
 			return err
 		}
 
-		fmt.Println(styles.HelpStyle.Render(" ✅ .envrc generated"))
-
-		cmd := exec.Command("direnv", "allow")
-		err = cmd.Run()
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -111,7 +111,6 @@ func fetchGitignore() error {
 				return err
 			}
 		}
-		fmt.Println(styles.HelpStyle.Render(" ✅ .gitignore already exists"))
 
 		return nil
 	} else {
@@ -129,8 +128,6 @@ func fetchGitignore() error {
 		if err != nil {
 			return err
 		}
-
-		fmt.Println(styles.HelpStyle.Render(" ✅ .gitignore generated"))
 	}
 
 	return nil
@@ -139,25 +136,61 @@ func fetchGitignore() error {
 
 func setDIrenv(args string) error {
 
-	if !strings.Contains(args, "=") {
-		return fmt.Errorf("Hint: use --env key=value")
-	} else {
-		file, err := os.OpenFile(".envrc", os.O_APPEND|os.O_WRONLY, 0644)
+	err := validateEnvVars(args)
+	if err != nil {
+		return err
+	}
+	file, err := os.OpenFile(".envrc", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("\nexport " + args)
+	if err != nil {
+		fmt.Println(styles.ErrorStyle.Render("", err.Error()))
+		return err
+	}
+
+	cmd := exec.Command("direnv", "allow")
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateEnvVars(args string) error {
+	validKeyValRegex := regexp.MustCompile(`^[\w]+=[^\s]+$`)
+
+	envVars := strings.Split(args, ",")
+
+	for _, envVar := range envVars {
+		if !validKeyValRegex.MatchString(envVar) {
+			return errors.New("Invalid key-value pair format")
+		}
+
+		resp := strings.SplitN(envVar, "=", 2)
+		key := resp[0]
+		value := resp[1]
+
+		if strings.ContainsAny(key, "= \t\n") {
+			return errors.New("Invalid characters in key")
+		}
+
+		if strings.ContainsAny(value, "\x00") {
+			return errors.New("Invalid characters in value")
+		}
+
+		read, err := os.ReadFile(".envrc")
 		if err != nil {
 			return err
 		}
 
-		_, err = file.WriteString("\nexport " + args)
-		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("", err.Error()))
-			return err
-		}
-
-		cmd := exec.Command("direnv", "allow")
-		err = cmd.Run()
-		if err != nil {
-			return err
+		if strings.Contains(string(read), key) {
+			return errors.New("Key already exists")
 		}
 	}
+
 	return nil
 }
