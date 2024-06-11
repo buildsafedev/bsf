@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 )
 
 // Lock generates the Nix flake lock file
-func Lock() error {
+func Lock(reportProgress func(int)) error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -22,6 +23,12 @@ func Lock() error {
 	err = cmd.Start()
 	if err != nil {
 		return fmt.Errorf("failed with %s", err)
+	}
+
+	// Simulate incremental progress
+	for i := 0; i <= 100; i += 10 {
+		time.Sleep(100 * time.Millisecond)
+		reportProgress(i)
 	}
 
 	err = cmd.Wait()

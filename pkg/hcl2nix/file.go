@@ -42,7 +42,7 @@ func NewFileHandlers(expectInit bool) (*FileHandlers, error) {
 	}
 
 	if exists != expectInit {
-		return nil, fmt.Errorf("Project already initialised. bsf.hcl found")
+		return nil, fmt.Errorf("project already initialised. bsf.hcl found")
 	}
 
 	lockFile, err := os.Create("bsf.lock")
