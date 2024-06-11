@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 
@@ -33,12 +32,6 @@ var Direnv = &cobra.Command{
 				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 				os.Exit(1)
 			}
-		}
-
-		cmD := exec.Command("direnv", "allow")
-		err = cmD.Run()
-		if err != nil {
-			os.Exit(1)
 		}
 	},
 }
@@ -69,7 +62,6 @@ func generateEnvrc() error {
 
 			_, err = file.WriteString("\nuse flake bsf/.")
 			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("", err.Error()))
 				return err
 			}
 			return nil
@@ -107,7 +99,6 @@ func fetchGitignore() error {
 			file, err := os.OpenFile(".gitignore", os.O_APPEND|os.O_WRONLY, 0644)
 			_, err = file.WriteString("\n.envrc")
 			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("", err.Error()))
 				return err
 			}
 		}
@@ -148,12 +139,6 @@ func setDIrenv(args string) error {
 	_, err = file.WriteString("\nexport " + args)
 	if err != nil {
 		fmt.Println(styles.ErrorStyle.Render("", err.Error()))
-		return err
-	}
-
-	cmd := exec.Command("direnv", "allow")
-	err = cmd.Run()
-	if err != nil {
 		return err
 	}
 
