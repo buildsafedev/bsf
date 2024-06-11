@@ -71,60 +71,11 @@ func IsFlakesEnabled() {
 	}
 }
 
-// generates .envrc for Direnv intigration
-func generateEnvrc() error {
-
-	if _, err := os.Stat(".envrc"); err == nil {
-
-		read, err := os.ReadFile(".envrc")
-		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("", err.Error()))
-			os.Exit(1)
-		}
-
-		if !strings.Contains(string(read), "use flake bsf/.") {
-
-			file, err := os.OpenFile(".envrc", os.O_APPEND|os.O_WRONLY, 0644)
-			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("", err.Error()))
-				os.Exit(1)
-			}
-
-			_, err = file.WriteString("\nuse flake bsf/.")
-			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("", err.Error()))
-				os.Exit(1)
-			}
-			return nil
-		}
-		fmt.Println(styles.HelpStyle.Render(" ✅ .envrc already exists"))
-
-	} else {
-		file, err := os.Create(".envrc")
-		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("", err.Error()))
-			os.Exit(1)
-		}
-
-		defer file.Close()
-
-		_, err = file.WriteString("use flake bsf/.")
-		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("", err.Error()))
-			os.Exit(1)
-		}
-	}
-
-	fmt.Println(styles.HelpStyle.Render(" ✅ .envrc generated"))
-
-	return nil
-}
-
 // AllPrechecks runs all the prechecks
 func AllPrechecks() {
 	fmt.Println(styles.TextStyle.Render("Running prechecks..."))
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(2)
 	go func() {
 		ValidateNixVersion()
 		wg.Done()
@@ -134,11 +85,6 @@ func AllPrechecks() {
 		wg.Done()
 
 	}()
-	go func() {
-		generateEnvrc()
-		wg.Done()
-	}()
-
 	wg.Wait()
 
 	fmt.Println(styles.SucessStyle.Render(" Prechecks ran successfully"))

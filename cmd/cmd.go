@@ -17,6 +17,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/build"
 	"github.com/buildsafedev/bsf/cmd/configure"
 	"github.com/buildsafedev/bsf/cmd/develop"
+	"github.com/buildsafedev/bsf/cmd/direnv"
 	"github.com/buildsafedev/bsf/cmd/dockerfile"
 	initCmd "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/nixgenerate"
@@ -63,6 +64,7 @@ func Execute() {
 	rootCmd.AddCommand(scan.ScanCmd)
 	rootCmd.AddCommand(update.UpdateCmd)
 	rootCmd.AddCommand(attestation.AttCmd)
+	rootCmd.AddCommand(direnv.Direnv)
 
 	if os.Getenv("BSF_DEBUG_MODE") == "true" {
 		rootCmd.AddCommand(configure.ConfigureCmd)
