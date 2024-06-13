@@ -27,7 +27,7 @@ var Direnv = &cobra.Command{
 		}
 
 		if envVar != "" {
-			err = setDIrenv(envVar)
+			err = setDirenv(envVar)
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 				os.Exit(1)
@@ -68,20 +68,12 @@ func generateEnvrc() error {
 		}
 
 	} else {
-		file, err := os.Create(".envrc")
-		if err != nil {
-			return err
-		}
-
-		defer file.Close()
-
-		_, err = file.WriteString("use flake bsf/.")
+		err = os.WriteFile(".envrc", []byte("use flake bsf/."), 0644)
 		if err != nil {
 			return err
 		}
 
 	}
-
 	return nil
 }
 
@@ -105,17 +97,7 @@ func fetchGitignore() error {
 
 		return nil
 	} else {
-		_, err := os.Create(".gitignore")
-		if err != nil {
-			return err
-		}
-
-		file, err := os.OpenFile(".gitignore", os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			return err
-		}
-
-		_, err = file.WriteString("\n.envrc")
+		err = os.WriteFile(".gitignore", []byte(".envrc"), 0644)
 		if err != nil {
 			return err
 		}
@@ -125,7 +107,7 @@ func fetchGitignore() error {
 
 }
 
-func setDIrenv(args string) error {
+func setDirenv(args string) error {
 
 	err := validateEnvVars(args)
 	if err != nil {
@@ -165,15 +147,6 @@ func validateEnvVars(args string) error {
 
 		if strings.ContainsAny(value, "\x00") {
 			return errors.New("Invalid characters in value")
-		}
-
-		read, err := os.ReadFile(".envrc")
-		if err != nil {
-			return err
-		}
-
-		if strings.Contains(string(read), key) {
-			return errors.New("Key already exists")
 		}
 	}
 
