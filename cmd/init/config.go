@@ -56,7 +56,7 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 	}
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: []string{"cargo@1.75.0"},
+			Development: []string{"cargo@1.75.0", "rustc@1.73.0", "clippy@1.77.2", "rustfmt@1.77.2", "rust-analyzer@2024-04-29"},
 			Runtime:     []string{"cacert@3.95"},
 		},
 		RustApp: &hcl2nix.RustApp{
