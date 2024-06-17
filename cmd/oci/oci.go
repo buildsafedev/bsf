@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	platform, output string
-	push, loadDocker bool
+	platform, output             string
+	push, loadDocker, loadPodman bool
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
@@ -154,6 +154,16 @@ var OCICmd = &cobra.Command{
 
 		}
 
+		if loadPodman {
+			fmt.Println(styles.HighlightStyle.Render("Loading image to podman..."))
+			err = oci.LoadPodman(output+"/result", env.Name)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to podman", env.Name)))
+		}
+
 		if push {
 			fmt.Println(styles.HighlightStyle.Render("Pushing image to registry..."))
 			err = oci.Push(output+"/result", env.Name)
@@ -248,6 +258,7 @@ func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
 	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
+	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
 
 }
