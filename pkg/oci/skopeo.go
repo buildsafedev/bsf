@@ -18,6 +18,19 @@ func LoadDocker(daemon, dir, imageName string) error {
 	return nil
 }
 
+// LoadPodman loads the image to the poadman
+func LoadPodman(dir, imageName string) error {
+	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "containers-storage:"+imageName)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Push image to registry
 func Push(dir, imageName string) error {
 	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "docker://"+imageName)
