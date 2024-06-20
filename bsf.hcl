@@ -1,8 +1,8 @@
 
 packages {
-  development = ["go-task@~3.37.2", "gotools@0.16.1", "delve@1.22.0", "go@1.21.6"]
+  development = ["delve@1.22.0", "gotools@0.16.1", "go-task@~3.37.2", "go@1.21.6"]
   runtime     = ["cacert@3.95"]
-} 
+}
 
 gomodule {
   name    = "bsf"
