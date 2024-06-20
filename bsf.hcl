@@ -10,4 +10,4 @@ gomodule {
   ldFlags = null
   tags    = null
   doCheck = false
-}
+} 
