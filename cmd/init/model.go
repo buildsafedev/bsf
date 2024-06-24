@@ -73,7 +73,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 	err = m.processStages(m.stage)
 	if err != nil {
-		 cleanUp()
+		cleanUp()
 		return m, tea.Quit
 	}
 	m.stage++

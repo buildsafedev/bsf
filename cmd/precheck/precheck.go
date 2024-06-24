@@ -75,7 +75,7 @@ func IsFlakesEnabled() {
 func AllPrechecks() {
 	fmt.Println(styles.TextStyle.Render("Running prechecks..."))
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(2)
 	go func() {
 		ValidateNixVersion()
 		wg.Done()
@@ -85,11 +85,6 @@ func AllPrechecks() {
 		wg.Done()
 
 	}()
-	go func() {
-		wg.Done()
-
-	}()
-
 	wg.Wait()
 
 	fmt.Println(styles.SucessStyle.Render(" Prechecks ran successfully"))
