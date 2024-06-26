@@ -15,6 +15,12 @@ import (
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 )
 
+var isBase bool
+
+func init() {
+	InitCmd.Flags().BoolVarP(&isBase, "base", "b", false, "build base for packages")
+}
+
 // InitCmd represents the init command
 var InitCmd = &cobra.Command{
 	Use:   "init",
@@ -38,7 +44,7 @@ var InitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		m := model{sc: sc}
+		m := model{sc: sc, base: isBase}
 		m.resetSpinner()
 		if _, err := tea.NewProgram(m).Run(); err != nil {
 			os.Exit(1)

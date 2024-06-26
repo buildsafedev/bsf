@@ -35,6 +35,15 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 	}
 }
 
+func generateEmptyConf() (hcl2nix.Config) {
+	return hcl2nix.Config{
+		Packages: hcl2nix.Packages{
+			Development: []string{""},
+			Runtime:     []string{""},
+		},
+	}
+}
+
 func genRustCargoConf() (hcl2nix.Config, error) {
 	content, err := os.ReadFile("Cargo.toml")
 	if err != nil {

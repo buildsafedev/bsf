@@ -34,6 +34,7 @@ type model struct {
 	stage    int
 	pt       langdetect.ProjectType
 	pd       *langdetect.ProjectDetails
+	base     bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -64,6 +65,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cleanUp()
 			return m, tea.Quit
 		}
+	}
+	if m.base{
+		modFile, err := hcl2nix.CreateModFile(false)
+		if err != nil{
+			m.stageMsg = errorStyle(err.Error())
+			return m, tea.Quit
+		}
+		conf := generateEmptyConf()
+		err = hcl2nix.WriteConfig(conf, modFile)
+		if err != nil {
+			m.stageMsg = errorStyle(err.Error())
+			return m, tea.Quit
+		}
+
+		m.stageMsg = sucessStyle("Initialised an empty bsf.hcl!")
+		return m, tea.Quit
 	}
 
 	var err error

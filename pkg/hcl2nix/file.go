@@ -22,27 +22,9 @@ func NewFileHandlers(expectInit bool) (*FileHandlers, error) {
 		return nil, err
 	}
 
-	bsfHcl := "bsf.hcl"
-	var modFile *os.File
-	var exists bool
-	if _, err = os.Stat(bsfHcl); os.IsNotExist(err) {
-		if expectInit {
-			return nil, fmt.Errorf("Project not initialised. bsf.hcl not found")
-		}
-		modFile, err = os.Create(bsfHcl)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		exists = true
-		modFile, err = os.Open(bsfHcl)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if exists != expectInit {
-		return nil, fmt.Errorf("Project already initialised. bsf.hcl found")
+	modFile, err := CreateModFile(expectInit)
+	if err != nil {
+		return nil, err
 	}
 
 	lockFile, err := os.Create("bsf.lock")
@@ -66,6 +48,34 @@ func NewFileHandlers(expectInit bool) (*FileHandlers, error) {
 		FlakeFile:    flakeFile,
 		DefFlakeFile: defFlakeFile,
 	}, nil
+}
+
+// CreateModFile creates bsf.hcl file
+func CreateModFile(expectInit bool) (*os.File, error) {
+	bsfHcl := "bsf.hcl"
+	var modFile *os.File
+	var exists bool
+	if _, err := os.Stat(bsfHcl); os.IsNotExist(err) {
+		if expectInit {
+			return nil, fmt.Errorf("Project not initialised. bsf.hcl not found")
+		}
+		modFile, err = os.Create(bsfHcl)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		exists = true
+		modFile, err = os.Open(bsfHcl)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if exists != expectInit {
+		return nil, fmt.Errorf("Project already initialised. bsf.hcl found")
+	}
+
+	return modFile, nil
 }
 
 // GetOrCreateFile gets or creates a file if it doesn't exist

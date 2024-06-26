@@ -120,7 +120,7 @@ var OCICmd = &cobra.Command{
 
 		if loadDocker {
 			fmt.Println(styles.HighlightStyle.Render("Loading image to docker daemon..."))
-
+ 
 			expectedInstall := true
 			currentContext, err := builddocker.GetCurrentContext()
 			if err != nil {
