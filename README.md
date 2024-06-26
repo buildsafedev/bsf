@@ -1,6 +1,6 @@
 # BuildSafe
 
-[![Discord Server](https://img.shields.io/badge/discord-gray?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/xrwYkuFT)
+[![Discord Server](https://img.shields.io/badge/discord-gray?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/geGGKhrz)
 
 ## About
 
