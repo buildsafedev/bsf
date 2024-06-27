@@ -176,7 +176,7 @@ const (
 )
 
 // GenerateFlake generates default flake
-func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
+func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config, forBase bool) error {
 	if conf.RustApp != nil {
 		fl.RustArguments = RustApp{
 			WorkspaceSrc:                  parentFolder(conf.RustApp.WorkspaceSrc),
@@ -205,7 +205,7 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 		fl.ConfigAttribute = confAttr
 	}
 
-	if conf.OCIArtifact != nil {
+	if conf.OCIArtifact != nil || forBase {
 		artifacts := hclOCIToOCIArtifact(conf.OCIArtifact)
 		artifacttAttr, err := GenerateOCIAttr(artifacts)
 		if err != nil {
