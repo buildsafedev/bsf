@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -19,6 +18,7 @@ import (
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 	"github.com/buildsafedev/bsf/pkg/oci"
+	"github.com/buildsafedev/bsf/pkg/platformutils"
 )
 
 var (
@@ -109,7 +109,7 @@ var OCICmd = &cobra.Command{
 		}
 		appDetails.Name = env.Name
 
-		tos, tarch := findPlatform(platform)
+		tos, tarch := platformutils.FindPlatform(platform)
 		err = build.GenerateArtifcats(output, symlink, lockFile, appDetails, graph, tos, tarch)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
@@ -167,23 +167,10 @@ var OCICmd = &cobra.Command{
 	},
 }
 
-func findPlatform(platform string) (string, string) {
-	if platform == "" {
-		return runtime.GOOS, runtime.GOARCH
-	}
-	osarch := strings.Split(platform, "/")
-	if len(osarch) != 2 {
-		return runtime.GOOS, runtime.GOARCH
-	}
-
-	return osarch[0], osarch[1]
-
-}
-
 // ProcessPlatformAndConfig processes the platform and config file
 func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact, string, error) {
 	if plat == "" {
-		tos, tarch := findPlatform(plat)
+		tos, tarch := platformutils.FindPlatform(plat)
 		plat = tos + "/" + tarch
 	}
 
