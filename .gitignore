@@ -3,5 +3,6 @@ result
 dist/
 debug.log
 bin/
+.env
 
 bsf-result/
