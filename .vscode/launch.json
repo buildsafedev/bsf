@@ -6,11 +6,15 @@
         "request": "launch",
         "mode": "auto",
         "program": "${workspaceFolder}/main.go",
-        "args": ["build"],
+        "args": ["release",
+        "bsf",
+        "v0.0.1"
+    ],
         "env": {
             "BSF_DEBUG": "true",
-            "BSF_DEBUG_DIR": "/Users/house/Desktop/buildsafe/examples/go-server-example",
+            // "BSF_DEBUG_DIR": "/Users/house/Desktop/buildsafe/examples/go-server-example",
         },
+        "envFile": "${workspaceFolder}/.env",
         "console": "integratedTerminal"
     }
     ]
