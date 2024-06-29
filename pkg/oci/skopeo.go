@@ -33,6 +33,19 @@ func LoadPodman(dir, imageName string) error {
 
 // Push image to registry
 func Push(dir, imageName string) error {
+	if _, err := os.Stat("/etc/skopeo/config.json"); err != nil {
+		cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "login", "--authfile", "~/.skopeo/config.json", "docker.io")
+
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		err := cmd.Run()
+		if err != nil {
+			return err
+		}
+	}
+
 	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "docker://"+imageName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
