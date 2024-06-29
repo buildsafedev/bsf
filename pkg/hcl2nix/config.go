@@ -14,13 +14,22 @@ import (
 
 // Config for hcl2nix
 type Config struct {
-	Packages    Packages      `hcl:"packages,block"`
-	GoModule    *GoModule     `hcl:"gomodule,block"`
-	PoetryApp   *PoetryApp    `hcl:"poetryapp,block"`
-	RustApp     *RustApp      `hcl:"rustapp,block"`
-	JsNpmApp    *JsNpmApp     `hcl:"jsnpmapp,block"`
-	OCIArtifact []OCIArtifact `hcl:"oci,block"`
-	ConfigFiles []ConfigFiles `hcl:"config,block"`
+	Packages       Packages        `hcl:"packages,block"`
+	GoModule       *GoModule       `hcl:"gomodule,block"`
+	PoetryApp      *PoetryApp      `hcl:"poetryapp,block"`
+	RustApp        *RustApp        `hcl:"rustapp,block"`
+	JsNpmApp       *JsNpmApp       `hcl:"jsnpmapp,block"`
+	OCIArtifact    []OCIArtifact   `hcl:"oci,block"`
+	ConfigFiles    []ConfigFiles   `hcl:"config,block"`
+	GitHubReleases []GitHubRelease `hcl:"githubRelease,block"`
+}
+
+// GitHubRelease holds github release parameters
+type GitHubRelease struct {
+	Owner string `hcl:"owner"`
+	Repo  string `hcl:"repo"`
+	App   string `hcl:"app,label"`
+	Dir   string `hcl:"dir,optional"`
 }
 
 // Packages holds package parameters

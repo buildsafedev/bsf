@@ -3,10 +3,8 @@ package cmd
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -18,6 +16,8 @@ import (
 	imgv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"zombiezen.com/go/nix/nar"
 	"zombiezen.com/go/nix/nixbase32"
+
+	"github.com/buildsafedev/bsf/pkg/crypto"
 )
 
 // App represents the application
@@ -86,7 +86,7 @@ func artifactHash(output, symlink string) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			hash, err := fileSHA256(output + symlink + "/bin/" + binName)
+			hash, err := crypto.FileSHA256(output + symlink + "/bin/" + binName)
 			if err != nil {
 				return "", err
 			}
@@ -162,30 +162,6 @@ func findResultBinary(output string, symlink string) (string, error) {
 		return file.Name(), nil
 	}
 	return "", fmt.Errorf("no result binary found")
-}
-
-// fileSHA256 returns the sha256 hash of the file
-func fileSHA256(filePath string) (string, error) {
-	// Open the file
-	file, err := os.Open(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	// Create a new SHA-256 hash
-	hash := sha256.New()
-
-	// Copy the file content to the hash
-	if _, err := io.Copy(hash, file); err != nil {
-		return "", err
-	}
-
-	// Get the SHA-256 checksum
-	checksum := hash.Sum(nil)
-
-	// Return the checksum as a hex string
-	return hex.EncodeToString(checksum), nil
 }
 
 // CleanNameFromGraph removes leading and trailing double quotes and escape characters

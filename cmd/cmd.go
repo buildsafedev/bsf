@@ -23,6 +23,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/nixgenerate"
 	"github.com/buildsafedev/bsf/cmd/oci"
 	"github.com/buildsafedev/bsf/cmd/precheck"
+	"github.com/buildsafedev/bsf/cmd/release"
 	"github.com/buildsafedev/bsf/cmd/scan"
 	"github.com/buildsafedev/bsf/cmd/search"
 	"github.com/buildsafedev/bsf/cmd/styles"
@@ -73,6 +74,7 @@ func Execute() {
 	}
 	rootCmd.AddCommand(oci.OCICmd)
 	rootCmd.AddCommand(dockerfile.DFCmd)
+	rootCmd.AddCommand(release.ReleaseCmd)
 
 	err := rootCmd.ExecuteContext(context.Background())
 	if err != nil {
