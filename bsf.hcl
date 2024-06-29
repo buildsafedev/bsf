@@ -11,3 +11,9 @@ gomodule {
   tags    = null
   doCheck = false
 }
+
+
+githubRelease "bsf" {
+  owner = "buildsafedev"
+  repo  = "bsf"
+}
