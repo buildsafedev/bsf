@@ -17,7 +17,7 @@ import (
 )
 
 // Generate reads bsf.hcl, resolves dependencies and generates bsf.lock, bsf/flake.nix, bsf/default.nix, etc.
-func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient, forBase bool, pkgType string) error {
+func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient, forBase bool, pkgType string, baseName string) error {
 	data, err := os.ReadFile("bsf.hcl")
 	if err != nil {
 		return err
@@ -45,19 +45,19 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient, forB
 	lang := findLang(conf)
 
 	cr := hcl2nix.ResolveCategoryRevisions(conf.Packages, lockPackages)
-	flake := btemplate.Flake{
+	genFlake := btemplate.Flake{
 		NixPackageRevisions: cr.Revisions,
 		Language:            string(lang),
 	}
 	if pkgType == "pkgs.dev" {
-		flake.DevPackages = cr.Development
-	} else if pkgType == "pkg.runtime" {
-		flake.RuntimePackages = cr.Runtime
+		genFlake.DevPackages = cr.Development
+	} else if pkgType == "pkgs.runtime" {
+		genFlake.RuntimePackages = cr.Runtime
 	} else {
-		flake.DevPackages = cr.Development
-		flake.RuntimePackages = cr.Runtime
+		genFlake.DevPackages = cr.Development
+		genFlake.RuntimePackages = cr.Runtime
 	}
-	err = btemplate.GenerateFlake(flake, fh.FlakeFile, conf, forBase)
+	err = btemplate.GenerateFlake(genFlake, fh.FlakeFile, conf, forBase, baseName)
 	if err != nil {
 		return err
 	}

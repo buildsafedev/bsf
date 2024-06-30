@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/buildsafedev/bsf/cmd/build"
 	binit "github.com/buildsafedev/bsf/cmd/init"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/builddocker"
@@ -21,7 +22,7 @@ import (
 )
 
 var (
-	platform, output             string
+	platform, output, baseName   string
 	push, loadDocker, loadPodman bool
 )
 var (
@@ -46,8 +47,13 @@ var OCICmd = &cobra.Command{
 
 		var pkgs hcl2nix.Packages
 		var pkgType string
-		var env hcl2nix.OCIArtifact
+		var artifact hcl2nix.OCIArtifact
 		if args[0] == "pkgs.dev" || args[0] == "pkgs.runtime" {
+			if baseName == "" {
+				fmt.Println(styles.HintStyle.Render("please define your image name using --name flag"))
+				os.Exit(1)
+			}
+			artifact.Name = baseName
 			gotPkgs, gotPkgType, err := processPackages(args[0])
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
@@ -55,145 +61,143 @@ var OCICmd = &cobra.Command{
 			}
 			pkgs = gotPkgs
 			pkgType = gotPkgType
+			tos, tarch := findPlatform(platform)
+			platform = tos + "/" + tarch
 		} else {
-			gotEnv, p, err := ProcessPlatformAndConfig(platform, args[0])
+			gotArtifact, p, err := ProcessPlatformAndConfig(platform, args[0])
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 				os.Exit(1)
 			}
 			platform = p
-			env = gotEnv
+			artifact = gotArtifact
 		}
 
-		build(pkgs, pkgType, env)
-	},
-}
-
-func build(pkgs hcl2nix.Packages, pkgType string, env hcl2nix.OCIArtifact) {
-	sc, fh, err := binit.GetBSFInitializers()
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-		os.Exit(1)
-	}
-	if len(pkgs.Development) > 0 || len(pkgs.Runtime) > 0 {
-		err = generate.Generate(fh, sc, true, pkgType)
-	} else {
-		err = generate.Generate(fh, sc, false, "")
-	}
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-		os.Exit(1)
-	}
-
-	if output == "" {
-		output = "bsf-result"
-	}
-
-	err = bgit.Add("bsf/")
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-		os.Exit(1)
-	}
-
-	err = bgit.Ignore(output + "/")
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-		os.Exit(1)
-	}
-
-	symlink := "/result"
-
-	err = nixcmd.Build(output+symlink, genOCIAttrName(env.Environment, platform))
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-		os.Exit(1)
-	}
-	fmt.Println(styles.HighlightStyle.Render("Generating artifacts..."))
-
-	lockData, err := os.ReadFile("bsf.lock")
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-		os.Exit(1)
-	}
-
-	lockFile := &hcl2nix.LockFile{}
-	err = json.Unmarshal(lockData, lockFile)
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-		os.Exit(1)
-	}
-
-	appDetails, graph, err := nixcmd.GetRuntimeClosureGraph(lockFile.App.Name, output, symlink)
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-		os.Exit(1)
-	}
-	appDetails.Name = env.Name
-
-	tos, tarch := findPlatform(platform)
-	err = build.GenerateArtifcats(output, symlink, lockFile, appDetails, graph, tos, tarch)
-	if err != nil {
-		fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-		os.Exit(1)
-	}
-
-	fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Build completed successfully, please check the %s directory", output)))
-
-	if loadDocker {
-		fmt.Println(styles.HighlightStyle.Render("Loading image to docker daemon..."))
-
-		expectedInstall := true
-		currentContext, err := builddocker.GetCurrentContext()
+		sc, fh, err := binit.GetBSFInitializers()
 		if err != nil {
-			expectedInstall = false
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
 		}
-		contextEP, err := builddocker.ReadContextEndpoints()
+		if len(pkgs.Development) > 0 || len(pkgs.Runtime) > 0 {
+			err = generate.Generate(fh, sc, true, pkgType, baseName)
+		} else {
+			err = generate.Generate(fh, sc, false, "", "")
+		}
 		if err != nil {
-			expectedInstall = false
-		}
-		if currentContext == "" {
-			currentContext = "default"
-		}
-		if contextEP == nil {
-			contextEP = make(map[string]string)
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
 		}
 
-		if _, ok := contextEP[currentContext]; !ok {
-			contextEP[currentContext] = "unix:///var/run/docker.sock"
+		if output == "" {
+			output = "bsf-result"
 		}
 
-		err = oci.LoadDocker(contextEP[currentContext], output+"/result", env.Name)
+		err = bgit.Add("bsf/")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		err = bgit.Ignore(output + "/")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		symlink := "/result"
+
+		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Environment, platform))
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+		fmt.Println(styles.HighlightStyle.Render("Generating artifacts..."))
+
+		lockData, err := os.ReadFile("bsf.lock")
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-			if !expectedInstall {
-				fmt.Println(styles.ErrorStyle.Render("error:", "Is Docker installed?"))
+			os.Exit(1)
+		}
+
+		lockFile := &hcl2nix.LockFile{}
+		err = json.Unmarshal(lockData, lockFile)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		appDetails, graph, err := nixcmd.GetRuntimeClosureGraph(lockFile.App.Name, output, symlink)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+		appDetails.Name = artifact.Name
+
+		tos, tarch := findPlatform(platform)
+		err = build.GenerateArtifcats(output, symlink, lockFile, appDetails, graph, tos, tarch)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Build completed successfully, please check the %s directory", output)))
+
+		if loadDocker {
+			fmt.Println(styles.HighlightStyle.Render("Loading image to docker daemon..."))
+
+			expectedInstall := true
+			currentContext, err := builddocker.GetCurrentContext()
+			if err != nil {
+				expectedInstall = false
 			}
-			os.Exit(1)
+			contextEP, err := builddocker.ReadContextEndpoints()
+			if err != nil {
+				expectedInstall = false
+			}
+			if currentContext == "" {
+				currentContext = "default"
+			}
+			if contextEP == nil {
+				contextEP = make(map[string]string)
+			}
+
+			if _, ok := contextEP[currentContext]; !ok {
+				contextEP[currentContext] = "unix:///var/run/docker.sock"
+			}
+
+			err = oci.LoadDocker(contextEP[currentContext], output+"/result", artifact.Name)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				if !expectedInstall {
+					fmt.Println(styles.ErrorStyle.Render("error:", "Is Docker installed?"))
+				}
+				os.Exit(1)
+			}
+
+			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to docker daemon", artifact.Name)))
+
 		}
 
-		fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to docker daemon", env.Name)))
-
-	}
-
-	if loadPodman {
-		fmt.Println(styles.HighlightStyle.Render("Loading image to podman..."))
-		err = oci.LoadPodman(output+"/result", env.Name)
-		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-			os.Exit(1)
+		if loadPodman {
+			fmt.Println(styles.HighlightStyle.Render("Loading image to podman..."))
+			err = oci.LoadPodman(output+"/result", artifact.Name)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to podman", artifact.Name)))
 		}
-		fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to podman", env.Name)))
-	}
 
-	if push {
-		fmt.Println(styles.HighlightStyle.Render("Pushing image to registry..."))
-		err = oci.Push(output+"/result", env.Name)
-		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-			os.Exit(1)
+		if push {
+			fmt.Println(styles.HighlightStyle.Render("Pushing image to registry..."))
+			err = oci.Push(output+"/result", artifact.Name)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", artifact.Name)))
 		}
-		fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", env.Name)))
-	}
+	},
 }
 
 func findPlatform(platform string) (string, string) {
@@ -239,7 +243,7 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 
 	envNames := make([]string, 0, len(conf.OCIArtifact))
 	var found bool
-	env := hcl2nix.OCIArtifact{}
+	artifact := hcl2nix.OCIArtifact{}
 	for _, ec := range conf.OCIArtifact {
 		errStr := ec.Validate(conf)
 		if errStr != nil {
@@ -248,7 +252,7 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 
 		if ec.Environment == envName {
 			found = true
-			env = ec
+			artifact = ec
 			break
 		}
 		envNames = append(envNames, ec.Environment)
@@ -258,7 +262,7 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 		return hcl2nix.OCIArtifact{}, "", fmt.Errorf("error: No such environment found. Valid oci environment that can be built are: %s", strings.Join(envNames, ", "))
 	}
 
-	return env, plat, nil
+	return artifact, plat, nil
 }
 
 func processPackages(pkgType string) (hcl2nix.Packages, string, error) {
@@ -292,12 +296,16 @@ func genOCIAttrName(env, platform string) string {
 	case "linux/arm64":
 		tostarch = "aarch64-linux"
 	}
+	if env == "" {
+		env = baseName
+	}
 	return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s-as-dir", tostarch, env)
 }
 
 func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
 	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
+	OCICmd.Flags().StringVarP(&baseName, "name", "n", "", "The name of the base image")
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")

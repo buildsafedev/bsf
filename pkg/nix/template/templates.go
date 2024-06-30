@@ -17,6 +17,7 @@ type Flake struct {
 	RustArguments       RustApp
 	OCIAttribute        *string
 	ConfigAttribute     *string
+	IsBase              bool
 }
 
 // todo: maybe we could let power users inject their own templates
@@ -103,7 +104,8 @@ const (
 		{{ if eq .Language "JsNpm"}} buildNodeModules = buildNodeModules.lib.${system}; {{end}}
 	  });
 	in {
-	  packages = forEachSupportedSystem ({ pkgs,
+	{{if ne .IsBase true}}
+	packages = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
@@ -135,7 +137,7 @@ const (
 		  ];
 		};
 	  });
-	
+	{{end}}
 	  runtimeEnvs = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
@@ -176,7 +178,7 @@ const (
 )
 
 // GenerateFlake generates default flake
-func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config, forBase bool) error {
+func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config, forBase bool, baseName string) error {
 	if conf.RustApp != nil {
 		fl.RustArguments = RustApp{
 			WorkspaceSrc:                  parentFolder(conf.RustApp.WorkspaceSrc),
@@ -205,13 +207,39 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config, forBase bool) e
 		fl.ConfigAttribute = confAttr
 	}
 
-	if conf.OCIArtifact != nil || forBase {
+	if conf.OCIArtifact != nil {
 		artifacts := hclOCIToOCIArtifact(conf.OCIArtifact)
 		artifacttAttr, err := GenerateOCIAttr(artifacts)
 		if err != nil {
 			return err
 		}
 		fl.OCIAttribute = artifacttAttr
+	}
+
+	if forBase {
+		fl.IsBase = forBase
+		if len(fl.RuntimePackages) > 0 {
+			baseArtifact := OCIArtifactforBase{
+				Runtime: true,
+				Name:    baseName,
+			}
+			artifacttAttr, err := GenerateOCIAttrForBase(baseArtifact)
+			if err != nil {
+				return err
+			}
+			fl.OCIAttribute = artifacttAttr
+		}
+		if len(fl.DevPackages) > 0 {
+			baseArtifact := OCIArtifactforBase{
+				Dev:  true,
+				Name: baseName,
+			}
+			artifacttAttr, err := GenerateOCIAttrForBase(baseArtifact)
+			if err != nil {
+				return err
+			}
+			fl.OCIAttribute = artifacttAttr
+		}
 	}
 
 	t, err := template.New("main").Funcs(template.FuncMap{
