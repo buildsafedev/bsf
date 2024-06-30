@@ -22,12 +22,23 @@ import (
 )
 
 var (
-	platform, output, baseName   string
-	push, loadDocker, loadPodman bool
+	platform, output, baseName, baseTag string
+	push, loadDocker, loadPodman        bool
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
 )
+
+func init() {
+	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
+	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
+	OCICmd.Flags().StringVarP(&baseName, "name", "n", "", "The name of the base image")
+	OCICmd.Flags().StringVarP(&baseTag, "tag", "t", "", "The tag of the base image")
+	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
+	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
+	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
+}
+
 
 // OCICmd represents the export command
 var OCICmd = &cobra.Command{
@@ -37,6 +48,9 @@ var OCICmd = &cobra.Command{
 	bsf oci <environment name> 
 	bsf oci <environment name> --platform <platform>
 	bsf oci <environment name> --platform <platform> --output <output directory>
+
+	bsf oci pkgs.runtime --name=<image name> --tag=<image tag>
+	bsf oci pkgs.dev --name=<image name> --tag=<image tag>
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// todo: we could provide a TUI list dropdown to select
@@ -49,11 +63,11 @@ var OCICmd = &cobra.Command{
 		var pkgType string
 		var artifact hcl2nix.OCIArtifact
 		if args[0] == "pkgs.dev" || args[0] == "pkgs.runtime" {
-			if baseName == "" {
-				fmt.Println(styles.HintStyle.Render("please define your image name using --name flag"))
+			if baseName == "" || baseTag == ""{
+				fmt.Println(styles.HintStyle.Render("please use --name and --tag flag to define the image name and tag"))
 				os.Exit(1)
 			}
-			artifact.Name = baseName
+			
 			gotPkgs, gotPkgType, err := processPackages(args[0])
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
@@ -63,6 +77,7 @@ var OCICmd = &cobra.Command{
 			pkgType = gotPkgType
 			tos, tarch := findPlatform(platform)
 			platform = tos + "/" + tarch
+			artifact.Name = baseName + ":" + baseTag
 		} else {
 			gotArtifact, p, err := ProcessPlatformAndConfig(platform, args[0])
 			if err != nil {
@@ -300,13 +315,4 @@ func genOCIAttrName(env, platform string) string {
 		env = baseName
 	}
 	return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s-as-dir", tostarch, env)
-}
-
-func init() {
-	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
-	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
-	OCICmd.Flags().StringVarP(&baseName, "name", "n", "", "The name of the base image")
-	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
-	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
-	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
 }

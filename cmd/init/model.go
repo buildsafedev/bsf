@@ -34,7 +34,6 @@ type model struct {
 	stage    int
 	pt       langdetect.ProjectType
 	pd       *langdetect.ProjectDetails
-	base     bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -65,22 +64,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cleanUp()
 			return m, tea.Quit
 		}
-	}
-	if m.base {
-		modFile, err := hcl2nix.CreateModFile(false)
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return m, tea.Quit
-		}
-		conf := generateEmptyConf()
-		err = hcl2nix.WriteConfig(conf, modFile)
-		if err != nil {
-			m.stageMsg = errorStyle(err.Error())
-			return m, tea.Quit
-		}
-
-		m.stageMsg = sucessStyle("Initialised an empty bsf.hcl!")
-		return m, tea.Quit
 	}
 
 	var err error
@@ -134,7 +117,7 @@ func (m *model) processStages(stage int) error {
 		defer fh.FlakeFile.Close()
 		defer fh.DefFlakeFile.Close()
 
-		conf, err := generatehcl2NixConf(m.pt, m.pd)
+		conf, isBase, err := generatehcl2NixConf(m.pt, m.pd)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
@@ -143,6 +126,9 @@ func (m *model) processStages(stage int) error {
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
+		}
+		if isBase {
+			return nil
 		}
 
 		err = generate.Generate(fh, m.sc, false, "", "")
