@@ -178,7 +178,7 @@ const (
 )
 
 // GenerateFlake generates default flake
-func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config, forBase bool, baseName string) error {
+func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 	if conf.RustApp != nil {
 		fl.RustArguments = RustApp{
 			WorkspaceSrc:                  parentFolder(conf.RustApp.WorkspaceSrc),
@@ -208,38 +208,14 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config, forBase bool, b
 	}
 
 	if conf.OCIArtifact != nil {
+		isBase := checkForBase(conf.OCIArtifact)
+		fl.IsBase = isBase
 		artifacts := hclOCIToOCIArtifact(conf.OCIArtifact)
 		artifacttAttr, err := GenerateOCIAttr(artifacts)
 		if err != nil {
 			return err
 		}
 		fl.OCIAttribute = artifacttAttr
-	}
-
-	if forBase {
-		fl.IsBase = forBase
-		if len(fl.RuntimePackages) > 0 {
-			baseArtifact := OCIArtifactforBase{
-				Runtime: true,
-				Name:    baseName,
-			}
-			artifacttAttr, err := GenerateOCIAttrForBase(baseArtifact)
-			if err != nil {
-				return err
-			}
-			fl.OCIAttribute = artifacttAttr
-		}
-		if len(fl.DevPackages) > 0 {
-			baseArtifact := OCIArtifactforBase{
-				Dev:  true,
-				Name: baseName,
-			}
-			artifacttAttr, err := GenerateOCIAttrForBase(baseArtifact)
-			if err != nil {
-				return err
-			}
-			fl.OCIAttribute = artifacttAttr
-		}
 	}
 
 	t, err := template.New("main").Funcs(template.FuncMap{
@@ -256,6 +232,18 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config, forBase bool, b
 	}
 
 	return nil
+}
+
+func checkForBase(confs []hcl2nix.OCIArtifact) bool {
+	var isBase int
+	for _, conf := range confs {
+		if conf.Base {
+			isBase++
+		} else {
+			isBase--
+		}
+	}		
+	return isBase == 1
 }
 
 // parentFolder returns the parent folder of the given path. ex: ( ./ -> ../ )

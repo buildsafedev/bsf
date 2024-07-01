@@ -17,7 +17,7 @@ import (
 )
 
 // Generate reads bsf.hcl, resolves dependencies and generates bsf.lock, bsf/flake.nix, bsf/default.nix, etc.
-func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient, forBase bool, pkgType string, baseName string) error {
+func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) error {
 	data, err := os.ReadFile("bsf.hcl")
 	if err != nil {
 		return err
@@ -49,15 +49,23 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient, forB
 		NixPackageRevisions: cr.Revisions,
 		Language:            string(lang),
 	}
-	if pkgType == "pkgs.dev" {
-		genFlake.DevPackages = cr.Development
-	} else if pkgType == "pkgs.runtime" {
-		genFlake.RuntimePackages = cr.Runtime
-	} else {
-		genFlake.DevPackages = cr.Development
-		genFlake.RuntimePackages = cr.Runtime
+	for _, conf := range conf.OCIArtifact {
+		if conf.Base {
+			if conf.BaseDeps != "" {
+				if conf.BaseDeps == "dev" {
+					genFlake.DevPackages = cr.Development
+				} else if conf.BaseDeps == "runtime" {
+					genFlake.RuntimePackages = cr.Runtime
+				} else {
+					genFlake.DevPackages = cr.Development
+					genFlake.RuntimePackages = cr.Runtime
+				}
+			} else {
+				return fmt.Errorf("please define the deps type in baseDeps block")
+			}
+		}
 	}
-	err = btemplate.GenerateFlake(genFlake, fh.FlakeFile, conf, forBase, baseName)
+	err = btemplate.GenerateFlake(genFlake, fh.FlakeFile, conf)
 	if err != nil {
 		return err
 	}

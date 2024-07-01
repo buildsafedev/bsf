@@ -37,7 +37,7 @@ func generateEmptyConf() hcl2nix.Config {
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
 			Development: []string{""},
-			Runtime:     []string{""},
+			Runtime:     []string{"cacert@3.95", "tzdata@2024"},
 		},
 	}
 }

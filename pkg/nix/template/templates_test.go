@@ -30,7 +30,7 @@ func TestTemplateMainForGolang(t *testing.T) {
 		},
 	}
 
-	err := GenerateFlake(flake, os.Stdout, conf, false, "")
+	err := GenerateFlake(flake, os.Stdout, conf)
 	if err != nil {
 		t.Error()
 		t.FailNow()
@@ -61,7 +61,7 @@ func TestTemplateMainForRust(t *testing.T) {
 		},
 	}
 
-	err := GenerateFlake(flake, os.Stdout, conf, false, "")
+	err := GenerateFlake(flake, os.Stdout, conf)
 	if err != nil {
 		t.Error()
 		t.FailNow()
@@ -91,7 +91,7 @@ func TestTemplateMainForPython(t *testing.T) {
 		},
 	}
 
-	err := GenerateFlake(flake, os.Stdout, conf, false, "")
+	err := GenerateFlake(flake, os.Stdout, conf)
 	if err != nil {
 		t.Error()
 		t.FailNow()
@@ -122,7 +122,7 @@ func TestTemplateMainForJavacript(t *testing.T) {
 		},
 	}
 
-	err := GenerateFlake(flake, os.Stdout, conf, false, "")
+	err := GenerateFlake(flake, os.Stdout, conf)
 	if err != nil {
 		t.Error()
 		t.FailNow()

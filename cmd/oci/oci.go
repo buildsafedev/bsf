@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	platform, output, baseName, baseTag string
-	push, loadDocker, loadPodman        bool
+	platform, output             string
+	push, loadDocker, loadPodman bool
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
@@ -32,13 +32,10 @@ var (
 func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
 	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
-	OCICmd.Flags().StringVarP(&baseName, "name", "n", "", "The name of the base image")
-	OCICmd.Flags().StringVarP(&baseTag, "tag", "t", "", "The tag of the base image")
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
 }
-
 
 // OCICmd represents the export command
 var OCICmd = &cobra.Command{
@@ -59,33 +56,16 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		var pkgs hcl2nix.Packages
-		var pkgType string
-		var artifact hcl2nix.OCIArtifact
-		if args[0] == "pkgs.dev" || args[0] == "pkgs.runtime" {
-			if baseName == "" || baseTag == ""{
-				fmt.Println(styles.HintStyle.Render("please use --name and --tag flag to define the image name and tag"))
-				os.Exit(1)
-			}
-			
-			gotPkgs, gotPkgType, err := processPackages(args[0])
-			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-				os.Exit(1)
-			}
-			pkgs = gotPkgs
-			pkgType = gotPkgType
-			tos, tarch := findPlatform(platform)
-			platform = tos + "/" + tarch
-			artifact.Name = baseName + ":" + baseTag
-		} else {
-			gotArtifact, p, err := ProcessPlatformAndConfig(platform, args[0])
-			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-				os.Exit(1)
-			}
-			platform = p
-			artifact = gotArtifact
+		artifact, p, err := ProcessPlatformAndConfig(platform, args[0])
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+		platform = p
+
+		if err := verifyBase(artifact); err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
 		}
 
 		sc, fh, err := binit.GetBSFInitializers()
@@ -93,11 +73,8 @@ var OCICmd = &cobra.Command{
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
-		if len(pkgs.Development) > 0 || len(pkgs.Runtime) > 0 {
-			err = generate.Generate(fh, sc, true, pkgType, baseName)
-		} else {
-			err = generate.Generate(fh, sc, false, "", "")
-		}
+		err = generate.Generate(fh, sc)
+
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -280,26 +257,11 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 	return artifact, plat, nil
 }
 
-func processPackages(pkgType string) (hcl2nix.Packages, string, error) {
-	data, err := os.ReadFile("bsf.hcl")
-	if err != nil {
-		return hcl2nix.Packages{}, "", fmt.Errorf("error: %s", err.Error())
+func verifyBase(a hcl2nix.OCIArtifact) error {
+	if a.Environment == "pkgs" && !a.Base {
+		return fmt.Errorf("please define base and baseDeps in the pkgs block")
 	}
-
-	var resPkg hcl2nix.Packages
-	var dstErr bytes.Buffer
-	conf, err := hcl2nix.ReadConfig(data, &dstErr)
-	if err != nil {
-		return hcl2nix.Packages{}, "", fmt.Errorf(dstErr.String())
-	}
-	if pkgType == "pkgs.dev" {
-		resPkg.Development = conf.Packages.Development
-	}
-	if pkgType == "pkgs.runtime" {
-		resPkg.Runtime = conf.Packages.Runtime
-	}
-
-	return resPkg, pkgType, nil
+	return nil
 }
 
 func genOCIAttrName(env, platform string) string {
@@ -310,9 +272,6 @@ func genOCIAttrName(env, platform string) string {
 		tostarch = "x86_64-linux"
 	case "linux/arm64":
 		tostarch = "aarch64-linux"
-	}
-	if env == "" {
-		env = baseName
 	}
 	return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s-as-dir", tostarch, env)
 }

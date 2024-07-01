@@ -17,6 +17,8 @@ type OCIArtifact struct {
 	ImportConfigs []string
 	ExposedPorts  []string
 	DevDeps       bool
+	Base          bool
+	BaseDeps      string
 }
 
 // OCIArtifactforBase holds parameters for base OCI Artifacts
@@ -32,7 +34,9 @@ const (
 		{{range $artifact := .}}
 		ociImage_{{$artifact.Environment}} =  nix2containerPkgs.nix2container.buildImage {
 		name = "{{$artifact.Name}}";
+		{{if ne .Base false}}
 		copyToRoot = [ inputs.self.packages.${system}.default ];
+		{{end}}
 		  config = {
 
 			cmd = [ {{range $c := $artifact.Cmd}}
@@ -71,30 +75,6 @@ const (
 	`
 )
 
-const (
-	ociTmplForBase = `
-	ociImages = forEachSupportedSystem ({ pkgs, nix2containerPkgs, system , ...}: {
-		ociImage_{{.Name}} = nix2containerPkgs.nix2container.buildImage {
-		name = "{{.Name}}";
-		 maxLayers = 100;
-		 layers = [
-			 (nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-				{{if .Runtime}}
-			    inputs.self.runtimeEnvs.${system}.runtime
-				{{end}}
-				{{if .Dev}}
-				inputs.self.devEnvs.${system}.development
-				{{end}}
-			  ];
-			 })
-		  ];      
-	};
-	ociImage_{{.Name}}-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{.Name}}.copyTo}/bin/copy-to dir:$out";
-	});
-	`
-)
-
 func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
 	converted := make([]OCIArtifact, len(ociArtifacts))
 
@@ -127,26 +107,6 @@ func GenerateOCIAttr(artifacts []OCIArtifact) (*string, error) {
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, artifacts)
-	if err != nil {
-		return nil, err
-	}
-
-	result := buf.String()
-	return &result, nil
-}
-
-// GenerateOCIAttrForBase generates the Nix attribute set for oci artifacts for base image
-func GenerateOCIAttrForBase(artifact OCIArtifactforBase) (*string, error) {
-	tmpl, err := template.New("ociAttrForBase").Funcs(template.FuncMap{
-		"quote": quote,
-	}).
-		Parse(ociTmplForBase)
-	if err != nil {
-		return nil, err
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, artifact)
 	if err != nil {
 		return nil, err
 	}
