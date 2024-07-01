@@ -17,6 +17,15 @@ type OCIArtifact struct {
 	ImportConfigs []string
 	ExposedPorts  []string
 	DevDeps       bool
+	Base          bool
+	BaseDeps      string
+}
+
+// OCIArtifactforBase holds parameters for base OCI Artifacts
+type OCIArtifactforBase struct {
+	Name    string
+	Runtime bool
+	Dev     bool
 }
 
 const (
@@ -25,7 +34,9 @@ const (
 		{{range $artifact := .}}
 		ociImage_{{$artifact.Environment}} =  nix2containerPkgs.nix2container.buildImage {
 		name = "{{$artifact.Name}}";
+		{{if ne .Base false}}
 		copyToRoot = [ inputs.self.packages.${system}.default ];
+		{{end}}
 		  config = {
 
 			cmd = [ {{range $c := $artifact.Cmd}}

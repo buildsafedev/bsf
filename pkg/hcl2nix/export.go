@@ -22,6 +22,10 @@ type OCIArtifact struct {
 	ImportConfigs []string `hcl:"importConfigs,optional"`
 	// DevDeps defines if development dependencies should be present in the image. By default, it is false.
 	DevDeps bool `hcl:"devDeps,optional"`
+	// Base defines if the OCI artifact that needs to be built is for a Base image. By default, it is false.
+	Base bool `hcl:"base,optional"`
+	// BaseDeps defines the type of dependencies which needs to included in the base image. Can be either "runtime" or "dev".
+	BaseDeps string `hcl:"baseDeps,optional"`
 }
 
 // Validate validates ExportConfig

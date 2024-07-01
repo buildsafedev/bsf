@@ -43,18 +43,29 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 	}
 
 	lang := findLang(conf)
-	if lang == "" {
-		return fmt.Errorf("could not detect programming language of the app")
-	}
 
 	cr := hcl2nix.ResolveCategoryRevisions(conf.Packages, lockPackages)
-	err = btemplate.GenerateFlake(btemplate.Flake{
-		// Description:         "bsf flake",
+	genFlake := btemplate.Flake{
 		NixPackageRevisions: cr.Revisions,
-		DevPackages:         cr.Development,
-		RuntimePackages:     cr.Runtime,
 		Language:            string(lang),
-	}, fh.FlakeFile, conf)
+	}
+	for _, conf := range conf.OCIArtifact {
+		if conf.Base {
+			if conf.BaseDeps != "" {
+				if conf.BaseDeps == "dev" {
+					genFlake.DevPackages = cr.Development
+				} else if conf.BaseDeps == "runtime" {
+					genFlake.RuntimePackages = cr.Runtime
+				} else {
+					genFlake.DevPackages = cr.Development
+					genFlake.RuntimePackages = cr.Runtime
+				}
+			} else {
+				return fmt.Errorf("please define the deps type in baseDeps block")
+			}
+		}
+	}
+	err = btemplate.GenerateFlake(genFlake, fh.FlakeFile, conf)
 	if err != nil {
 		return err
 	}

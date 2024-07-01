@@ -1,7 +1,6 @@
 package langdetect
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,12 +60,10 @@ func FindProjectType() (ProjectType, *ProjectDetails, error) {
 
 		case "Cargo.lock":
 			return RustCargo, &ProjectDetails{}, nil
-		
+
 		case "package-lock.json":
 			return JsNpm, &ProjectDetails{}, nil
 
-		default:
-			err = fmt.Errorf("unable to detect the language ,supported languages: " + (strings.Join(supportedLanguages, ",") + "."))
 		}
 	}
 
