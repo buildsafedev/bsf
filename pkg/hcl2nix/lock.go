@@ -97,8 +97,18 @@ func GenerateLockFile(conf *Config, packages []LockPackage, wr io.Writer) error 
 }
 
 // ResolvePackages resolves a list of packages concurrently
-func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, packages Packages) ([]LockPackage, error) {
-	allPackages := slices.Compact(append(packages.Development, packages.Runtime...))
+func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, packages Packages, pkgType string) ([]LockPackage, error) {
+	var selectedPackages []string
+    switch pkgType {
+    case "dev":
+        selectedPackages = packages.Development
+    case "runtime":
+        selectedPackages = packages.Runtime
+    case "all":
+        selectedPackages = append(packages.Development, packages.Runtime...)
+    }
+
+    allPackages := slices.Compact(selectedPackages)
 	resolvedPackages := make([]LockPackage, 0, len(allPackages))
 	pkgMap := mapPackageCategory(packages)
 
@@ -108,7 +118,7 @@ func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, pa
 		wg.Add(1)
 		go func(pkg string) {
 			defer wg.Done()
-			p, err := ResolvePackage(ctx, sc, pkg)
+			p, err := resolvePackage(ctx, sc, pkg)
 			if err != nil {
 				errStr += fmt.Sprintf("error resolving package %s: %v\n", pkg, err)
 				return
@@ -142,7 +152,7 @@ func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, pa
 }
 
 // ResolvePackage resolves package name
-func ResolvePackage(ctx context.Context, sc buildsafev1.SearchServiceClient, pkg string) (*buildsafev1.Package, error) {
+func resolvePackage(ctx context.Context, sc buildsafev1.SearchServiceClient, pkg string) (*buildsafev1.Package, error) {
 	var desiredVersion *buildsafev1.FetchPackageVersionResponse
 	var err error
 
@@ -215,11 +225,13 @@ func mapPackageCategory(packages Packages) map[string][]Category {
 	m := make(map[string][]Category)
 
 	addCategory := func(p []string, category Category) {
-		for _, pkg := range p {
-			name, version := update.TrimVersionInfo(pkg)
-			key := name + "@" + version
+		if len(p) > 1 {
+			for _, pkg := range p {
+				name, version := update.TrimVersionInfo(pkg)
+				key := name + "@" + version
 
-			m[key] = append(m[key], category)
+				m[key] = append(m[key], category)
+			}
 		}
 	}
 

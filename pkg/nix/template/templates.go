@@ -235,15 +235,13 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 }
 
 func checkForBase(confs []hcl2nix.OCIArtifact) bool {
-	var isBase int
+	var isBase bool
 	for _, conf := range confs {
-		if conf.Base {
-			isBase++
-		} else {
-			isBase--
+		if conf.Artifact == "pkgs" {
+			isBase = true
 		}
 	}		
-	return isBase == 1
+	return isBase
 }
 
 // parentFolder returns the parent folder of the given path. ex: ( ./ -> ../ )

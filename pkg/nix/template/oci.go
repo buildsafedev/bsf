@@ -9,32 +9,25 @@ import (
 
 // OCIArtifact holds parameters for OCI artifacts
 type OCIArtifact struct {
-	Environment   string
+	Artifact      string
 	Name          string
 	Cmd           []string
 	Entrypoint    []string
 	EnvVars       []string
 	ImportConfigs []string
 	ExposedPorts  []string
+	RuntimeDeps   bool
 	DevDeps       bool
 	Base          bool
-	BaseDeps      string
-}
-
-// OCIArtifactforBase holds parameters for base OCI Artifacts
-type OCIArtifactforBase struct {
-	Name    string
-	Runtime bool
-	Dev     bool
 }
 
 const (
 	ociTmpl = `
 	ociImages = forEachSupportedSystem ({ pkgs, nix2containerPkgs, system , ...}: {
 		{{range $artifact := .}}
-		ociImage_{{$artifact.Environment}} =  nix2containerPkgs.nix2container.buildImage {
+		ociImage_{{$artifact.Artifact}} =  nix2containerPkgs.nix2container.buildImage {
 		name = "{{$artifact.Name}}";
-		{{if ne .Base false}}
+		{{if ne .Base true}}
 		copyToRoot = [ inputs.self.packages.${system}.default ];
 		{{end}}
 		  config = {
@@ -58,7 +51,9 @@ const (
 		 layers = [
 			 (nix2containerPkgs.nix2container.buildLayer { 
 				copyToRoot = [
+				{{ if (.RuntimeDeps)}}
 			    inputs.self.runtimeEnvs.${system}.runtime
+				{{end}}
 			    {{range $config := $artifact.ImportConfigs}}
 				inputs.self.configs.${system}.config_{{ . }} {{end}}
 				{{ if (.DevDeps)}}
@@ -70,7 +65,7 @@ const (
 	};
 	{{end}}
 	{{range $artifact := .}}
-	ociImage_{{$artifact.Environment}}-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{$artifact.Environment}}.copyTo}/bin/copy-to dir:$out";{{end}}
+	ociImage_{{$artifact.Artifact}}-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{$artifact.Artifact}}.copyTo}/bin/copy-to dir:$out";{{end}}
 	});
 	`
 )
@@ -80,7 +75,7 @@ func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
 
 	for i, ociArtifact := range ociArtifacts {
 		converted[i] = OCIArtifact{
-			Environment:   ociArtifact.Environment,
+			Artifact:      ociArtifact.Artifact,
 			Name:          ociArtifact.Name,
 			Cmd:           ociArtifact.Cmd,
 			Entrypoint:    ociArtifact.Entrypoint,
@@ -88,6 +83,16 @@ func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
 			ImportConfigs: ociArtifact.ImportConfigs,
 			ExposedPorts:  ociArtifact.ExposedPorts,
 			DevDeps:       ociArtifact.DevDeps,
+		}
+		if ociArtifact.Artifact == "pkgs" {
+			converted[i].Base = true
+			if ociArtifact.DevDeps {
+				converted[i].RuntimeDeps = false
+			} else {
+				converted[i].RuntimeDeps = true
+			}
+		} else {
+			converted[i].RuntimeDeps = true
 		}
 	}
 

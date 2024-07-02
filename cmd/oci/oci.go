@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	platform, output             string
-	push, loadDocker, loadPodman bool
+	platform, output                      string
+	push, loadDocker, loadPodman, devDeps bool
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
@@ -35,6 +35,7 @@ func init() {
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
+	OCICmd.Flags().BoolVarP(&devDeps, "dev", "", false, "Build base image for Dev Dependencies")
 }
 
 // OCICmd represents the export command
@@ -42,12 +43,9 @@ var OCICmd = &cobra.Command{
 	Use:   "oci",
 	Short: "Builds an OCI image",
 	Long: `
-	bsf oci <environment name> 
-	bsf oci <environment name> --platform <platform>
-	bsf oci <environment name> --platform <platform> --output <output directory>
-
-	bsf oci pkgs.runtime --name=<image name> --tag=<image tag>
-	bsf oci pkgs.dev --name=<image name> --tag=<image tag>
+	bsf oci <artifact> 
+	bsf oci <artifact> --platform <platform>
+	bsf oci <artifact> --platform <platform> --output <output directory>
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// todo: we could provide a TUI list dropdown to select
@@ -62,18 +60,13 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 		platform = p
-
-		if err := verifyBase(artifact); err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-			os.Exit(1)
-		}
-
+		
 		sc, fh, err := binit.GetBSFInitializers()
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
-		err = generate.Generate(fh, sc)
+		err = generate.Generate(fh, sc, devDeps)
 
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
@@ -98,7 +91,7 @@ var OCICmd = &cobra.Command{
 
 		symlink := "/result"
 
-		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Environment, platform))
+		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Artifact, platform))
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -242,12 +235,12 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 			return hcl2nix.OCIArtifact{}, "", fmt.Errorf("Config for export block %s is invalid\n Error: %s", ec.Name, *errStr)
 		}
 
-		if ec.Environment == envName {
+		if ec.Artifact == envName {
 			found = true
 			artifact = ec
 			break
 		}
-		envNames = append(envNames, ec.Environment)
+		envNames = append(envNames, ec.Artifact)
 	}
 
 	if !found {
@@ -255,13 +248,6 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 	}
 
 	return artifact, plat, nil
-}
-
-func verifyBase(a hcl2nix.OCIArtifact) error {
-	if a.Environment == "pkgs" && !a.Base {
-		return fmt.Errorf("please define base and baseDeps in the pkgs block")
-	}
-	return nil
 }
 
 func genOCIAttrName(env, platform string) string {

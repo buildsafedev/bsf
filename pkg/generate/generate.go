@@ -17,7 +17,7 @@ import (
 )
 
 // Generate reads bsf.hcl, resolves dependencies and generates bsf.lock, bsf/flake.nix, bsf/default.nix, etc.
-func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) error {
+func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient, devDeps bool) error {
 	data, err := os.ReadFile("bsf.hcl")
 	if err != nil {
 		return err
@@ -32,7 +32,9 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 
-	lockPackages, err := hcl2nix.ResolvePackages(ctx, sc, conf.Packages)
+	pkgType := getPkgType(conf)
+
+	lockPackages, err := hcl2nix.ResolvePackages(ctx, sc, conf.Packages, pkgType)
 	if err != nil {
 		return err
 	}
@@ -49,22 +51,21 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 		NixPackageRevisions: cr.Revisions,
 		Language:            string(lang),
 	}
-	for _, conf := range conf.OCIArtifact {
-		if conf.Base {
-			if conf.BaseDeps != "" {
-				if conf.BaseDeps == "dev" {
-					genFlake.DevPackages = cr.Development
-				} else if conf.BaseDeps == "runtime" {
-					genFlake.RuntimePackages = cr.Runtime
-				} else {
-					genFlake.DevPackages = cr.Development
-					genFlake.RuntimePackages = cr.Runtime
-				}
-			} else {
-				return fmt.Errorf("please define the deps type in baseDeps block")
-			}
-		}
+
+	switch pkgType {
+	case "dev":
+		genFlake.DevPackages = cr.Development
+	case "runtime":
+		genFlake.RuntimePackages = cr.Runtime
+	case "all":
+		genFlake.DevPackages = cr.Development
+		genFlake.RuntimePackages = cr.Runtime
 	}
+
+	if devDeps {
+		conf.OCIArtifact[0].DevDeps = true
+	}
+
 	err = btemplate.GenerateFlake(genFlake, fh.FlakeFile, conf)
 	if err != nil {
 		return err
@@ -76,6 +77,18 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 	}
 
 	return nil
+}
+
+func getPkgType(conf *hcl2nix.Config) string {
+	for _, conf := range conf.OCIArtifact {
+		if conf.Artifact == "pkgs" {
+			if conf.DevDeps {
+				return "dev"
+			}
+			return "runtime"
+		}
+	}
+	return "all"
 }
 
 func findLang(conf *hcl2nix.Config) langdetect.ProjectType {

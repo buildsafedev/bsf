@@ -9,7 +9,7 @@ import (
 func TestGenerateOCIAttr(t *testing.T) {
 	artifacts := []OCIArtifact{
 		{
-			Environment:   "Test1",
+			Artifact:      "Test1",
 			Name:          "artifact1",
 			EnvVars:       []string{"VAR1=value1", "VAR2=value2"},
 			ExposedPorts:  []string{"8080", "8081"},
@@ -17,7 +17,7 @@ func TestGenerateOCIAttr(t *testing.T) {
 			DevDeps:       true,
 		},
 		{
-			Environment:  "Test2",
+			Artifact:     "Test2",
 			Name:         "artifact2",
 			EnvVars:      []string{"VAR3=value3", "VAR4=value4"},
 			ExposedPorts: []string{"8082", "8083"},

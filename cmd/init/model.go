@@ -131,7 +131,7 @@ func (m *model) processStages(stage int) error {
 			return nil
 		}
 
-		err = generate.Generate(fh, m.sc)
+		err = generate.Generate(fh, m.sc, false)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
