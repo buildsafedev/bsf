@@ -19,6 +19,8 @@ import (
 	"github.com/buildsafedev/bsf/pkg/update"
 )
 
+var check bool
+
 // UpdateCmd represents the update command
 var UpdateCmd = &cobra.Command{
 	Use:   "update",
@@ -29,8 +31,7 @@ var UpdateCmd = &cobra.Command{
 
 		Currently, only packages following semver versioning are supported.
 
-	
-	`,
+		`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(styles.TextStyle.Render("Updating..."))
 
@@ -42,7 +43,7 @@ var UpdateCmd = &cobra.Command{
 
 		data, err := os.ReadFile("bsf.hcl")
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
 
@@ -55,7 +56,7 @@ var UpdateCmd = &cobra.Command{
 
 		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
 
@@ -68,6 +69,15 @@ var UpdateCmd = &cobra.Command{
 		newPackages := hcl2nix.Packages{
 			Development: devVersions,
 			Runtime:     runtimeVersions,
+		}
+
+		if check {
+			if !update.ComparePackages(hconf.Packages.Development, devVersions) || !update.ComparePackages(hconf.Packages.Runtime, runtimeVersions) {
+				fmt.Println(styles.WarnStyle.Render("Updates are available"))
+				os.Exit(1)
+			}
+			fmt.Println(styles.SucessStyle.Render("No updates available"))
+			os.Exit(0)
 		}
 
 		fh, err := hcl2nix.NewFileHandlers(true)
@@ -95,7 +105,6 @@ var UpdateCmd = &cobra.Command{
 		}
 
 		fmt.Println(styles.SucessStyle.Render("Updated ran successfully"))
-
 	},
 }
 
@@ -129,9 +138,7 @@ func parsePackagesForUpdates(versionMap map[string]*buildsafev1.FetchPackagesRes
 		case update.UpdateTypePinned:
 			newVersions = append(newVersions, k)
 			continue
-
 		}
-
 	}
 	return newVersions
 }
@@ -164,4 +171,8 @@ func fetchPackageVersions(packages []string, sc buildsafev1.SearchServiceClient)
 	wg.Wait()
 
 	return versionsMap
+}
+
+func init() {
+	UpdateCmd.PersistentFlags().BoolVarP(&check, "check", "c", false, "Check for updates without applying them")
 }

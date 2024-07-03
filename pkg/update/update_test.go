@@ -198,3 +198,39 @@ func TestParseUpdateType(t *testing.T) {
 		})
 	}
 }
+
+func TestComparePackages(t *testing.T) {
+	tests := []struct {
+		name string
+		a    []string
+		b    []string
+		want bool
+	}{
+		{
+			name: "Test Case 1 - Equal slices",
+			a:    []string{"pkg1@~v1.0.0", "pkg2@~v1.1.0", "pkg3@~v1.2.0"},
+			b:    []string{"pkg3@~v1.2.0", "pkg2@~v1.1.0", "pkg1@~v1.0.0"},
+			want: true,
+		},
+		{
+			name: "Test Case 2 - Different slices",
+			a:    []string{"pkg1@~v1.0.0", "pkg2@~v1.1.0", "pkg3@~v1.2.0"},
+			b:    []string{"pkg1@~v1.2.0", "pkg2@~v1.1.0", "pkg3@~v1.3.0"},
+			want: false,
+		},
+		{
+			name: "Test Case 3 - Different lengths",
+			a:    []string{"pkg1@~v1.0.0", "pkg2@~v1.1.0"},
+			b:    []string{"pkg2@~v1.2.0", "pkg1@~v1.1.0", "pkg3@~v1.0.0"},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ComparePackages(tt.a, tt.b); got != tt.want {
+				t.Errorf("CompareVersions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
