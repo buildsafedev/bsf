@@ -5,7 +5,6 @@ import (
 	"io/fs"
 	"os"
 )
-
 // FileHandlers holds file handlers
 type FileHandlers struct {
 	ModFile      *os.File
@@ -13,7 +12,6 @@ type FileHandlers struct {
 	FlakeFile    *os.File
 	DefFlakeFile *os.File
 }
-
 // NewFileHandlers creates new file handlers
 func NewFileHandlers(expectInit bool) (*FileHandlers, error) {
 	var err error
@@ -49,17 +47,14 @@ func NewFileHandlers(expectInit bool) (*FileHandlers, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	flakeFile, err := os.Create("bsf/flake.nix")
 	if err != nil {
 		return nil, err
 	}
-
 	defFlakeFile, err := os.Create("bsf/default.nix")
 	if err != nil {
 		return nil, err
 	}
-
 	return &FileHandlers{
 		ModFile:      modFile,
 		LockFile:     lockFile,
@@ -73,10 +68,8 @@ func GetOrCreateFile(path string) (*os.File, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return os.Create(path)
 	}
-
 	return os.Open(path)
 }
-
 func createBsfDirectory() ([]fs.DirEntry, error) {
 	// check if the directory exists
 	files, err := os.ReadDir("bsf")
@@ -89,6 +82,5 @@ func createBsfDirectory() ([]fs.DirEntry, error) {
 			}
 		}
 	}
-
 	return files, nil
 }

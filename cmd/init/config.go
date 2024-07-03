@@ -10,31 +10,49 @@ import (
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 )
 
-func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
+func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails) (hcl2nix.Config, bool, error) {
 	switch pt {
 	case langdetect.GoModule:
-		return genGoModuleConf(pd), nil
+		return genGoModuleConf(pd), false, nil
 	case langdetect.PythonPoetry:
-		return genPythonPoetryConf(), nil
+		return genPythonPoetryConf(), false, nil
 	case langdetect.RustCargo:
 		config, err := genRustCargoConf()
 		if err != nil {
-			return hcl2nix.Config{}, err
+			return hcl2nix.Config{}, false, err
 		}
-		return config, nil
+		return config, false, nil
 	case langdetect.JsNpm:
 		config, err := genJsNpmConf()
 		if err != nil {
-			return hcl2nix.Config{}, err
+			return hcl2nix.Config{}, false, err
 		}
-		return config, nil
+		return config, false, nil
 	default:
-		return hcl2nix.Config{
-			Packages: hcl2nix.Packages{},
-		}, nil
+		return generateEmptyConf(), true, nil
 	}
 }
 
+func generateEmptyConf() hcl2nix.Config {
+	return hcl2nix.Config{
+		Packages: hcl2nix.Packages{
+			Development: []string{""},
+			Runtime:     []string{"cacert@3.95"},
+		},
+		OCIArtifact: []hcl2nix.OCIArtifact{
+			{
+				Artifact: "pkgs",
+				Name:     "bsf-base-image",
+				Cmd:      []string{},
+				Entrypoint: []string{},
+				EnvVars:    []string{},
+				ExposedPorts: []string{},
+				ImportConfigs: []string{},
+				DevDeps: false,
+			},
+		},
+	}
+}
 func genRustCargoConf() (hcl2nix.Config, error) {
 	content, err := os.ReadFile("Cargo.toml")
 	if err != nil {
@@ -65,6 +83,18 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 			RustVersion:  "1.75.0",
 			Release:      true,
 		},
+		OCIArtifact: []hcl2nix.OCIArtifact{
+			{
+				Artifact: "pkgs",
+				Name:     "bsf-base-image",
+				Cmd:      []string{},
+				Entrypoint: []string{},
+				EnvVars:    []string{},
+				ExposedPorts: []string{},
+				ImportConfigs: []string{},
+				DevDeps: false,
+			},
+		},
 	}, nil
 }
 
@@ -82,6 +112,18 @@ func genPythonPoetryConf() hcl2nix.Config {
 			Poetrylock:   "./poetry.lock",
 			PreferWheels: false,
 			CheckGroups:  []string{"dev"},
+		},
+		OCIArtifact: []hcl2nix.OCIArtifact{
+			{
+				Artifact: "pkgs",
+				Name:     "bsf-base-image",
+				Cmd:      []string{},
+				Entrypoint: []string{},
+				EnvVars:    []string{},
+				ExposedPorts: []string{},
+				ImportConfigs: []string{},
+				DevDeps: false,
+			},
 		},
 	}
 }
@@ -105,6 +147,18 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 		GoModule: &hcl2nix.GoModule{
 			Name:       name,
 			SourcePath: entrypoint,
+		},
+		OCIArtifact: []hcl2nix.OCIArtifact{
+			{
+				Artifact: "pkgs",
+				Name:     "bsf-base-image",
+				Cmd:      []string{},
+				Entrypoint: []string{},
+				EnvVars:    []string{},
+				ExposedPorts: []string{},
+				ImportConfigs: []string{},
+				DevDeps: false,
+			},
 		},
 	}
 
@@ -133,6 +187,18 @@ func genJsNpmConf() (hcl2nix.Config, error) {
 		JsNpmApp: &hcl2nix.JsNpmApp{
 			PackageName: name,
 			PackageRoot: "./.",
+		},
+		OCIArtifact: []hcl2nix.OCIArtifact{
+			{
+				Artifact: "pkgs",
+				Name:     "bsf-base-image",
+				Cmd:      []string{},
+				Entrypoint: []string{},
+				EnvVars:    []string{},
+				ExposedPorts: []string{},
+				ImportConfigs: []string{},
+				DevDeps: false,
+			},
 		},
 	}, nil
 }

@@ -9,7 +9,7 @@ import (
 
 // OCIArtifact holds parameters for OCI artifacts
 type OCIArtifact struct {
-	Environment   string
+	Artifact      string
 	Name          string
 	Cmd           []string
 	Entrypoint    []string
@@ -17,59 +17,129 @@ type OCIArtifact struct {
 	ImportConfigs []string
 	ExposedPorts  []string
 	DevDeps       bool
+	Base          bool
 }
 
 const (
-	ociTmpl = `
+    ociTmpl = `
 	ociImages = forEachSupportedSystem ({ pkgs, nix2containerPkgs, system , ...}: {
 		{{range $artifact := .}}
-		ociImage_{{$artifact.Environment}} =  nix2containerPkgs.nix2container.buildImage {
-		name = "{{$artifact.Name}}";
-		copyToRoot = [ inputs.self.packages.${system}.default ];
-		  config = {
-
-			cmd = [ {{range $c := $artifact.Cmd}}
+		{{ if ne ($artifact.Base) true }}
+		ociImage_{{$artifact.Artifact}} = nix2containerPkgs.nix2container.buildImage {
+			name = "{{$artifact.Name}}";
+			copyToRoot = [ inputs.self.packages.${system}.default ];
+			config = {
+				cmd = [ {{range $c := $artifact.Cmd}}
 				"{{.}}" {{end}} ];
 
-			entrypoint = [ {{range $c := $artifact.Entrypoint}}
+				entrypoint = [ {{range $c := $artifact.Entrypoint}}
+					"{{.}}" {{end}} ];
+				env = [
+					{{range $env := $artifact.EnvVars}}
+					"{{ . }}"{{end}}
+				];
+				ExposedPorts = {
+					{{ range $port := $artifact.ExposedPorts}}
+					"{{ . }}"={}; {{end}}
+				};
+			};
+			maxLayers = 100;
+			layers = [
+				(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.runtimeEnvs.${system}.runtime
+						{{range $config := $artifact.ImportConfigs}}
+						inputs.self.configs.${system}.config_{{ . }} {{end}}
+						{{ if (.DevDeps)}}
+						inputs.self.devEnvs.${system}.development
+						{{end}}
+					];
+				})
+			];      
+		};
+		{{end}}
+
+		{{ if ($artifact.Base)}}
+		ociImage_{{$artifact.Artifact}}_runtime = nix2containerPkgs.nix2container.buildImage {
+			name = "{{$artifact.Name}}";
+			config = {
+				cmd = [ {{range $c := $artifact.Cmd}}
 				"{{.}}" {{end}} ];
 
-		  env = [
-			{{range $env := $artifact.EnvVars}}
-		     "{{ . }}"{{end}}
-		  ];
-		  ExposedPorts = {
-			{{ range $port := $artifact.ExposedPorts}}
-			 "{{ . }}"={}; {{end}}
-		  };
-		  };
-		 maxLayers = 100;
-		 layers = [
-			 (nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-			    inputs.self.runtimeEnvs.${system}.runtime
-			    {{range $config := $artifact.ImportConfigs}}
-				inputs.self.configs.${system}.config_{{ . }} {{end}}
-				{{ if (.DevDeps)}}
-				inputs.self.devEnvs.${system}.development
-				{{end}}
-			  ];
-			 })
-		  ];      
-	};
-	{{end}}
-	{{range $artifact := .}}
-	ociImage_{{$artifact.Environment}}-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{$artifact.Environment}}.copyTo}/bin/copy-to dir:$out";{{end}}
+				entrypoint = [ {{range $c := $artifact.Entrypoint}}
+					"{{.}}" {{end}} ];
+				env = [
+					{{range $env := $artifact.EnvVars}}
+					"{{ . }}"{{end}}
+				];
+				ExposedPorts = {
+					{{ range $port := $artifact.ExposedPorts}}
+					"{{ . }}"={}; {{end}}
+				};
+			};
+			maxLayers = 100;
+			layers = [
+				(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.runtimeEnvs.${system}.runtime
+						{{range $config := $artifact.ImportConfigs}}
+						inputs.self.configs.${system}.config_{{ . }} {{end}}
+					];
+				})
+			];      
+		};
+
+		ociImage_{{$artifact.Artifact}}_dev = nix2containerPkgs.nix2container.buildImage {
+			name = "{{$artifact.Name}}";
+			config = {
+				cmd = [ {{range $c := $artifact.Cmd}}
+				"{{.}}" {{end}} ];
+
+				entrypoint = [ {{range $c := $artifact.Entrypoint}}
+					"{{.}}" {{end}} ];
+				env = [
+					{{range $env := $artifact.EnvVars}}
+					"{{ . }}"{{end}}
+				];
+				ExposedPorts = {
+					{{ range $port := $artifact.ExposedPorts}}
+					"{{ . }}"={}; {{end}}
+				};
+			};
+			maxLayers = 100;
+			layers = [
+				(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						{{range $config := $artifact.ImportConfigs}}
+						inputs.self.configs.${system}.config_{{ . }} {{end}}
+						inputs.self.devEnvs.${system}.development
+					];
+				})
+			];      
+		};
+		{{end}}
+		{{end}}
+
+		{{range $artifact := .}}
+		{{ if ne ($artifact.Base) true }}
+		ociImage_{{$artifact.Artifact}}-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{$artifact.Artifact}}.copyTo}/bin/copy-to dir:$out";
+		{{end}}
+		{{ if ($artifact.Base)}}
+		ociImage_{{$artifact.Artifact}}_runtime-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{$artifact.Artifact}}_runtime.copyTo}/bin/copy-to dir:$out";
+		ociImage_{{$artifact.Artifact}}_dev-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{$artifact.Artifact}}_dev.copyTo}/bin/copy-to dir:$out";
+		{{end}}
+		{{end}}
 	});
-	`
+`
 )
+
 
 func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
 	converted := make([]OCIArtifact, len(ociArtifacts))
 
 	for i, ociArtifact := range ociArtifacts {
 		converted[i] = OCIArtifact{
-			Environment:   ociArtifact.Environment,
+			Artifact:      ociArtifact.Artifact,
 			Name:          ociArtifact.Name,
 			Cmd:           ociArtifact.Cmd,
 			Entrypoint:    ociArtifact.Entrypoint,
@@ -78,10 +148,11 @@ func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
 			ExposedPorts:  ociArtifact.ExposedPorts,
 			DevDeps:       ociArtifact.DevDeps,
 		}
+		if ociArtifact.Artifact == "pkgs" {
+			converted[i].Base = true
+		}
 	}
-
 	return converted
-
 }
 
 // GenerateOCIAttr generates the Nix attribute set for oci artifacts

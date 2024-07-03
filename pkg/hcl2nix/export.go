@@ -7,7 +7,7 @@ import (
 
 // OCIArtifact to export Nix package outputs to an artifact
 type OCIArtifact struct {
-	Environment string `hcl:"environment,label"`
+	Artifact string `hcl:"environment,label"`
 	// Name of the image . Ex: ttl.sh/myproject/app:1h
 	Name string `hcl:"name"`
 	// Cmd defines the default arguments to the entrypoint of the container.
@@ -22,6 +22,7 @@ type OCIArtifact struct {
 	ImportConfigs []string `hcl:"importConfigs,optional"`
 	// DevDeps defines if development dependencies should be present in the image. By default, it is false.
 	DevDeps bool `hcl:"devDeps,optional"`
+
 }
 
 // Validate validates ExportConfig

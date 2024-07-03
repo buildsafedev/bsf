@@ -32,7 +32,9 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 
-	lockPackages, err := hcl2nix.ResolvePackages(ctx, sc, conf.Packages)
+	pkgType := getPkgType(conf)
+
+	lockPackages, err := hcl2nix.ResolvePackages(ctx, sc, conf.Packages, pkgType)
 	if err != nil {
 		return err
 	}
@@ -43,11 +45,9 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 	}
 
 	lang := findLang(conf)
-	if lang == "" {
-		return fmt.Errorf("could not detect programming language of the app")
-	}
 
 	cr := hcl2nix.ResolveCategoryRevisions(conf.Packages, lockPackages)
+
 	err = btemplate.GenerateFlake(btemplate.Flake{
 		// Description:         "bsf flake",
 		NixPackageRevisions: cr.Revisions,
@@ -65,6 +65,18 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 	}
 
 	return nil
+}
+
+func getPkgType(conf *hcl2nix.Config) string {
+	for _, conf := range conf.OCIArtifact {
+		if conf.Artifact == "pkgs" {
+			if conf.DevDeps {
+				return "dev"
+			}
+			return "runtime"
+		}
+	}
+	return "all"
 }
 
 func findLang(conf *hcl2nix.Config) langdetect.ProjectType {

@@ -17,6 +17,7 @@ type Flake struct {
 	RustArguments       RustApp
 	OCIAttribute        *string
 	ConfigAttribute     *string
+	IsBase              bool
 }
 
 // todo: maybe we could let power users inject their own templates
@@ -103,7 +104,8 @@ const (
 		{{ if eq .Language "JsNpm"}} buildNodeModules = buildNodeModules.lib.${system}; {{end}}
 	  });
 	in {
-	  packages = forEachSupportedSystem ({ pkgs,
+	{{if ne .IsBase true}}
+	packages = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
 		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
@@ -135,7 +137,7 @@ const (
 		  ];
 		};
 	  });
-	
+	{{end}}
 	  runtimeEnvs = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
@@ -206,6 +208,8 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 	}
 
 	if conf.OCIArtifact != nil {
+		isBase := checkForBase(conf.OCIArtifact)
+		fl.IsBase = isBase
 		artifacts := hclOCIToOCIArtifact(conf.OCIArtifact)
 		artifacttAttr, err := GenerateOCIAttr(artifacts)
 		if err != nil {
@@ -228,6 +232,16 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 	}
 
 	return nil
+}
+
+func checkForBase(confs []hcl2nix.OCIArtifact) bool {
+	var isBase bool
+	for _, conf := range confs {
+		if conf.Artifact == "pkgs" {
+			isBase = true
+		}
+	}		
+	return isBase
 }
 
 // parentFolder returns the parent folder of the given path. ex: ( ./ -> ../ )

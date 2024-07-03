@@ -22,21 +22,30 @@ import (
 )
 
 var (
-	platform, output             string
-	push, loadDocker, loadPodman bool
+	platform, output                      string
+	push, loadDocker, loadPodman, devDeps bool
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
 )
+
+func init() {
+	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
+	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
+	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
+	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
+	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
+	OCICmd.Flags().BoolVarP(&devDeps, "dev", "", false, "Build base image for Dev Dependencies")
+}
 
 // OCICmd represents the export command
 var OCICmd = &cobra.Command{
 	Use:   "oci",
 	Short: "Builds an OCI image",
 	Long: `
-	bsf oci <environment name> 
-	bsf oci <environment name> --platform <platform>
-	bsf oci <environment name> --platform <platform> --output <output directory>
+	bsf oci <artifact> 
+	bsf oci <artifact> --platform <platform>
+	bsf oci <artifact> --platform <platform> --output <output directory>
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// todo: we could provide a TUI list dropdown to select
@@ -45,7 +54,7 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		env, p, err := ProcessPlatformAndConfig(platform, args[0])
+		artifact, p, err := ProcessPlatformAndConfig(platform, args[0])
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -57,8 +66,8 @@ var OCICmd = &cobra.Command{
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
-
 		err = generate.Generate(fh, sc)
+
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -82,7 +91,7 @@ var OCICmd = &cobra.Command{
 
 		symlink := "/result"
 
-		err = nixcmd.Build(output+symlink, genOCIAttrName(env.Environment, platform))
+		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Artifact, platform, artifact))
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -107,7 +116,7 @@ var OCICmd = &cobra.Command{
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
-		appDetails.Name = env.Name
+		appDetails.Name = artifact.Name
 
 		tos, tarch := findPlatform(platform)
 		err = build.GenerateArtifcats(output, symlink, lockFile, appDetails, graph, tos, tarch)
@@ -141,7 +150,7 @@ var OCICmd = &cobra.Command{
 				contextEP[currentContext] = "unix:///var/run/docker.sock"
 			}
 
-			err = oci.LoadDocker(contextEP[currentContext], output+"/result", env.Name)
+			err = oci.LoadDocker(contextEP[currentContext], output+"/result", artifact.Name)
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 				if !expectedInstall {
@@ -150,30 +159,29 @@ var OCICmd = &cobra.Command{
 				os.Exit(1)
 			}
 
-			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to docker daemon", env.Name)))
+			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to docker daemon", artifact.Name)))
 
 		}
 
 		if loadPodman {
 			fmt.Println(styles.HighlightStyle.Render("Loading image to podman..."))
-			err = oci.LoadPodman(output+"/result", env.Name)
+			err = oci.LoadPodman(output+"/result", artifact.Name)
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 				os.Exit(1)
 			}
-			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to podman", env.Name)))
+			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to podman", artifact.Name)))
 		}
 
 		if push {
 			fmt.Println(styles.HighlightStyle.Render("Pushing image to registry..."))
-			err = oci.Push(output+"/result", env.Name)
+			err = oci.Push(output+"/result", artifact.Name)
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 				os.Exit(1)
 			}
-			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", env.Name)))
+			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", artifact.Name)))
 		}
-
 	},
 }
 
@@ -220,29 +228,29 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 
 	envNames := make([]string, 0, len(conf.OCIArtifact))
 	var found bool
-	env := hcl2nix.OCIArtifact{}
+	artifact := hcl2nix.OCIArtifact{}
 	for _, ec := range conf.OCIArtifact {
 		errStr := ec.Validate(conf)
 		if errStr != nil {
 			return hcl2nix.OCIArtifact{}, "", fmt.Errorf("Config for export block %s is invalid\n Error: %s", ec.Name, *errStr)
 		}
 
-		if ec.Environment == envName {
+		if ec.Artifact == envName {
 			found = true
-			env = ec
+			artifact = ec
 			break
 		}
-		envNames = append(envNames, ec.Environment)
+		envNames = append(envNames, ec.Artifact)
 	}
 
 	if !found {
 		return hcl2nix.OCIArtifact{}, "", fmt.Errorf("error: No such environment found. Valid oci environment that can be built are: %s", strings.Join(envNames, ", "))
 	}
 
-	return env, plat, nil
+	return artifact, plat, nil
 }
 
-func genOCIAttrName(env, platform string) string {
+func genOCIAttrName(env, platform string, artifact hcl2nix.OCIArtifact) string {
 	// .#ociImages.x86_64-linux.ociImage_caddy-as-dir
 	tostarch := ""
 	switch platform {
@@ -251,14 +259,11 @@ func genOCIAttrName(env, platform string) string {
 	case "linux/arm64":
 		tostarch = "aarch64-linux"
 	}
+	if env == "pkgs" {
+		if devDeps || artifact.DevDeps {
+			return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s_dev-as-dir", tostarch, env)
+		}
+		return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s_runtime-as-dir", tostarch, env)
+	}
 	return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s-as-dir", tostarch, env)
-}
-
-func init() {
-	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
-	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
-	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
-	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
-	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
-
 }
