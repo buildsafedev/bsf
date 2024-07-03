@@ -208,20 +208,20 @@ func TestCompareVersions(t *testing.T) {
 	}{
 		{
 			name: "Test Case 1 - Equal slices",
-			a:    []string{"v1.0.0", "v1.1.0", "v1.2.0"},
-			b:    []string{"v1.2.0", "v1.1.0", "v1.0.0"},
+			a:    []string{"pkg1@~v1.0.0", "pkg2@~v1.1.0", "pkg3@~v1.2.0"},
+			b:    []string{"pkg3@~v1.2.0", "pkg2@~v1.1.0", "pkg1@~v1.0.0"},
 			want: true,
 		},
 		{
 			name: "Test Case 2 - Different slices",
-			a:    []string{"v1.0.0", "v1.1.0", "v1.2.0"},
-			b:    []string{"v1.2.0", "v1.1.0", "v1.3.0"},
+			a:    []string{"pkg1@~v1.0.0", "pkg2@~v1.1.0", "pkg3@~v1.2.0"},
+			b:    []string{"pkg1@~v1.2.0", "pkg2@~v1.1.0", "pkg3@~v1.3.0"},
 			want: false,
 		},
 		{
 			name: "Test Case 3 - Different lengths",
-			a:    []string{"v1.0.0", "v1.1.0"},
-			b:    []string{"v1.2.0", "v1.1.0", "v1.0.0"},
+			a:    []string{"pkg1@~v1.0.0", "pkg2@~v1.1.0"},
+			b:    []string{"pkg2@~v1.2.0", "pkg1@~v1.1.0", "pkg3@~v1.0.0"},
 			want: false,
 		},
 	}
