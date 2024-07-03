@@ -199,7 +199,7 @@ func TestParseUpdateType(t *testing.T) {
 	}
 }
 
-func TestCompareVersions(t *testing.T) {
+func TestComparePackages(t *testing.T) {
 	tests := []struct {
 		name string
 		a    []string
@@ -228,7 +228,7 @@ func TestCompareVersions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := CompareVersions(tt.a, tt.b); got != tt.want {
+			if got := ComparePackages(tt.a, tt.b); got != tt.want {
 				t.Errorf("CompareVersions() = %v, want %v", got, tt.want)
 			}
 		})

@@ -74,7 +74,7 @@ var UpdateCmd = &cobra.Command{
 		}
 
 		if updateCmdOptions.check {
-			if !update.CompareVersions(hconf.Packages.Development, devVersions) || !update.CompareVersions(hconf.Packages.Runtime, runtimeVersions) {
+			if !update.ComparePackages(hconf.Packages.Development, devVersions) || !update.ComparePackages(hconf.Packages.Runtime, runtimeVersions) {
 				fmt.Println(styles.WarnStyle.Render("Updates are available"))
 				os.Exit(1)
 			} else {
