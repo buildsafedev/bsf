@@ -144,7 +144,7 @@ func parsePackagesForUpdates(versionMap map[string]*buildsafev1.FetchPackagesRes
 		name, version := update.ParsePackage(k)
 
 		if !semver.IsValid("v" + version) {
-			fmt.Println(styles.WarnStyle.Render("Warning: skipping", k, "as only semver updates are supported currently"))
+			fmt.Println(styles.WarnStyle.Render("warning:", "skipping ", k, " as only semver updates are supported currently"))
 			newVersions = append(newVersions, k)
 			continue
 		}
@@ -179,7 +179,7 @@ func fetchPackageVersions(packages []string, sc buildsafev1.SearchServiceClient)
 	for _, pkg := range packages {
 		name, version := update.ParsePackage(pkg)
 		if name == "" || version == "" {
-			fmt.Println(styles.ErrorStyle.Render("Error:", "invalid package name or version"))
+			fmt.Println(styles.ErrorStyle.Render("error:", "invalid package name or version"))
 			continue
 		}
 
@@ -190,7 +190,7 @@ func fetchPackageVersions(packages []string, sc buildsafev1.SearchServiceClient)
 				Name: name,
 			})
 			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("Error finding", name+":", err.Error()))
+				fmt.Println(styles.ErrorStyle.Render("error finding ", name, ":", err.Error()))
 				return
 			}
 
