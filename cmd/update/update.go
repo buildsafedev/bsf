@@ -19,30 +19,33 @@ import (
 	"github.com/buildsafedev/bsf/pkg/update"
 )
 
+var updateCmdOptions struct {
+	check bool
+}
+
 // UpdateCmd represents the update command
 var UpdateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "updates dependencies to highest version based on constraints",
+	Short: "Updates dependencies to the highest version based on constraints",
 	Long: `Updates can be done for development and runtime dependencies based on constraints. Following constraints are supported:
 		~ : latest patch version
 		^ : latest minor version
 
 		Currently, only packages following semver versioning are supported.
 
-	
-	`,
+The --check flag allows you to check for available updates without applying them. If updates are available, the command exits with status code 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(styles.TextStyle.Render("Updating..."))
+		fmt.Println(styles.TextStyle.Render("Checking for updates..."))
 
 		conf, err := configure.PreCheckConf()
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error:", err.Error()))
 			os.Exit(1)
 		}
 
 		data, err := os.ReadFile("bsf.hcl")
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error:", err.Error()))
 			os.Exit(1)
 		}
 
@@ -55,7 +58,7 @@ var UpdateCmd = &cobra.Command{
 
 		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error:", err.Error()))
 			os.Exit(1)
 		}
 
@@ -70,33 +73,68 @@ var UpdateCmd = &cobra.Command{
 			Runtime:     runtimeVersions,
 		}
 
+		if updateCmdOptions.check {
+			if !compareVersions(hconf.Packages.Development, devVersions) || !compareVersions(hconf.Packages.Runtime, runtimeVersions) {
+				fmt.Println(styles.WarnStyle.Render("Updates are available"))
+				os.Exit(1)
+			} else {
+				fmt.Println(styles.SucessStyle.Render("No updates available"))
+				os.Exit(0)
+			}
+		}
+
 		fh, err := hcl2nix.NewFileHandlers(true)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error creating file handlers: %s", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error creating file handlers:", err.Error()))
 			os.Exit(1)
 		}
-		// changing file handler to allow writes
+		// Changing file handler to allow writes
 		fh.ModFile, err = os.Create("bsf.hcl")
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error creating bsf.hcl: %s", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error creating bsf.hcl:", err.Error()))
 			os.Exit(1)
 		}
 
 		err = hcl2nix.SetPackages(data, newPackages, fh.ModFile)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error updating bsf.hcl: %s", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error updating bsf.hcl:", err.Error()))
 			os.Exit(1)
 		}
 
 		err = generate.Generate(fh, sc)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error generating files: %s", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error generating files:", err.Error()))
 			os.Exit(1)
 		}
 
-		fmt.Println(styles.SucessStyle.Render("Updated ran successfully"))
-
+		fmt.Println(styles.SucessStyle.Render("Update ran successfully"))
 	},
+}
+
+// This function compares the devVersions and the runtimeVersions
+func compareVersions(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	counts := make(map[string]int)
+	for _, item := range a {
+		counts[item]++
+	}
+	for _, item := range b {
+		if counts[item] == 0 {
+			return false
+		}
+		counts[item]--
+	}
+
+	for _, count := range counts {
+		if count != 0 {
+			return false
+		}
+	}
+
+	return true
 }
 
 func parsePackagesForUpdates(versionMap map[string]*buildsafev1.FetchPackagesResponse) []string {
@@ -106,7 +144,7 @@ func parsePackagesForUpdates(versionMap map[string]*buildsafev1.FetchPackagesRes
 		name, version := update.ParsePackage(k)
 
 		if !semver.IsValid("v" + version) {
-			fmt.Println(styles.WarnStyle.Render("warning:", "skipping ", k, " as only semver updates are supported currently"))
+			fmt.Println(styles.WarnStyle.Render("Warning: skipping", k, "as only semver updates are supported currently"))
 			newVersions = append(newVersions, k)
 			continue
 		}
@@ -129,9 +167,7 @@ func parsePackagesForUpdates(versionMap map[string]*buildsafev1.FetchPackagesRes
 		case update.UpdateTypePinned:
 			newVersions = append(newVersions, k)
 			continue
-
 		}
-
 	}
 	return newVersions
 }
@@ -143,7 +179,7 @@ func fetchPackageVersions(packages []string, sc buildsafev1.SearchServiceClient)
 	for _, pkg := range packages {
 		name, version := update.ParsePackage(pkg)
 		if name == "" || version == "" {
-			fmt.Println(styles.ErrorStyle.Render("error:", "invalid package name or version"))
+			fmt.Println(styles.ErrorStyle.Render("Error:", "invalid package name or version"))
 			continue
 		}
 
@@ -154,7 +190,7 @@ func fetchPackageVersions(packages []string, sc buildsafev1.SearchServiceClient)
 				Name: name,
 			})
 			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error finding ", name, ":", err.Error()))
+				fmt.Println(styles.ErrorStyle.Render("Error finding", name+":", err.Error()))
 				return
 			}
 
@@ -164,4 +200,8 @@ func fetchPackageVersions(packages []string, sc buildsafev1.SearchServiceClient)
 	wg.Wait()
 
 	return versionsMap
+}
+
+func init() {
+	UpdateCmd.PersistentFlags().BoolVarP(&updateCmdOptions.check, "check", "c", false, "Check for updates without applying them")
 }
