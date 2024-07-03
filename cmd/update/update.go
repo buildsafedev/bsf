@@ -26,26 +26,26 @@ var updateCmdOptions struct {
 // UpdateCmd represents the update command
 var UpdateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Updates dependencies to the highest version based on constraints",
+	Short: "updates dependencies to highest version based on constraints",
 	Long: `Updates can be done for development and runtime dependencies based on constraints. Following constraints are supported:
 		~ : latest patch version
 		^ : latest minor version
 
 		Currently, only packages following semver versioning are supported.
 
-The --check flag allows you to check for available updates without applying them. If updates are available, the command exits with status code 1.`,
+		`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(styles.TextStyle.Render("Checking for updates..."))
+		fmt.Println(styles.TextStyle.Render("Updating..."))
 
 		conf, err := configure.PreCheckConf()
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error:", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
 
 		data, err := os.ReadFile("bsf.hcl")
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error:", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
 
@@ -58,7 +58,7 @@ The --check flag allows you to check for available updates without applying them
 
 		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error:", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
 
@@ -85,29 +85,29 @@ The --check flag allows you to check for available updates without applying them
 
 		fh, err := hcl2nix.NewFileHandlers(true)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error creating file handlers:", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error creating file handlers: %s", err.Error()))
 			os.Exit(1)
 		}
-		// Changing file handler to allow writes
+		// changing file handler to allow writes
 		fh.ModFile, err = os.Create("bsf.hcl")
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error creating bsf.hcl:", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error creating bsf.hcl: %s", err.Error()))
 			os.Exit(1)
 		}
 
 		err = hcl2nix.SetPackages(data, newPackages, fh.ModFile)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error updating bsf.hcl:", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error updating bsf.hcl: %s", err.Error()))
 			os.Exit(1)
 		}
 
 		err = generate.Generate(fh, sc)
 		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error generating files:", err.Error()))
+			fmt.Println(styles.ErrorStyle.Render("Error generating files: %s", err.Error()))
 			os.Exit(1)
 		}
 
-		fmt.Println(styles.SucessStyle.Render("Update ran successfully"))
+		fmt.Println(styles.SucessStyle.Render("Updated ran successfully"))
 	},
 }
 
