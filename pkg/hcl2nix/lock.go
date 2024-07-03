@@ -223,13 +223,11 @@ func mapPackageCategory(packages Packages) map[string][]Category {
 	m := make(map[string][]Category)
 
 	addCategory := func(p []string, category Category) {
-		if len(p) > 1 {
-			for _, pkg := range p {
-				name, version := update.TrimVersionInfo(pkg)
-				key := name + "@" + version
+		for _, pkg := range p {
+			name, version := update.TrimVersionInfo(pkg)
+			key := name + "@" + version
 
-				m[key] = append(m[key], category)
-			}
+			m[key] = append(m[key], category)
 		}
 	}
 
