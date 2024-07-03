@@ -74,7 +74,7 @@ var UpdateCmd = &cobra.Command{
 		}
 
 		if updateCmdOptions.check {
-			if !compareVersions(hconf.Packages.Development, devVersions) || !compareVersions(hconf.Packages.Runtime, runtimeVersions) {
+			if !update.CompareVersions(hconf.Packages.Development, devVersions) || !update.CompareVersions(hconf.Packages.Runtime, runtimeVersions) {
 				fmt.Println(styles.WarnStyle.Render("Updates are available"))
 				os.Exit(1)
 			} else {
@@ -109,32 +109,6 @@ var UpdateCmd = &cobra.Command{
 
 		fmt.Println(styles.SucessStyle.Render("Updated ran successfully"))
 	},
-}
-
-// This function compares the devVersions and the runtimeVersions
-func compareVersions(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	counts := make(map[string]int)
-	for _, item := range a {
-		counts[item]++
-	}
-	for _, item := range b {
-		if counts[item] == 0 {
-			return false
-		}
-		counts[item]--
-	}
-
-	for _, count := range counts {
-		if count != 0 {
-			return false
-		}
-	}
-
-	return true
 }
 
 func parsePackagesForUpdates(versionMap map[string]*buildsafev1.FetchPackagesResponse) []string {

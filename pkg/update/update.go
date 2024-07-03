@@ -101,3 +101,29 @@ func TrimVersionInfo(pkg string) (string, string) {
 
 	return name, version
 }
+
+// This function compares the devVersions and the runtimeVersions
+func CompareVersions(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	counts := make(map[string]int)
+	for _, item := range a {
+		counts[item]++
+	}
+	for _, item := range b {
+		if counts[item] == 0 {
+			return false
+		}
+		counts[item]--
+	}
+
+	for _, count := range counts {
+		if count != 0 {
+			return false
+		}
+	}
+
+	return true
+}
