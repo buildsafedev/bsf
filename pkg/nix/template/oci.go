@@ -25,7 +25,7 @@ const (
 	ociImages = forEachSupportedSystem ({ pkgs, nix2containerPkgs, system , ...}: {
 		{{range $artifact := .}}
 		{{ if ne ($artifact.Base) true }}
-		ociImage_{{$artifact.Artifact}} = nix2containerPkgs.nix2container.buildImage {
+		ociImage_{{$artifact.Artifact}}_app = nix2containerPkgs.nix2container.buildImage {
 			name = "{{$artifact.Name}}";
 			copyToRoot = [ inputs.self.packages.${system}.default ];
 			config = {
@@ -50,9 +50,37 @@ const (
 						inputs.self.runtimeEnvs.${system}.runtime
 						{{range $config := $artifact.ImportConfigs}}
 						inputs.self.configs.${system}.config_{{ . }} {{end}}
-						{{ if (.DevDeps)}}
+					];
+				})
+			];      
+		};
+
+		ociImage_{{$artifact.Artifact}}_app_with_dev = nix2containerPkgs.nix2container.buildImage {
+			name = "{{$artifact.Name}}";
+			copyToRoot = [ inputs.self.packages.${system}.default ];
+			config = {
+				cmd = [ {{range $c := $artifact.Cmd}}
+				"{{.}}" {{end}} ];
+
+				entrypoint = [ {{range $c := $artifact.Entrypoint}}
+					"{{.}}" {{end}} ];
+				env = [
+					{{range $env := $artifact.EnvVars}}
+					"{{ . }}"{{end}}
+				];
+				ExposedPorts = {
+					{{ range $port := $artifact.ExposedPorts}}
+					"{{ . }}"={}; {{end}}
+				};
+			};
+			maxLayers = 100;
+			layers = [
+				(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.runtimeEnvs.${system}.runtime
+						{{range $config := $artifact.ImportConfigs}}
+						inputs.self.configs.${system}.config_{{ . }} {{end}}
 						inputs.self.devEnvs.${system}.development
-						{{end}}
 					];
 				})
 			];      
@@ -122,7 +150,8 @@ const (
 
 		{{range $artifact := .}}
 		{{ if ne ($artifact.Base) true }}
-		ociImage_{{$artifact.Artifact}}-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{$artifact.Artifact}}.copyTo}/bin/copy-to dir:$out";
+		ociImage_{{$artifact.Artifact}}_app-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{$artifact.Artifact}}_app.copyTo}/bin/copy-to dir:$out";
+		ociImage_{{$artifact.Artifact}}_app_with_dev-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{$artifact.Artifact}}_app_with_dev.copyTo}/bin/copy-to dir:$out";
 		{{end}}
 		{{ if ($artifact.Base)}}
 		ociImage_{{$artifact.Artifact}}_runtime-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_{{$artifact.Artifact}}_runtime.copyTo}/bin/copy-to dir:$out";

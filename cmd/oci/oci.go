@@ -238,19 +238,28 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 }
 
 func genOCIAttrName(env, platform string, artifact hcl2nix.OCIArtifact) string {
-	// .#ociImages.x86_64-linux.ociImage_caddy-as-dir
-	tostarch := ""
+	var arch string
+
 	switch platform {
 	case "linux/amd64":
-		tostarch = "x86_64-linux"
+		arch = "x86_64-linux"
 	case "linux/arm64":
-		tostarch = "aarch64-linux"
+		arch = "aarch64-linux"
+	default:
+		arch = "unknown"
 	}
+
+	base := fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s_", arch, env)
+
 	if env == "pkgs" {
 		if devDeps || artifact.DevDeps {
-			return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s_dev-as-dir", tostarch, env)
+			return base + "dev-as-dir"
 		}
-		return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s_runtime-as-dir", tostarch, env)
+		return base + "runtime-as-dir"
 	}
-	return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s-as-dir", tostarch, env)
+
+	if devDeps || artifact.DevDeps {
+		return base + "app_with_dev-as-dir"
+	}
+	return base + "app-as-dir"
 }

@@ -10,26 +10,26 @@ import (
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 )
 
-func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails) (hcl2nix.Config, bool, error) {
+func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
 	switch pt {
 	case langdetect.GoModule:
-		return genGoModuleConf(pd), false, nil
+		return genGoModuleConf(pd), nil
 	case langdetect.PythonPoetry:
-		return genPythonPoetryConf(), false, nil
+		return genPythonPoetryConf(), nil
 	case langdetect.RustCargo:
 		config, err := genRustCargoConf()
 		if err != nil {
-			return hcl2nix.Config{}, false, err
+			return hcl2nix.Config{}, err
 		}
-		return config, false, nil
+		return config, nil
 	case langdetect.JsNpm:
 		config, err := genJsNpmConf()
 		if err != nil {
-			return hcl2nix.Config{}, false, err
+			return hcl2nix.Config{}, err
 		}
-		return config, false, nil
+		return config, nil
 	default:
-		return generateEmptyConf(), true, nil
+		return generateEmptyConf(), nil
 	}
 }
 
