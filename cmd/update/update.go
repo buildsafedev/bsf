@@ -77,10 +77,9 @@ var UpdateCmd = &cobra.Command{
 			if !update.ComparePackages(hconf.Packages.Development, devVersions) || !update.ComparePackages(hconf.Packages.Runtime, runtimeVersions) {
 				fmt.Println(styles.WarnStyle.Render("Updates are available"))
 				os.Exit(1)
-			} else {
-				fmt.Println(styles.SucessStyle.Render("No updates available"))
-				os.Exit(0)
 			}
+			fmt.Println(styles.SucessStyle.Render("No updates available"))
+			os.Exit(0)
 		}
 
 		fh, err := hcl2nix.NewFileHandlers(true)
