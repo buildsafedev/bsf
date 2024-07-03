@@ -5,3 +5,7 @@ tasks:
     desc: "Run all Go tests"
     cmds:
       - go test ./...
+  build:
+    desc: "Build the project"
+    cmds:
+      - go run main.go build
