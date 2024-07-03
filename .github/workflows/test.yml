@@ -1,12 +1,15 @@
-name: Taskfile Ci
+name: BuildSafe CI
 
 on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 jobs:
-  test_all:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - name: git checkout
@@ -19,3 +22,6 @@ jobs:
           arguments: bsf/.#devShell
       - name: run tests
         run: task test
+      - name: build app 
+        run : task build
+        continue-on-error: true
