@@ -113,7 +113,7 @@ func ComparePackages(a, b []string) bool {
 		counts[item] = true
 	}
 	for _, item := range b {
-		if counts[item] {
+		if !counts[item] {
 			return false
 		}
 	}
