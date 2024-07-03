@@ -108,19 +108,12 @@ func ComparePackages(a, b []string) bool {
 		return false
 	}
 
-	counts := make(map[string]int)
+	counts := make(map[string]bool)
 	for _, item := range a {
-		counts[item]++
+		counts[item] = true
 	}
 	for _, item := range b {
-		if counts[item] == 0 {
-			return false
-		}
-		counts[item]--
-	}
-
-	for _, count := range counts {
-		if count != 0 {
+		if counts[item] {
 			return false
 		}
 	}
