@@ -99,16 +99,14 @@ func GenerateLockFile(conf *Config, packages []LockPackage, wr io.Writer) error 
 // ResolvePackages resolves a list of packages concurrently
 func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, packages Packages, pkgType string) ([]LockPackage, error) {
 	var selectedPackages []string
-    switch pkgType {
-    case "dev":
-        selectedPackages = packages.Development
-    case "runtime":
-        selectedPackages = packages.Runtime
-    case "all":
-        selectedPackages = append(packages.Development, packages.Runtime...)
-    }
+	switch pkgType {
+	case "runtime":
+		selectedPackages = packages.Runtime
+	default:
+		selectedPackages = append(packages.Development, packages.Runtime...)
+	}
 
-    allPackages := slices.Compact(selectedPackages)
+	allPackages := slices.Compact(selectedPackages)
 	resolvedPackages := make([]LockPackage, 0, len(allPackages))
 	pkgMap := mapPackageCategory(packages)
 
