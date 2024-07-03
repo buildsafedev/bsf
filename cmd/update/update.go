@@ -19,9 +19,7 @@ import (
 	"github.com/buildsafedev/bsf/pkg/update"
 )
 
-var updateCmdOptions struct {
-	check bool
-}
+var check bool
 
 // UpdateCmd represents the update command
 var UpdateCmd = &cobra.Command{
@@ -73,7 +71,7 @@ var UpdateCmd = &cobra.Command{
 			Runtime:     runtimeVersions,
 		}
 
-		if updateCmdOptions.check {
+		if check {
 			if !update.ComparePackages(hconf.Packages.Development, devVersions) || !update.ComparePackages(hconf.Packages.Runtime, runtimeVersions) {
 				fmt.Println(styles.WarnStyle.Render("Updates are available"))
 				os.Exit(1)
@@ -176,5 +174,5 @@ func fetchPackageVersions(packages []string, sc buildsafev1.SearchServiceClient)
 }
 
 func init() {
-	UpdateCmd.PersistentFlags().BoolVarP(&updateCmdOptions.check, "check", "c", false, "Check for updates without applying them")
+	UpdateCmd.PersistentFlags().BoolVarP(&check, "check", "c", false, "Check for updates without applying them")
 }
