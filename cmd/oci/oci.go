@@ -60,13 +60,13 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 		platform = p
-		
+
 		sc, fh, err := binit.GetBSFInitializers()
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
-		err = generate.Generate(fh, sc, devDeps)
+		err = generate.Generate(fh, sc)
 
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
@@ -91,7 +91,7 @@ var OCICmd = &cobra.Command{
 
 		symlink := "/result"
 
-		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Artifact, platform))
+		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Artifact, platform, artifact))
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -250,7 +250,7 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 	return artifact, plat, nil
 }
 
-func genOCIAttrName(env, platform string) string {
+func genOCIAttrName(env, platform string, artifact hcl2nix.OCIArtifact) string {
 	// .#ociImages.x86_64-linux.ociImage_caddy-as-dir
 	tostarch := ""
 	switch platform {
@@ -258,6 +258,12 @@ func genOCIAttrName(env, platform string) string {
 		tostarch = "x86_64-linux"
 	case "linux/arm64":
 		tostarch = "aarch64-linux"
+	}
+	if env == "pkgs" {
+		if devDeps || artifact.DevDeps {
+			return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s_dev-as-dir", tostarch, env)
+		}
+		return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s_runtime-as-dir", tostarch, env)
 	}
 	return fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s-as-dir", tostarch, env)
 }

@@ -39,9 +39,20 @@ func generateEmptyConf() hcl2nix.Config {
 			Development: []string{""},
 			Runtime:     []string{"cacert@3.95"},
 		},
+		OCIArtifact: []hcl2nix.OCIArtifact{
+			{
+				Artifact: "pkgs",
+				Name:     "bsf-base-image",
+				Cmd:      []string{},
+				Entrypoint: []string{},
+				EnvVars:    []string{},
+				ExposedPorts: []string{},
+				ImportConfigs: []string{},
+				DevDeps: false,
+			},
+		},
 	}
 }
-
 func genRustCargoConf() (hcl2nix.Config, error) {
 	content, err := os.ReadFile("Cargo.toml")
 	if err != nil {
@@ -72,6 +83,18 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 			RustVersion:  "1.75.0",
 			Release:      true,
 		},
+		OCIArtifact: []hcl2nix.OCIArtifact{
+			{
+				Artifact: "pkgs",
+				Name:     "bsf-base-image",
+				Cmd:      []string{},
+				Entrypoint: []string{},
+				EnvVars:    []string{},
+				ExposedPorts: []string{},
+				ImportConfigs: []string{},
+				DevDeps: false,
+			},
+		},
 	}, nil
 }
 
@@ -89,6 +112,18 @@ func genPythonPoetryConf() hcl2nix.Config {
 			Poetrylock:   "./poetry.lock",
 			PreferWheels: false,
 			CheckGroups:  []string{"dev"},
+		},
+		OCIArtifact: []hcl2nix.OCIArtifact{
+			{
+				Artifact: "pkgs",
+				Name:     "bsf-base-image",
+				Cmd:      []string{},
+				Entrypoint: []string{},
+				EnvVars:    []string{},
+				ExposedPorts: []string{},
+				ImportConfigs: []string{},
+				DevDeps: false,
+			},
 		},
 	}
 }
@@ -112,6 +147,18 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 		GoModule: &hcl2nix.GoModule{
 			Name:       name,
 			SourcePath: entrypoint,
+		},
+		OCIArtifact: []hcl2nix.OCIArtifact{
+			{
+				Artifact: "pkgs",
+				Name:     "bsf-base-image",
+				Cmd:      []string{},
+				Entrypoint: []string{},
+				EnvVars:    []string{},
+				ExposedPorts: []string{},
+				ImportConfigs: []string{},
+				DevDeps: false,
+			},
 		},
 	}
 
@@ -140,6 +187,18 @@ func genJsNpmConf() (hcl2nix.Config, error) {
 		JsNpmApp: &hcl2nix.JsNpmApp{
 			PackageName: name,
 			PackageRoot: "./.",
+		},
+		OCIArtifact: []hcl2nix.OCIArtifact{
+			{
+				Artifact: "pkgs",
+				Name:     "bsf-base-image",
+				Cmd:      []string{},
+				Entrypoint: []string{},
+				EnvVars:    []string{},
+				ExposedPorts: []string{},
+				ImportConfigs: []string{},
+				DevDeps: false,
+			},
 		},
 	}, nil
 }
