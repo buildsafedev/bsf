@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	platform, output             string
+	platform, output, tag        string
 	push, loadDocker, loadPodman bool
 )
 var (
@@ -37,6 +37,7 @@ var OCICmd = &cobra.Command{
 	bsf oci <environment name> 
 	bsf oci <environment name> --platform <platform>
 	bsf oci <environment name> --platform <platform> --output <output directory>
+	bsf oci --tag <tag>
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// todo: we could provide a TUI list dropdown to select
@@ -82,7 +83,12 @@ var OCICmd = &cobra.Command{
 
 		symlink := "/result"
 
-		err = nixcmd.Build(output+symlink, genOCIAttrName(env.Environment, platform))
+		buildOutputPath := output + symlink
+		if tag != "" {
+			buildOutputPath = fmt.Sprintf("%s:%s", buildOutputPath, tag)
+		}
+
+		err = nixcmd.Build(buildOutputPath, genOCIAttrName(env.Environment, platform))
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -256,6 +262,7 @@ func genOCIAttrName(env, platform string) string {
 
 func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
+	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "Tag")
 	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
