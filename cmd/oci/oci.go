@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	platform, output                      string
+	platform, output, tag                 string
 	push, loadDocker, loadPodman, devDeps bool
 )
 var (
@@ -32,6 +32,7 @@ var (
 func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
 	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
+	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "Tag")
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
@@ -91,7 +92,12 @@ var OCICmd = &cobra.Command{
 
 		symlink := "/result"
 
-		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Artifact, platform, artifact))
+		buildOutputPath := output + symlink
+		if tag != "" {
+			buildOutputPath = fmt.Sprintf("%s:%s", buildOutputPath, tag)
+		}
+
+		err = nixcmd.Build(buildOutputPath, genOCIAttrName(artifact.Artifact, platform, artifact))
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
