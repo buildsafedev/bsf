@@ -1,8 +1,10 @@
 package oci
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 )
 
 // LoadDocker loads the image to the docker daemon
@@ -33,23 +35,35 @@ func LoadPodman(dir, imageName string) error {
 
 // Push image to registry
 func Push(dir, imageName string) error {
-	if _, err := os.Stat("/etc/skopeo/config.json"); err != nil {
-		cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "login", "--authfile", "~/.skopeo/config.json", "docker.io")
 
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		err := cmd.Run()
-		if err != nil {
-			return err
-		}
+	currentuser, err := user.Current()
+	if err != nil {
+		return err
 	}
-
-	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "docker://"+imageName)
+	authFile := currentuser.HomeDir + "/.skopeo/config.json"
+	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--authfile", authFile, "--insecure-policy", "dir:"+dir, "docker://"+imageName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func Auth() error {
+	currentuser, err := user.Current()
+	if err != nil {
+		return err
+	}
+	fmt.Println("Logging in to registry")
+	authFile := currentuser.HomeDir + "/.skopeo/config.json"
+	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "login", "--authfile", authFile, "docker.io")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Run()
 	if err != nil {
 		return err
 	}

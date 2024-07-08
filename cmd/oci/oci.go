@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	platform, output             string
-	push, loadDocker, loadPodman bool
+	platform, output                    string
+	push, loadDocker, loadPodman, login bool
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
@@ -40,6 +40,14 @@ var OCICmd = &cobra.Command{
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// todo: we could provide a TUI list dropdown to select
+		if login {
+			err := oci.Auth()
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
 		if len(args) < 1 {
 			fmt.Println(styles.HintStyle.Render("hint:", "run `bsf oci <environment name>` to build an OCI image"))
 			os.Exit(1)
@@ -260,5 +268,6 @@ func init() {
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
+	OCICmd.Flags().BoolVarP(&login, "login", "", false, "Authenticate to the registry")
 
 }
