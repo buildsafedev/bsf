@@ -63,7 +63,12 @@ var OCICmd = &cobra.Command{
 		platform = p
 
 		if tag != "" {
-			artifact.Name = fmt.Sprintf("%s:%s", artifact.Name, tag)
+			if strings.Contains(artifact.Name, ":") {
+				parts := strings.Split(artifact.Name, ":")
+				artifact.Name = fmt.Sprintf("%s:%s", parts[0], tag)
+			} else {
+				artifact.Name = fmt.Sprintf("%s:%s", artifact.Name, tag)
+			}
 		}
 
 		sc, fh, err := binit.GetBSFInitializers()
