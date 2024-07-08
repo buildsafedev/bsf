@@ -61,22 +61,26 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 		platform = p
+		nameMap := make(map[string]string)
+		originalName := artifact.Name
+		newName := artifact.Name
 
 		if tag != "" {
 			if strings.Contains(artifact.Name, ":") {
 				parts := strings.Split(artifact.Name, ":")
-				artifact.Name = fmt.Sprintf("%s:%s", parts[0], tag)
+				newName = fmt.Sprintf("%s:%s", parts[0], tag)
 			} else {
-				artifact.Name = fmt.Sprintf("%s:%s", artifact.Name, tag)
+				newName = fmt.Sprintf("%s:%s", artifact.Name, tag)
 			}
 		}
+		nameMap[originalName] = newName
 
 		sc, fh, err := binit.GetBSFInitializers()
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
-		err = generate.Generate(fh, sc)
+		err = generate.Generate(fh, sc, nameMap)
 
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
