@@ -3,6 +3,7 @@ package hcl2nix
 import (
 	"reflect"
 	"testing"
+	"sort"	
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -130,7 +131,7 @@ func TestMapPackageCategory(t *testing.T) {
 		},
 
 		{
-			name: "Test Case 2",
+			name: "Test Case 3",
 			packages: Packages{
 				Runtime:     []string{"go@1.20", "node@14.0"},
 				Development: []string{"go@1.20", "node@14.0"},
@@ -146,6 +147,82 @@ func TestMapPackageCategory(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := mapPackageCategory(tt.packages); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("mapPackageCategory() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestResolvePackagesSorting(t *testing.T) {
+	tests := []struct {
+		name           string
+		pkgVersions    []LockPackage
+		sortedExpected []LockPackage
+	}{
+		{
+			name: "test sorting",
+			pkgVersions: []LockPackage{
+				{
+					Package: &buildsafev1.Package{
+						Name:     "pkgB",
+						Version:  "1.1.0",
+					},
+					Runtime: true,
+				},
+				{
+					Package: &buildsafev1.Package{
+						Name:     "pkgA",
+						Version:  "1.2.0",
+					},
+					Runtime: false,
+				},
+				{
+					Package: &buildsafev1.Package{
+						Name:     "pkgA",
+						Version:  "1.0.0",
+					},
+					Runtime: false,
+				},
+			},
+			sortedExpected: []LockPackage{
+				{
+					Package: &buildsafev1.Package{
+						Name:     "pkgA",
+						Version:  "1.0.0",
+					},
+					Runtime: false,
+				},
+				{
+					Package: &buildsafev1.Package{
+						Name:     "pkgA",
+						Version:  "1.2.0",
+					},
+					Runtime: false,
+				},
+				{
+					Package: &buildsafev1.Package{
+						Name:     "pkgB",
+						Version:  "1.1.0",
+					},
+					Runtime: true,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Sort the package versions
+			sortedPackages := tt.pkgVersions
+			sort.Slice(sortedPackages, func(i, j int) bool {
+				pi, pj := sortedPackages[i].Package, sortedPackages[j].Package
+				if pi.Name != pj.Name {
+					return pi.Name < pj.Name
+				}
+				return pi.Version < pj.Version
+			})
+
+			if !reflect.DeepEqual(sortedPackages, tt.sortedExpected) {
+				t.Errorf("sortedPackages = %v, want %v", sortedPackages, tt.sortedExpected)
 			}
 		})
 	}

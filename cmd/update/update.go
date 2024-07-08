@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"sort"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
@@ -65,6 +66,10 @@ var UpdateCmd = &cobra.Command{
 
 		devVersions := parsePackagesForUpdates(devVersionMap)
 		runtimeVersions := parsePackagesForUpdates(runtimeVersionMap)
+
+		// Sorted the versions
+		sort.Strings(devVersions)
+		sort.Strings(runtimeVersions)
 
 		newPackages := hcl2nix.Packages{
 			Development: devVersions,
