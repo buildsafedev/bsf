@@ -32,7 +32,7 @@ var (
 func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
 	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
-	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "Tag")
+	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "Tag for the OCI image")
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
@@ -61,6 +61,10 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 		platform = p
+
+		if tag != "" {
+			artifact.Name = fmt.Sprintf("%s:%s", artifact.Name, tag)
+		}
 
 		sc, fh, err := binit.GetBSFInitializers()
 		if err != nil {
@@ -92,12 +96,7 @@ var OCICmd = &cobra.Command{
 
 		symlink := "/result"
 
-		buildOutputPath := output + symlink
-		if tag != "" {
-			buildOutputPath = fmt.Sprintf("%s:%s", buildOutputPath, tag)
-		}
-
-		err = nixcmd.Build(buildOutputPath, genOCIAttrName(artifact.Artifact, platform, artifact))
+		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Artifact, platform, artifact))
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
