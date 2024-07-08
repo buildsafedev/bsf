@@ -1,12 +1,16 @@
 package git
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/buildsafedev/bsf/pkg/langdetect"
 	"github.com/go-git/go-git/v5"
 )
+
+var ErrFilesNotAddedToVersionControl = errors.New("files are not added to version control")
 
 // Add adds the path to the git work tree
 func Add(path string) error {
@@ -40,13 +44,37 @@ func Add(path string) error {
 	if leafDir != "" {
 		path = leafDir + "/" + path
 	}
-
 	// Add all changes to the working directory
 	err = w.AddWithOptions(&git.AddOptions{
 		Path: path,
 	})
 	if err != nil {
 		return err
+	}
+	status, err :=w.Status()
+	if err !=nil{
+		return err
+	}
+	var fileName string
+	pd, _, err:=langdetect.FindProjectType()
+	if err!=nil{
+		return err
+	}
+	switch pd{
+	case langdetect.GoModule:
+		fileName = "go.mod"
+	case langdetect.RustCargo:
+		fileName = "Cargo.lock"
+	case langdetect.JsNpm:
+		fileName = "package-lock.json"
+	case langdetect.PythonPoetry:
+		fileName = "poetry.lock"
+	}
+	fl:= status.File(fileName)
+	// 63 code represents that file is untracked
+	// See the StatusCodes of FileStatus for more info
+	if fl.Staging==63{
+		return ErrFilesNotAddedToVersionControl
 	}
 	return nil
 }
