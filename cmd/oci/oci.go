@@ -1,7 +1,6 @@
 package oci
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -32,7 +31,6 @@ var (
 func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
 	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
-	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "Tag for the OCI image")
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
@@ -58,34 +56,40 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		artifact, p, err := ProcessPlatformAndConfig(platform, args[0])
+		conf, err := hcl2nix.ReadHclFile("bsf.hcl")
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
-		platform = p
-		nameMap := make(map[string]string)
-		originalName := artifact.Name
-		var newName string
 
-		if tag != "" {
-			if strings.Contains(artifact.Name, ":") {
-				parts := strings.Split(artifact.Name, ":")
-				if len(parts) > 0 {
-					newName = fmt.Sprintf("%s:%s", parts[0], tag)
-				} else {
-					newName = fmt.Sprintf("%s:%s", artifact.Name, tag)
-				}
-			} else {
-				newName = fmt.Sprintf("%s:%s", artifact.Name, tag)
+		artifact, p, err := ProcessPlatformAndConfig(conf, platform, args[0])
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		platform = p
+
+		if tag != "" && !dfSwap {
+			newName, err := getNewName(artifact, tag)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+				os.Exit(1)
+			}
+			oldName := artifact.Name
+			artifact.Name = newName
+			err = hcl2nix.ModifyConfig(oldName, artifact, conf)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+				os.Exit(1)
 			}
 		}
-		nameMap[originalName] = newName
 
 		if dfSwap {
 			if tag != "" {
 				if err = modifyDockerfileWithTag(path, tag, devDeps); err != nil {
 					fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+					os.Exit(1)
 				}
 				fmt.Println(styles.SucessStyle.Render("dockerfile succesfully updated with tag:", tag))
 			} else {
@@ -99,7 +103,7 @@ var OCICmd = &cobra.Command{
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
-		err = generate.Generate(fh, sc, nameMap)
+		err = generate.Generate(fh, sc)
 
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
@@ -219,7 +223,7 @@ var OCICmd = &cobra.Command{
 }
 
 // ProcessPlatformAndConfig processes the platform and config file
-func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact, string, error) {
+func ProcessPlatformAndConfig(conf *hcl2nix.Config, plat string, envName string) (hcl2nix.OCIArtifact, string, error) {
 	if plat == "" {
 		tos, tarch := platformutils.FindPlatform(plat)
 		plat = tos + "/" + tarch
@@ -234,16 +238,6 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 	}
 	if !pfound {
 		return hcl2nix.OCIArtifact{}, "", fmt.Errorf("Platform %s is not supported. Supported platforms are %s", platform, strings.Join(supportedPlatforms, ", "))
-	}
-	data, err := os.ReadFile("bsf.hcl")
-	if err != nil {
-		return hcl2nix.OCIArtifact{}, "", fmt.Errorf("error: %s", err.Error())
-	}
-
-	var dstErr bytes.Buffer
-	conf, err := hcl2nix.ReadConfig(data, &dstErr)
-	if err != nil {
-		return hcl2nix.OCIArtifact{}, "", fmt.Errorf(dstErr.String())
 	}
 
 	envNames := make([]string, 0, len(conf.OCIArtifact))
@@ -295,6 +289,21 @@ func modifyDockerfileWithTag(path, tag string, devDeps bool) error {
 	}
 
 	return nil
+}
+
+func getNewName(artifact hcl2nix.OCIArtifact, tag string) (string, error) {
+	var newName string
+	if strings.Contains(artifact.Name, ":") {
+		parts := strings.Split(artifact.Name, ":")
+		if len(parts) > 0 {
+			newName = fmt.Sprintf("%s:%s", parts[0], tag)
+		} else {
+			newName = fmt.Sprintf("%s:%s", artifact.Name, tag)
+		}
+	} else {
+		newName = fmt.Sprintf("%s:%s", artifact.Name, tag)
+	}
+	return newName, nil
 }
 
 func genOCIAttrName(env, platform string, artifact hcl2nix.OCIArtifact) string {

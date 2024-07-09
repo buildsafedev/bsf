@@ -98,7 +98,7 @@ var UpdateCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		err = generate.Generate(fh, sc, nil)
+		err = generate.Generate(fh, sc)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("Error generating files: %s", err.Error()))
 			os.Exit(1)

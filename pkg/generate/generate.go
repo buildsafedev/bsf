@@ -1,7 +1,6 @@
 package generate
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -17,31 +16,16 @@ import (
 )
 
 // Generate reads bsf.hcl, resolves dependencies and generates bsf.lock, bsf/flake.nix, bsf/default.nix, etc.
-func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient, nameMap map[string]string) error {
-	data, err := os.ReadFile("bsf.hcl")
+func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) error {
+	conf, err := hcl2nix.ReadHclFile("bsf.hcl")
 	if err != nil {
 		return err
-	}
-
-	var dstErr bytes.Buffer
-	conf, err := hcl2nix.ReadConfig(data, &dstErr)
-	if err != nil {
-		return fmt.Errorf("%v", &dstErr)
-	}
-
-	if len(nameMap) > 0 {
-		for i, artifact := range conf.OCIArtifact {
-			if newName, ok := nameMap[artifact.Name]; ok {
-				conf.OCIArtifact[i].Name = newName
-			}
-		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 
 	pkgType := getPkgType(conf)
-
 	lockPackages, err := hcl2nix.ResolvePackages(ctx, sc, conf.Packages, pkgType)
 	if err != nil {
 		return err
