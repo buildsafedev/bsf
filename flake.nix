@@ -38,7 +38,7 @@
       packages = forEachSystem ({ pkgs, ... }: {
         default = pkgs.stdenvNoCC.mkDerivation  rec {
           name = "bsf";
-          version = "0.1.1";
+          version = "0.2";
 
           src = pkgs.fetchurl {
             url = getBinaryUrl { system = pkgs.system; version = version; };
