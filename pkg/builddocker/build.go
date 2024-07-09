@@ -79,9 +79,9 @@ func readDockerFile(file *os.File) ([]string, error) {
 	func editDockerfile(lines []string, dev bool, tag string) ([]string, error) {
 		var searchTag string
 		if dev {
-			searchTag = "# bsfimage:dev"
+			searchTag = "bsfimage:dev"
 		} else {
-			searchTag = "# bsfimage:runtime"
+			searchTag = "bsfimage:runtime"
 		}
 
 		var selectedFrom string
