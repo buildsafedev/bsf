@@ -1,7 +1,6 @@
 package release
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -50,15 +49,7 @@ var ReleaseCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		data, err := os.ReadFile("bsf.hcl")
-		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error: ", "failed to read config"))
-			fmt.Println(styles.HintStyle.Render("hint:", "run `bsf init` "))
-			os.Exit(1)
-		}
-
-		var dstErr bytes.Buffer
-		conf, err := hcl2nix.ReadConfig(data, &dstErr)
+		conf, err := hcl2nix.ReadHclFile("bsf.hcl")
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", "failed to read config"))
 			fmt.Println(styles.HintStyle.Render("hint:", "run `bsf init` "))

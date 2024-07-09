@@ -13,6 +13,7 @@ import (
 	"github.com/buildsafedev/bsf/pkg/builddocker"
 	"github.com/buildsafedev/bsf/pkg/generate"
 	bgit "github.com/buildsafedev/bsf/pkg/git"
+	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 )
 
 var (
@@ -40,7 +41,13 @@ var DFCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		env, p, err := ocicmd.ProcessPlatformAndConfig(platform, args[0])
+		conf, err := hcl2nix.ReadHclFile("bsf.hcl")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+			os.Exit(1)
+		}
+
+		env, p, err := ocicmd.ProcessPlatformAndConfig(conf, platform, args[0])
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -53,7 +60,7 @@ var DFCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		err = generate.Generate(fh, sc, nil)
+		err = generate.Generate(fh, sc)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
