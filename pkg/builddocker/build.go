@@ -49,7 +49,7 @@ func GenerateDockerfile(w io.Writer, env hcl2nix.OCIArtifact, platform string) e
 
 }
 
-// ModifyDockerfile modifies Dockerfile with tag
+// ModifyDockerfile modifies the Dockerfile with the specified tag
 func ModifyDockerfile(path, tag string, dev bool) error {
 	var dockerfilePath string
 	if path != "" {
@@ -57,6 +57,7 @@ func ModifyDockerfile(path, tag string, dev bool) error {
 	} else {
 		dockerfilePath = "./Dockerfile"
 	}
+
 	if _, err := os.Stat(dockerfilePath); os.IsNotExist(err) {
 		return fmt.Errorf("dockerfile not found")
 	}
@@ -68,54 +69,51 @@ func ModifyDockerfile(path, tag string, dev bool) error {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	fromCommands := []string{}
 	lines := []string{}
-
 	for scanner.Scan() {
-		line := scanner.Text()
-		lines = append(lines, line)
-		if strings.HasPrefix(strings.TrimSpace(line), "FROM") {
-			fromCommands = append(fromCommands, line)
-		}
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("error reading Dockerfile: %v", err)
 	}
 
-	if len(fromCommands) == 0 {
-		return fmt.Errorf("No FROM commands found in Dockerfile")
+	var searchTag string
+	if dev {
+		searchTag = "# bsfimage:dev"
+	} else {
+		searchTag = "# bsfimage:runtime"
 	}
 
 	var selectedFrom string
 	var selectedIndex int
-	if dev {
-		selectedFrom = fromCommands[0]
-	} else {
-		selectedFrom = fromCommands[0]
-		if len(fromCommands) > 1 {
-			selectedFrom = fromCommands[1]
+	for i, line := range lines {
+		if strings.Contains(line, searchTag) {
+			selectedFrom = line
+			selectedIndex = i
+			break
 		}
 	}
 
-	selectedIndex = indexOf(lines, selectedFrom)
+	if selectedFrom == "" {
+		return fmt.Errorf("no FROM command found with tag %s", searchTag)
+	}
 
 	fromParts := strings.Fields(selectedFrom)
 	if len(fromParts) < 2 {
-		return fmt.Errorf("Invalid FROM command format")
+		return fmt.Errorf("invalid FROM command format")
 	}
 
 	var newFrom string
 	if strings.Contains(fromParts[1], ":") {
 		imageParts := strings.Split(fromParts[1], ":")
 		newFrom = fmt.Sprintf("FROM %s:%s", imageParts[0], tag)
-		for _, part := range fromParts[2:] {
-			newFrom = fmt.Sprintf("%s %s", newFrom, part)
-		}
 	} else {
 		newFrom = fmt.Sprintf("FROM %s:%s", fromParts[1], tag)
-		for _, part := range fromParts[2:] {
-			newFrom = fmt.Sprintf("%s %s", newFrom, part)
-		}
+	}
+	for _, part := range fromParts[2:] {
+		newFrom = fmt.Sprintf("%s %s", newFrom, part)
 	}
 
-	fmt.Println("Modified FROM command:", newFrom)
 	lines[selectedIndex] = newFrom
 
 	err = os.WriteFile(dockerfilePath, []byte(strings.Join(lines, "\n")), 0644)
@@ -124,15 +122,6 @@ func ModifyDockerfile(path, tag string, dev bool) error {
 	}
 
 	return nil
-}
-
-func indexOf(slice []string, item string) int {
-	for i, v := range slice {
-		if v == item {
-			return i
-		}
-	}
-	return -1
 }
 
 func convertExportCfgToDockerfileCfg(env hcl2nix.OCIArtifact, platform string) dockerfileCfg {

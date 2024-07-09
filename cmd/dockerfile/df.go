@@ -16,16 +16,13 @@ import (
 )
 
 var (
-	output, platform, path, tag string
-	dev                         bool
+	output, platform string
+	dev              bool
 )
 
 func init() {
 	DFCmd.Flags().StringVarP(&output, "output", "o", "", "location of the dockerfile generated")
 	DFCmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
-	DFCmd.Flags().StringVar(&path, "path", "", "The path to Dockerfile")
-	DFCmd.Flags().StringVarP(&tag, "tag", "t", "", "The tag that will be replaced with original tag in Dockerfile")
-	DFCmd.Flags().BoolVar(&dev, "dev", false, "The tag will be replaced for dev stage")
 }
 
 // DFCmd represents the generate command
@@ -46,15 +43,6 @@ var DFCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			fmt.Println(styles.HintStyle.Render("hint:", "run `bsf dockerfile <artifact>` to export the environment"))
-			os.Exit(1)
-		}
-
-		if args[0] == "pkgs" && tag != "" {
-			if err := builddocker.ModifyDockerfile(path, tag, dev); err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-				os.Exit(1)
-			}
-			fmt.Println(styles.SucessStyle.Render("dockerfile succesfully updated with tag:", tag))
 			os.Exit(1)
 		}
 
