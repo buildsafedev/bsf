@@ -53,7 +53,7 @@ var DFCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		err = generate.Generate(fh, sc)
+		err = generate.Generate(fh, sc, nil)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)

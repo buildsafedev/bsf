@@ -32,6 +32,7 @@ var (
 func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
 	OCICmd.Flags().StringVarP(&output, "output", "o", "", "location of the build artifacts generated")
+	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "Tag for the OCI image")
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
@@ -63,6 +64,23 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 		platform = p
+		nameMap := make(map[string]string)
+		originalName := artifact.Name
+		var newName string
+
+		if tag != "" {
+			if strings.Contains(artifact.Name, ":") {
+				parts := strings.Split(artifact.Name, ":")
+				if len(parts) > 0 {
+					newName = fmt.Sprintf("%s:%s", parts[0], tag)
+				} else {
+					newName = fmt.Sprintf("%s:%s", artifact.Name, tag)
+				}
+			} else {
+				newName = fmt.Sprintf("%s:%s", artifact.Name, tag)
+			}
+		}
+		nameMap[originalName] = newName
 
 		if dfSwap {
 			if tag != "" {
@@ -81,7 +99,7 @@ var OCICmd = &cobra.Command{
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
-		err = generate.Generate(fh, sc)
+		err = generate.Generate(fh, sc, nameMap)
 
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
