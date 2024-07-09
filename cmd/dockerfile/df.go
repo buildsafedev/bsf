@@ -17,7 +17,6 @@ import (
 
 var (
 	output, platform string
-	dev              bool
 )
 
 func init() {
@@ -34,11 +33,6 @@ var DFCmd = &cobra.Command{
 	bsf dockerfile <artifact> 
 	bsf dockerfile <artifact> --platform <platform>
 	bsf dockerfile <artifact> --platform <platform> --output <output filename>
-
-	bsf dockerfile <artifact> --tag=<tag>
-	bsf dockerfile <artifact> --tag=<tag> --dev
-	bsf dockerfile <artifact> --tag=<tag> --dev --path=<path to dockerfile>
-
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
