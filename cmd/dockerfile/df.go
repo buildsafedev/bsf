@@ -22,7 +22,6 @@ var (
 func init() {
 	DFCmd.Flags().StringVarP(&output, "output", "o", "", "location of the dockerfile generated")
 	DFCmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
-
 }
 
 // DFCmd represents the generate command
@@ -31,15 +30,16 @@ var DFCmd = &cobra.Command{
 	Short:   "dockerfile generates a dockerfile for the app",
 	Aliases: []string{"df"},
 	Long: `
-	bsf dockerfile <environment name> 
-	bsf dockerfile <environment name> --platform <platform>
-	bsf dockerfile <environment name> --platform <platform> --output <output filename>
+	bsf dockerfile <artifact> 
+	bsf dockerfile <artifact> --platform <platform>
+	bsf dockerfile <artifact> --platform <platform> --output <output filename>
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			fmt.Println(styles.HintStyle.Render("hint:", "run `bsf dockerfile <environment name>` to export the environment"))
+			fmt.Println(styles.HintStyle.Render("hint:", "run `bsf dockerfile <artifact>` to export the environment"))
 			os.Exit(1)
 		}
+
 		env, p, err := ocicmd.ProcessPlatformAndConfig(platform, args[0])
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))

@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	platform, output, tag                 string
-	push, loadDocker, loadPodman, devDeps bool
+	platform, output, tag, path                   string
+	push, loadDocker, loadPodman, devDeps, dfSwap bool
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
@@ -37,6 +37,9 @@ func init() {
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
 	OCICmd.Flags().BoolVarP(&devDeps, "dev", "", false, "Build base image for Dev Dependencies")
+	OCICmd.Flags().BoolVarP(&dfSwap, "df-swap", "", false, "Modify base images in Dockerfile")
+	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "The tag that will be replaced with original tag in Dockerfile")
+	OCICmd.Flags().StringVar(&path, "path", "", "The path to Dockerfile")
 }
 
 // OCICmd represents the export command
@@ -78,6 +81,18 @@ var OCICmd = &cobra.Command{
 			}
 		}
 		nameMap[originalName] = newName
+
+		if dfSwap {
+			if tag != "" {
+				if err = modifyDockerfileWithTag(path, tag, devDeps); err != nil {
+					fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
+				}
+				fmt.Println(styles.SucessStyle.Render("dockerfile succesfully updated with tag:", tag))
+			} else {
+				fmt.Println(styles.HintStyle.Render("hint:", "use --tag flag to define a tag"))
+			}
+			os.Exit(1)
+		}
 
 		sc, fh, err := binit.GetBSFInitializers()
 		if err != nil {
@@ -253,6 +268,33 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 	}
 
 	return artifact, plat, nil
+}
+
+func modifyDockerfileWithTag(path, tag string, devDeps bool) error {
+	var dockerfilePath string
+	if path != "" {
+		dockerfilePath = path + "/Dockerfile"
+	} else {
+		dockerfilePath = "./Dockerfile"
+	}
+
+	file, err := os.Open(dockerfilePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	resLines, err := builddocker.ModifyDockerfile(file, devDeps, tag)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(dockerfilePath, []byte(strings.Join(resLines, "\n")), 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func genOCIAttrName(env, platform string, artifact hcl2nix.OCIArtifact) string {
