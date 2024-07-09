@@ -36,7 +36,7 @@ func init() {
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
 	OCICmd.Flags().BoolVarP(&devDeps, "dev", "", false, "Build base image for Dev Dependencies")
-	OCICmd.Flags().BoolVarP(&dfSwap, "df-swap", "", false, "Build base image for Dev Dependencies")
+	OCICmd.Flags().BoolVarP(&dfSwap, "df-swap", "", false, "Modify base images in Dockerfile")
 	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "The tag that will be replaced with original tag in Dockerfile")
 	OCICmd.Flags().StringVar(&path, "path", "", "The path to Dockerfile")
 }
@@ -66,16 +66,14 @@ var OCICmd = &cobra.Command{
 
 		if dfSwap {
 			if tag != "" {
-				if err := builddocker.ModifyDockerfile(path, tag, devDeps); err != nil {
+				if err = modifyDockerfileWithTag(path, tag, devDeps); err != nil {
 					fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-					os.Exit(1)
 				}
 				fmt.Println(styles.SucessStyle.Render("dockerfile succesfully updated with tag:", tag))
-				os.Exit(1)
 			} else {
 				fmt.Println(styles.HintStyle.Render("hint:", "use --tag flag to define a tag"))
-				os.Exit(1)
 			}
+			os.Exit(1)
 		}
 
 		sc, fh, err := binit.GetBSFInitializers()
@@ -252,6 +250,38 @@ func ProcessPlatformAndConfig(plat string, envName string) (hcl2nix.OCIArtifact,
 	}
 
 	return artifact, plat, nil
+}
+
+func modifyDockerfileWithTag(path, tag string, devDeps bool) error {
+	var dockerfilePath string
+	if path != "" {
+		dockerfilePath = path + "/Dockerfile"
+	} else {
+		dockerfilePath = "./Dockerfile"
+	}
+
+	_, err := os.Stat(dockerfilePath)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Open(dockerfilePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	resLines, err := builddocker.ModifyDockerfile(file, devDeps, tag)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(dockerfilePath, []byte(strings.Join(resLines, "\n")), 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func genOCIAttrName(env, platform string, artifact hcl2nix.OCIArtifact) string {
