@@ -260,11 +260,6 @@ func modifyDockerfileWithTag(path, tag string, devDeps bool) error {
 		dockerfilePath = "./Dockerfile"
 	}
 
-	_, err := os.Stat(dockerfilePath)
-	if err != nil {
-		return err
-	}
-
 	file, err := os.Open(dockerfilePath)
 	if err != nil {
 		return err
