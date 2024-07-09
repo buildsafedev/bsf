@@ -24,7 +24,7 @@ require (
 	golang.org/x/mod v0.17.0
 	golang.org/x/oauth2 v0.21.0
 	golang.org/x/term v0.21.0
-	google.golang.org/grpc v1.64.0
+	google.golang.org/grpc v1.64.1
 	google.golang.org/protobuf v1.34.2
 	oras.land/oras-go/v2 v2.5.0
 	zombiezen.com/go/nix v0.0.0-20240320004700-0734e137f7fe
