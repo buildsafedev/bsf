@@ -79,19 +79,17 @@ func ModifyConfig(oldName string, artifact OCIArtifact, config *Config) error {
 		}
 	}
 
-	if !updated {
-		config.OCIArtifact = append(config.OCIArtifact, artifact)
-	}
+	if updated {
+		var buf bytes.Buffer
+		err := WriteConfig(*config, &buf)
+		if err != nil {
+			return err
+		}
 
-	var buf bytes.Buffer
-	err := WriteConfig(*config, &buf)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile("bsf.hcl", buf.Bytes(), 0644)
-	if err != nil {
-		return err
+		err = os.WriteFile("bsf.hcl", buf.Bytes(), 0644)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
