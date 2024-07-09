@@ -63,12 +63,16 @@ var OCICmd = &cobra.Command{
 		platform = p
 		nameMap := make(map[string]string)
 		originalName := artifact.Name
-		newName := artifact.Name
+		var newName string
 
 		if tag != "" {
 			if strings.Contains(artifact.Name, ":") {
 				parts := strings.Split(artifact.Name, ":")
-				newName = fmt.Sprintf("%s:%s", parts[0], tag)
+				if len(parts) > 0 {
+					newName = fmt.Sprintf("%s:%s", parts[0], tag)
+				} else {
+					newName = fmt.Sprintf("%s:%s", artifact.Name, tag)
+				}
 			} else {
 				newName = fmt.Sprintf("%s:%s", artifact.Name, tag)
 			}

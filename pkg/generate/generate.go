@@ -30,9 +30,9 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient, name
 	}
 
 	if len(nameMap) > 0 {
-		for _, artifact := range conf.OCIArtifact {
+		for i, artifact := range conf.OCIArtifact {
 			if newName, ok := nameMap[artifact.Name]; ok {
-				artifact.Name = newName
+				conf.OCIArtifact[i].Name = newName
 			}
 		}
 	}
