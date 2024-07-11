@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"os/exec"
 )
@@ -18,28 +17,47 @@ func Build(dir string, attribute string) error {
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		log.Fatalf("could not get stderr pipe: %v", err)
+		return err
 	}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Fatalf("could not get stdout pipe: %v", err)
+		return err
 	}
-	go func() {
-		merged := io.MultiReader(stderr, stdout)
-		scanner := bufio.NewScanner(merged)
+	stdErrChan:= make(chan string)
+
+	go func(){
+		scanner:= bufio.NewScanner(stderr)
 		for scanner.Scan() {
-			msg := scanner.Text()
+			stdErr:= scanner.Text()
 			dir, err:= os.Getwd()
 			if err!=nil{
-				panic(err)
+				stdErrChan <- err.Error()
 			}
 			warning:= fmt.Sprintf("warning: Git tree '%s' is dirty", dir)
-			if msg==warning{
-				msg = fmt.Sprintf("warning: Git tree '%s' is dirty.\nThis implies you have not checked-in files in the git work tree (hint: git add)", dir)
+			if stdErr==warning{
+				stdErr = fmt.Sprintf("warning: Git tree '%s' is dirty.\nThis implies you have not checked-in files in the git work tree (hint: git add)", dir)
 			}
-			fmt.Printf("%s\n", msg)
+			stdErr = fmt.Sprint(stdErr, "\n")
+			os.Stderr.Write([]byte(stdErr))
 		}
 	}()
+	
+	go func(){
+		scanner:= bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			stdOut:= scanner.Text()
+			stdOut = fmt.Sprint(stdOut, "\n")
+			os.Stdout.Write([]byte(stdOut))
+		}
+	}()
+	
+	select{
+	case stdErr:=<-stdErrChan:
+		return errors.New(stdErr)
+	default:
+		break
+	}
+	
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting command: %v", err)
 	}

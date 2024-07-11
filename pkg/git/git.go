@@ -10,7 +10,7 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
-var ErrFilesNotAddedToVersionControl = errors.New("files are not added to version control")
+var ErrFilesNotAddedToVersionControl = errors.New("files like 'package-lock.json', 'Cargo.lock', 'go.mod', 'poetry.lock' are not added to version control")
 
 // Add adds the path to the git work tree
 func Add(path string) error {
