@@ -9,71 +9,48 @@ import (
 func TestGetDateBasedVersion(t *testing.T) {
 	tests := []struct {
 		name     string
-		response *buildsafev1.FetchPackagesResponse
-		version  string
-		want     string
+		input    *buildsafev1.FetchPackagesResponse
+		expected string
 	}{
 		{
-			name: "Test Case 1",
-			response: &buildsafev1.FetchPackagesResponse{
-				Packages: []*buildsafev1.Package{
-					{Version: "2023.06.15"},
-					{Version: "2023.07.01"},
-					{Version: "2023.07.10"},
-				},
-			},
-			version: "2023",
-			want:    "2023.07.10",
+			name:     "Test Case 1",
+			input:    nil,
+			expected: "",
 		},
 		{
 			name: "Test Case 2",
-			response: &buildsafev1.FetchPackagesResponse{
-				Packages: []*buildsafev1.Package{
-					{Version: "2022.12.25"},
-					{Version: "2023.01.01"},
-					{Version: "2023.01.02"},
-				},
+			input: &buildsafev1.FetchPackagesResponse{
+				Packages: []*buildsafev1.Package{},
 			},
-			version: "2023",
-			want:    "2023.01.02",
+			expected: "",
 		},
 		{
-			name:     "Test Case 3",
-			response: nil,
-			version:  "2023",
-			want:     "",
+			name: "Test Case 3",
+			input: &buildsafev1.FetchPackagesResponse{
+				Packages: []*buildsafev1.Package{
+					{Version: "1.0.0", EpochSeconds: 100},
+				},
+			},
+			expected: "1.0.0",
 		},
 		{
 			name: "Test Case 4",
-			response: &buildsafev1.FetchPackagesResponse{
+			input: &buildsafev1.FetchPackagesResponse{
 				Packages: []*buildsafev1.Package{
-					{Version: "2023.01.01"},
-					{Version: "2023.01.02"},
-					{Version: "2023.01.03"},
-					{Version: "2022.12.31"},
+					{Version: "1.0.0", EpochSeconds: 100},
+					{Version: "2.0.0", EpochSeconds: 200},
+					{Version: "1.5.0", EpochSeconds: 150},
 				},
 			},
-			version: "2023",
-			want:    "2023.01.03",
-		},
-		{
-			name: "Test Case 5",
-			response: &buildsafev1.FetchPackagesResponse{
-				Packages: []*buildsafev1.Package{
-					{Version: "2023.02.01"},
-					{Version: "2023.02.02"},
-					{Version: "2023.02.03"},
-				},
-			},
-			version: "2023.02",
-			want:    "2023.02.03",
+			expected: "2.0.0",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetDateBasedVersion(tt.response, tt.version); got != tt.want {
-				t.Errorf("GetDateBasedVersion() = %v, want %v", got, tt.want)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := GetDateBasedVersion(test.input, "")
+			if result != test.expected {
+				t.Errorf("expected %v, got %v", test.expected, result)
 			}
 		})
 	}

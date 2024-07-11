@@ -49,11 +49,11 @@ func ParsePackage(pkg string) (name, version string) {
 
 // GetDateBasedVersion returns the latest date version for the given version.
 func GetDateBasedVersion(v *buildsafev1.FetchPackagesResponse, version string) string {
-	if v == nil {
+	if v == nil || len(v.Packages) == 0 {
 		return ""
 	}
 
-	// sorting epochs
+	// sorting EpochSeconds
 	sort.Slice(v.Packages, func(i, j int) bool {
 		return v.Packages[i].EpochSeconds > v.Packages[j].EpochSeconds
 	})
