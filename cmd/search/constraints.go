@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
+	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -139,6 +140,12 @@ func (m *versionConstraintsModel) updateVersionConstraint() (tea.Model, tea.Cmd)
 	err = hcl2nix.AddPackages(data, newConfFromSelectedPackages(m.name, m.version, m.selectedConstraints, m.env), fh.ModFile)
 	if err != nil {
 		m.errorMsg = fmt.Sprintf(errorStyle.Render("Error updating bsf.hcl: %s", err.Error()))
+		return m, tea.Quit
+	}
+
+	err = generate.Generate(fh, sc)
+	if err != nil {
+		m.errorMsg = fmt.Sprintf(errorStyle.Render("Error regenerating nix files: %s", err.Error()))
 		return m, tea.Quit
 	}
 
