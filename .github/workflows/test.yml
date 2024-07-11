@@ -12,16 +12,35 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - name: git checkout
+      - name: Checkout repository
         uses: actions/checkout@v3
+
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-      - uses: nicknovitski/nix-develop@v1
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Setup Nix development environment
+        uses: nicknovitski/nix-develop@v1
         with:
           arguments: bsf/.#devShell
-      - name: run tests
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.21'
+
+      - name: Install Task
+        run: |
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b $(go env GOPATH)/bin
+
+      - name: Run tests
         run: task test
-      - name: build app 
-        run : task build
+
+      - name: Build app
+        run: task build
+
+      - name: Run GolangCI-Lint
+        run: task lint
         continue-on-error: true
