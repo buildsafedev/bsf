@@ -26,11 +26,6 @@ jobs:
         with:
           arguments: bsf/.#devShell
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: '1.21'
-
       - name: Install Task
         run: |
           sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b $(go env GOPATH)/bin
