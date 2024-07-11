@@ -20,9 +20,6 @@ type OCIArtifact struct {
 	ExposedPorts []string `hcl:"exposedPorts,optional"`
 	// Names of configs to import
 	ImportConfigs []string `hcl:"importConfigs,optional"`
-	// DevDeps defines if development dependencies should be present in the image. By default, it is false.
-	DevDeps bool `hcl:"devDeps,optional"`
-
 }
 
 // Validate validates ExportConfig
