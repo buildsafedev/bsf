@@ -78,6 +78,7 @@
 			nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs.delve  
 			nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs.go  
 			nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.go-task  
+			nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.golangci-lint  
 			nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs.gotools  
 			
 		  ];
@@ -109,6 +110,7 @@
 			nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs.delve  
 			nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs.go  
 			nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.go-task  
+			nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.golangci-lint  
 			nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs.gotools  
 			
 		   ];

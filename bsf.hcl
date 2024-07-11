@@ -1,6 +1,6 @@
 
 packages {
-  development = ["go@1.21.6", "gotools@0.16.1", "delve@1.22.0", "go-task@~3.37.2"]
+  development = ["go@1.21.6", "gotools@0.16.1", "delve@1.22.0", "go-task@~3.37.2", "golangci-lint@~1.59.0"]
   runtime     = ["cacert@3.95"]
 }
 
@@ -12,8 +12,8 @@ gomodule {
   doCheck = false
 }
 
-
 githubRelease "bsf" {
   owner = "buildsafedev"
   repo  = "bsf"
+  dir   = ""
 }
