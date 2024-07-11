@@ -26,10 +26,6 @@ jobs:
         with:
           arguments: bsf/.#devShell
 
-      - name: Install Task
-        run: |
-          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b $(go env GOPATH)/bin
-
       - name: Run tests
         run: task test
 
