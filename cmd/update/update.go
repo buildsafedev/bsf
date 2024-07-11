@@ -123,6 +123,12 @@ func parsePackagesForUpdates(versionMap map[string]*buildsafev1.FetchPackagesRes
 		updateType := update.ParseUpdateType(k)
 
 		switch updateType {
+		case update.UpdateTypeDate:
+			newVer := update.GetDateBasedVersion(v, version)
+			if newVer != "" {
+				newVersions = append(newVersions, fmt.Sprintf("%s@#%s", name, newVer))
+			}
+
 		case update.UpdateTypePatch:
 			newVer := update.GetLatestPatchVersion(v, version)
 			if newVer != "" {

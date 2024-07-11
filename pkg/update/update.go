@@ -12,6 +12,8 @@ const (
 	UpdateTypePatch = iota
 	// UpdateTypeMinor represents minor update type
 	UpdateTypeMinor
+	// UpdateTypeDate represents date update type
+	UpdateTypeDate
 	// UpdateTypePinned represents pinned update type
 	UpdateTypePinned
 )
@@ -22,6 +24,8 @@ func ParseUpdateType(pkg string) int {
 		return UpdateTypePatch
 	} else if strings.Contains(pkg, "^") {
 		return UpdateTypeMinor
+	} else if strings.Contains(pkg, "#") {
+		return UpdateTypeDate
 	} else {
 		return UpdateTypePinned
 	}
@@ -40,6 +44,28 @@ func ParsePackage(pkg string) (name, version string) {
 	}
 
 	return nameWithVersion[0], version
+}
+
+// GetDateBasedVersion returns the latest date version for the given version.
+func GetDateBasedVersion(v *buildsafev1.FetchPackagesResponse, version string) string {
+	if v == nil {
+		return ""
+	}
+
+	var latestVersion string
+	var latestDate string
+
+	for _, pkg := range v.Packages {
+		if strings.HasPrefix(pkg.Version, version[:4]) {
+			datePart := strings.TrimPrefix(pkg.Version, version[:4]+".")
+			if datePart > latestDate {
+				latestDate = datePart
+				latestVersion = pkg.Version
+			}
+		}
+	}
+
+	return latestVersion
 }
 
 // GetLatestPatchVersion returns the latest patch version for the given version.
@@ -83,8 +109,8 @@ func GetLatestMinorVersion(v *buildsafev1.FetchPackagesResponse, version string)
 
 // TrimVersionInfo trims the version information and returns the package name and version.
 func TrimVersionInfo(pkg string) (string, string) {
-	if pkg == ""{
-		return "",""
+	if pkg == "" {
+		return "", ""
 	}
 	s := strings.Split(pkg, "@")
 	name := s[0]
@@ -96,6 +122,10 @@ func TrimVersionInfo(pkg string) (string, string) {
 
 	if strings.HasPrefix(version, "^") {
 		version = strings.TrimPrefix(version, "^")
+	}
+
+	if strings.HasPrefix(version, "#") {
+		version = strings.TrimPrefix(version, "#")
 	}
 
 	if strings.HasPrefix(version, "v") {

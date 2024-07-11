@@ -6,6 +6,79 @@ import (
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 )
 
+func TestGetDateBasedVersion(t *testing.T) {
+	tests := []struct {
+		name     string
+		response *buildsafev1.FetchPackagesResponse
+		version  string
+		want     string
+	}{
+		{
+			name: "Test Case 1",
+			response: &buildsafev1.FetchPackagesResponse{
+				Packages: []*buildsafev1.Package{
+					{Version: "2023.06.15"},
+					{Version: "2023.07.01"},
+					{Version: "2023.07.10"},
+				},
+			},
+			version: "2023",
+			want:    "2023.07.10",
+		},
+		{
+			name: "Test Case 2",
+			response: &buildsafev1.FetchPackagesResponse{
+				Packages: []*buildsafev1.Package{
+					{Version: "2022.12.25"},
+					{Version: "2023.01.01"},
+					{Version: "2023.01.02"},
+				},
+			},
+			version: "2023",
+			want:    "2023.01.02",
+		},
+		{
+			name:     "Test Case 3",
+			response: nil,
+			version:  "2023",
+			want:     "",
+		},
+		{
+			name: "Test Case 4",
+			response: &buildsafev1.FetchPackagesResponse{
+				Packages: []*buildsafev1.Package{
+					{Version: "2023.01.01"},
+					{Version: "2023.01.02"},
+					{Version: "2023.01.03"},
+					{Version: "2022.12.31"},
+				},
+			},
+			version: "2023",
+			want:    "2023.01.03",
+		},
+		{
+			name: "Test Case 5",
+			response: &buildsafev1.FetchPackagesResponse{
+				Packages: []*buildsafev1.Package{
+					{Version: "2023.02.01"},
+					{Version: "2023.02.02"},
+					{Version: "2023.02.03"},
+				},
+			},
+			version: "2023.02",
+			want:    "2023.02.03",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetDateBasedVersion(tt.response, tt.version); got != tt.want {
+				t.Errorf("GetDateBasedVersion() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestGetLatestPatchVersion(t *testing.T) {
 	tests := []struct {
 		name     string
