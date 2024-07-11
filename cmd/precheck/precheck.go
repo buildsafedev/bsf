@@ -29,11 +29,7 @@ var PreCheckCmd = &cobra.Command{
 func checkVersionGreater(currentVer string, nixversion string) bool {
 	val := semver.Compare(currentVer, nixversion)
 
-	if val < 0 {
-		return false
-	}
-
-	return true
+	return val >= 0
 }
 
 // ValidateNixVersion checks if the current nix version is it compatible with bsf

@@ -124,16 +124,16 @@ func createFileDescriptors(fs *file.Store, dir string, files []string) ([]ociv1.
 	return fileDescriptors, nil
 }
 
-func ociCreateFlake(fds []ociv1.Descriptor, params OCIParams) error {
-	// temp file
-	ff, err := os.CreateTemp("/tmp", "flake.nix")
-	if err != nil {
-		return err
-	}
+// func ociCreateFlake(fds []ociv1.Descriptor, params OCIParams) error {
+// 	// temp file
+// 	ff, err := os.CreateTemp("/tmp", "flake.nix")
+// 	if err != nil {
+// 		return err
+// 	}
 
-	defer ff.Close()
+// 	defer ff.Close()
 
-	// TODO: write flake to temp file
+// 	// TODO: write flake to temp file
 
-	return nil
-}
+// 	return nil
+// }

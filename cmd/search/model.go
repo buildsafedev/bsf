@@ -35,9 +35,9 @@ func convLPR2Items(packages *buildsafev1.ListPackagesResponse) []list.Item {
 	return items
 }
 
-type (
-	errMsg struct{ error }
-)
+// type (
+// 	errMsg struct{ error }
+// )
 
 type mode int
 

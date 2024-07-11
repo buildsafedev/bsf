@@ -2,6 +2,8 @@ package sbom
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/awalterschulze/gographviz"
@@ -122,14 +124,30 @@ func parseLockfileToSBOMNodes(document *sbom.Document, appNode *sbom.Node, lf *h
 
 		document.NodeList.AddNode(&snode)
 		if pkg.Runtime {
-			document.NodeList.RelateNodeAtID(&snode, appNode.Id, sbom.Edge_runtimeDependency)
+			if err := document.NodeList.RelateNodeAtID(
+				&snode,
+				appNode.Id,
+				sbom.Edge_runtimeDependency,
+			); err != nil {
+				fmt.Fprintf(os.Stderr, "error : %s\n", err)
+			}
 		} else {
-			document.NodeList.RelateNodeAtID(&snode, appNode.Id, sbom.Edge_devDependency)
-			document.NodeList.RelateNodeAtID(&snode, appNode.Id, sbom.Edge_devTool)
+			if err := document.NodeList.RelateNodeAtID(
+				&snode,
+				appNode.Id,
+				sbom.Edge_devDependency,
+			); err != nil {
+				fmt.Fprintf(os.Stderr, "error : %s\n", err)
+			}
+			if err := document.NodeList.RelateNodeAtID(
+				&snode,
+				appNode.Id,
+				sbom.Edge_devTool,
+			); err != nil {
+				fmt.Fprintf(os.Stderr, "error : %s\n", err)
+			}
 		}
 	}
-
-	return
 }
 
 func parseDotGraph(document *sbom.Document, appNode *sbom.Node, graph *gographviz.Graph) {
@@ -154,10 +172,14 @@ func parseDotGraph(document *sbom.Document, appNode *sbom.Node, graph *gographvi
 			},
 		}
 		document.NodeList.AddNode(&snode)
-		document.NodeList.RelateNodeAtID(&snode, appNode.Id, sbom.Edge_contains)
+		if err := document.NodeList.RelateNodeAtID(
+			&snode,
+			appNode.Id,
+			sbom.Edge_contains,
+		); err != nil {
+			fmt.Fprintf(os.Stderr, "error : %s\n", err)
+		}
 	}
-
-	return
 }
 
 // GeneratePurl returns a package url for the given name and version

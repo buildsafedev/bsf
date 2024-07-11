@@ -109,19 +109,19 @@ func TrimVersionInfo(pkg string) (string, string) {
 	name := s[0]
 	version := s[1]
 
-	if strings.HasPrefix(version, "~") {
+	if ok := strings.HasPrefix(version, "~"); ok {
 		version = strings.TrimPrefix(version, "~")
 	}
 
-	if strings.HasPrefix(version, "^") {
+	if ok := strings.HasPrefix(version, "^"); ok {
 		version = strings.TrimPrefix(version, "^")
 	}
 
-	if strings.HasPrefix(version, "#") {
+	if ok := strings.HasPrefix(version, "#"); ok {
 		version = strings.TrimPrefix(version, "#")
 	}
 
-	if strings.HasPrefix(version, "v") {
+	if ok := strings.HasPrefix(version, "v"); ok {
 		version = strings.TrimPrefix(version, "v")
 	}
 

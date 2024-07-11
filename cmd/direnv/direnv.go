@@ -89,6 +89,9 @@ func fetchGitignore() error {
 		if !strings.Contains(string(read), ".envrc") {
 
 			file, err := os.OpenFile(".gitignore", os.O_APPEND|os.O_WRONLY, 0644)
+			if err != nil {
+				return err
+			}
 			_, err = file.WriteString("\n.envrc")
 			if err != nil {
 				return err

@@ -5,12 +5,9 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"math/rand"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 )
@@ -75,47 +72,47 @@ func readDockerFile(file *os.File) ([]string, error) {
 	return lines, nil
 }
 
-	func editDockerfile(lines []string, dev bool, tag string) ([]string, error) {
-		var searchTag string
-		if dev {
-			searchTag = "bsfimage:dev"
-		} else {
-			searchTag = "bsfimage:runtime"
-		}
-
-		var selectedFrom string
-		var selectedIndex int
-		for i, line := range lines {
-			if strings.Contains(line, searchTag) {
-				selectedFrom = line
-				selectedIndex = i
-				break
-			}
-		}
-
-		if selectedFrom == "" {
-			return nil, fmt.Errorf("no FROM command found with tag %s", searchTag)
-		}
-
-		fromParts := strings.Fields(selectedFrom)
-		if len(fromParts) < 2 {
-			return nil, fmt.Errorf("invalid FROM command format")
-		}
-
-		var newFrom string
-		if strings.Contains(fromParts[1], ":") {
-			imageParts := strings.Split(fromParts[1], ":")
-			newFrom = fmt.Sprintf("FROM %s:%s", imageParts[0], tag)
-		} else {
-			newFrom = fmt.Sprintf("FROM %s:%s", fromParts[1], tag)
-		}
-		for _, part := range fromParts[2:] {
-			newFrom = fmt.Sprintf("%s %s", newFrom, part)
-		}
-
-		lines[selectedIndex] = newFrom
-		return lines, nil
+func editDockerfile(lines []string, dev bool, tag string) ([]string, error) {
+	var searchTag string
+	if dev {
+		searchTag = "bsfimage:dev"
+	} else {
+		searchTag = "bsfimage:runtime"
 	}
+
+	var selectedFrom string
+	var selectedIndex int
+	for i, line := range lines {
+		if strings.Contains(line, searchTag) {
+			selectedFrom = line
+			selectedIndex = i
+			break
+		}
+	}
+
+	if selectedFrom == "" {
+		return nil, fmt.Errorf("no FROM command found with tag %s", searchTag)
+	}
+
+	fromParts := strings.Fields(selectedFrom)
+	if len(fromParts) < 2 {
+		return nil, fmt.Errorf("invalid FROM command format")
+	}
+
+	var newFrom string
+	if strings.Contains(fromParts[1], ":") {
+		imageParts := strings.Split(fromParts[1], ":")
+		newFrom = fmt.Sprintf("FROM %s:%s", imageParts[0], tag)
+	} else {
+		newFrom = fmt.Sprintf("FROM %s:%s", fromParts[1], tag)
+	}
+	for _, part := range fromParts[2:] {
+		newFrom = fmt.Sprintf("%s %s", newFrom, part)
+	}
+
+	lines[selectedIndex] = newFrom
+	return lines, nil
+}
 
 func convertExportCfgToDockerfileCfg(env hcl2nix.OCIArtifact, platform string) dockerfileCfg {
 	switch platform {
@@ -135,31 +132,31 @@ func convertExportCfgToDockerfileCfg(env hcl2nix.OCIArtifact, platform string) d
 }
 
 // generateRandomFilename generates a random filename
-func generateRandomFilename() string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	letterRunes := []rune("abcdefghijklmnopqrstuvwxyz")
-	b := make([]rune, 10)
-	for i := range b {
-		b[i] = letterRunes[r.Intn(len(letterRunes))]
-	}
-	return string(b)
-}
+// func generateRandomFilename() string {
+// 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+// 	letterRunes := []rune("abcdefghijklmnopqrstuvwxyz")
+// 	b := make([]rune, 10)
+// 	for i := range b {
+// 		b[i] = letterRunes[r.Intn(len(letterRunes))]
+// 	}
+// 	return string(b)
+// }
 
-func createTempDir() (string, error) {
-	tmpDir := os.TempDir()
-	bsfDir := filepath.Join(tmpDir, "bsf")
+// func createTempDir() (string, error) {
+// 	tmpDir := os.TempDir()
+// 	bsfDir := filepath.Join(tmpDir, "bsf")
 
-	if _, err := os.Stat(bsfDir); os.IsNotExist(err) {
-		err := os.Mkdir(bsfDir, 0755)
-		if err != nil {
-			return "", err
-		}
-	} else if err != nil {
-		return "", err
-	}
+// 	if _, err := os.Stat(bsfDir); os.IsNotExist(err) {
+// 		err := os.Mkdir(bsfDir, 0755)
+// 		if err != nil {
+// 			return "", err
+// 		}
+// 	} else if err != nil {
+// 		return "", err
+// 	}
 
-	return bsfDir, nil
-}
+// 	return bsfDir, nil
+// }
 
 func convertEnvsToMap(envs []string) map[string]string {
 	envMap := make(map[string]string)
