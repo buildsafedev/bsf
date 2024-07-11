@@ -43,4 +43,3 @@ jobs:
 
       - name: Run GolangCI-Lint
         run: task lint
-        continue-on-error: true
