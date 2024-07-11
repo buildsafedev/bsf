@@ -6,6 +6,56 @@ import (
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 )
 
+func TestGetDateBasedVersion(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    *buildsafev1.FetchPackagesResponse
+		expected string
+	}{
+		{
+			name:     "Test Case 1",
+			input:    nil,
+			expected: "",
+		},
+		{
+			name: "Test Case 2",
+			input: &buildsafev1.FetchPackagesResponse{
+				Packages: []*buildsafev1.Package{},
+			},
+			expected: "",
+		},
+		{
+			name: "Test Case 3",
+			input: &buildsafev1.FetchPackagesResponse{
+				Packages: []*buildsafev1.Package{
+					{Version: "1.0.0", EpochSeconds: 100},
+				},
+			},
+			expected: "1.0.0",
+		},
+		{
+			name: "Test Case 4",
+			input: &buildsafev1.FetchPackagesResponse{
+				Packages: []*buildsafev1.Package{
+					{Version: "1.0.0", EpochSeconds: 100},
+					{Version: "2.0.0", EpochSeconds: 200},
+					{Version: "1.5.0", EpochSeconds: 150},
+				},
+			},
+			expected: "2.0.0",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := GetDateBasedVersion(test.input)
+			if result != test.expected {
+				t.Errorf("expected %v, got %v", test.expected, result)
+			}
+		})
+	}
+}
+
 func TestGetLatestPatchVersion(t *testing.T) {
 	tests := []struct {
 		name     string

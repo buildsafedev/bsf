@@ -1,6 +1,7 @@
 package update
 
 import (
+	"sort"
 	"strings"
 
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
@@ -12,6 +13,8 @@ const (
 	UpdateTypePatch = iota
 	// UpdateTypeMinor represents minor update type
 	UpdateTypeMinor
+	// UpdateTypeDate represents date update type
+	UpdateTypeDate
 	// UpdateTypePinned represents pinned update type
 	UpdateTypePinned
 )
@@ -22,6 +25,8 @@ func ParseUpdateType(pkg string) int {
 		return UpdateTypePatch
 	} else if strings.Contains(pkg, "^") {
 		return UpdateTypeMinor
+	} else if strings.Contains(pkg, "#") {
+		return UpdateTypeDate
 	} else {
 		return UpdateTypePinned
 	}
@@ -40,6 +45,20 @@ func ParsePackage(pkg string) (name, version string) {
 	}
 
 	return nameWithVersion[0], version
+}
+
+// GetDateBasedVersion returns the latest date version for the given version.
+func GetDateBasedVersion(v *buildsafev1.FetchPackagesResponse) string {
+	if v == nil || len(v.Packages) == 0 {
+		return ""
+	}
+
+	// sorting EpochSeconds
+	sort.Slice(v.Packages, func(i, j int) bool {
+		return v.Packages[i].EpochSeconds > v.Packages[j].EpochSeconds
+	})
+
+	return v.Packages[0].Version
 }
 
 // GetLatestPatchVersion returns the latest patch version for the given version.
@@ -83,8 +102,8 @@ func GetLatestMinorVersion(v *buildsafev1.FetchPackagesResponse, version string)
 
 // TrimVersionInfo trims the version information and returns the package name and version.
 func TrimVersionInfo(pkg string) (string, string) {
-	if pkg == ""{
-		return "",""
+	if pkg == "" {
+		return "", ""
 	}
 	s := strings.Split(pkg, "@")
 	name := s[0]
@@ -96,6 +115,10 @@ func TrimVersionInfo(pkg string) (string, string) {
 
 	if strings.HasPrefix(version, "^") {
 		version = strings.TrimPrefix(version, "^")
+	}
+
+	if strings.HasPrefix(version, "#") {
+		version = strings.TrimPrefix(version, "#")
 	}
 
 	if strings.HasPrefix(version, "v") {

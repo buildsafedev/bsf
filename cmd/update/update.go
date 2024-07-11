@@ -29,7 +29,7 @@ var UpdateCmd = &cobra.Command{
 	Long: `Updates can be done for development and runtime dependencies based on constraints. Following constraints are supported:
 		~ : latest patch version
 		^ : latest minor version
-
+		# : date based updates. Useful, when a package doesn't follow semver and we want to update to the latest published version
 		Currently, only packages following semver versioning are supported.
 
 		`,
@@ -128,6 +128,12 @@ func parsePackagesForUpdates(versionMap map[string]*buildsafev1.FetchPackagesRes
 		updateType := update.ParseUpdateType(k)
 
 		switch updateType {
+		case update.UpdateTypeDate:
+			newVer := update.GetDateBasedVersion(v)
+			if newVer != "" {
+				newVersions = append(newVersions, fmt.Sprintf("%s@#%s", name, newVer))
+			}
+
 		case update.UpdateTypePatch:
 			newVer := update.GetLatestPatchVersion(v, version)
 			if newVer != "" {
