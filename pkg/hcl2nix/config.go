@@ -1,7 +1,10 @@
 package hcl2nix
 
 import (
+	"bytes"
+	"fmt"
 	"io"
+	"os"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -39,6 +42,21 @@ type Packages struct {
 	Runtime     []string `hcl:"runtime"`
 }
 
+// ReadHclFile reads an HCL file
+func ReadHclFile(fileName string) (*Config, error) {
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		return nil, fmt.Errorf("error: %s", err.Error())
+	}
+
+	var dstErr bytes.Buffer
+	conf, err := ReadConfig(data, &dstErr)
+	if err != nil {
+		return nil, fmt.Errorf(dstErr.String())
+	}
+	return conf, nil
+}
+
 // WriteConfig writes packages to writer
 func WriteConfig(config Config, wr io.Writer) error {
 	f := hclwrite.NewEmptyFile()
@@ -47,6 +65,33 @@ func WriteConfig(config Config, wr io.Writer) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// ModifyConfig modifes the config
+func ModifyConfig(oldName string, artifact OCIArtifact, config *Config) error {
+	updated := false
+	for i, existingArtifact := range config.OCIArtifact {
+		if existingArtifact.Name == oldName {
+			config.OCIArtifact[i] = artifact
+			updated = true
+			break
+		}
+	}
+
+	if updated {
+		var buf bytes.Buffer
+		err := WriteConfig(*config, &buf)
+		if err != nil {
+			return err
+		}
+
+		err = os.WriteFile("bsf.hcl", buf.Bytes(), 0644)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

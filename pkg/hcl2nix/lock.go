@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sort"
 
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
 	bstrings "github.com/buildsafedev/bsf/pkg/strings"
@@ -145,10 +146,16 @@ func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, pa
 	if errStr != "" {
 		return nil, fmt.Errorf(errStr)
 	}
+	sort.Slice(resolvedPackages, func(i, j int) bool {
+		pi, pj := resolvedPackages[i].Package, resolvedPackages[j].Package
+		if pi.Name != pj.Name {
+			return pi.Name < pj.Name
+		}
+		return pi.Version < pj.Version
+	})
 
 	return resolvedPackages, nil
 }
-
 // ResolvePackage resolves package name
 func resolvePackage(ctx context.Context, sc buildsafev1.SearchServiceClient, pkg string) (*buildsafev1.Package, error) {
 	var desiredVersion *buildsafev1.FetchPackageVersionResponse
