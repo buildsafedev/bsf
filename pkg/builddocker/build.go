@@ -20,7 +20,6 @@ type dockerfileCfg struct {
 	Cmd        []string
 	Entrypoint []string
 	EnvVars    map[string]string
-	DevDeps    bool
 	Config     string
 }
 
@@ -132,7 +131,6 @@ func convertExportCfgToDockerfileCfg(env hcl2nix.OCIArtifact, platform string) d
 		Cmd:        env.Cmd,
 		Entrypoint: env.Entrypoint,
 		EnvVars:    envVarsMap,
-		DevDeps:    env.DevDeps,
 	}
 }
 

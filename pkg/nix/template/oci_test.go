@@ -14,7 +14,6 @@ func TestGenerateOCIAttr(t *testing.T) {
 			EnvVars:       []string{"VAR1=value1", "VAR2=value2"},
 			ExposedPorts:  []string{"8080", "8081"},
 			ImportConfigs: []string{"config1", "config2"},
-			DevDeps:       true,
 		},
 		{
 			Artifact:     "Test2",

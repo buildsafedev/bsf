@@ -16,7 +16,6 @@ type OCIArtifact struct {
 	EnvVars       []string
 	ImportConfigs []string
 	ExposedPorts  []string
-	DevDeps       bool
 	Base          bool
 }
 
@@ -138,6 +137,7 @@ const (
 			layers = [
 				(nix2containerPkgs.nix2container.buildLayer { 
 					copyToRoot = [
+						inputs.self.runtimeEnvs.${system}.runtime
 						{{range $config := $artifact.ImportConfigs}}
 						inputs.self.configs.${system}.config_{{ . }} {{end}}
 						inputs.self.devEnvs.${system}.development
@@ -175,7 +175,6 @@ func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
 			EnvVars:       ociArtifact.EnvVars,
 			ImportConfigs: ociArtifact.ImportConfigs,
 			ExposedPorts:  ociArtifact.ExposedPorts,
-			DevDeps:       ociArtifact.DevDeps,
 		}
 		if ociArtifact.Artifact == "pkgs" {
 			converted[i].Base = true

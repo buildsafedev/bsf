@@ -48,7 +48,6 @@ func generateEmptyConf() hcl2nix.Config {
 				EnvVars:    []string{},
 				ExposedPorts: []string{},
 				ImportConfigs: []string{},
-				DevDeps: false,
 			},
 		},
 	}
@@ -92,7 +91,6 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 				EnvVars:    []string{},
 				ExposedPorts: []string{},
 				ImportConfigs: []string{},
-				DevDeps: false,
 			},
 		},
 	}, nil
@@ -122,7 +120,6 @@ func genPythonPoetryConf() hcl2nix.Config {
 				EnvVars:    []string{},
 				ExposedPorts: []string{},
 				ImportConfigs: []string{},
-				DevDeps: false,
 			},
 		},
 	}
@@ -157,7 +154,6 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 				EnvVars:    []string{},
 				ExposedPorts: []string{},
 				ImportConfigs: []string{},
-				DevDeps: false,
 			},
 		},
 	}
@@ -197,7 +193,6 @@ func genJsNpmConf() (hcl2nix.Config, error) {
 				EnvVars:    []string{},
 				ExposedPorts: []string{},
 				ImportConfigs: []string{},
-				DevDeps: false,
 			},
 		},
 	}, nil
