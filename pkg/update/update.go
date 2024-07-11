@@ -48,7 +48,7 @@ func ParsePackage(pkg string) (name, version string) {
 }
 
 // GetDateBasedVersion returns the latest date version for the given version.
-func GetDateBasedVersion(v *buildsafev1.FetchPackagesResponse, version string) string {
+func GetDateBasedVersion(v *buildsafev1.FetchPackagesResponse) string {
 	if v == nil || len(v.Packages) == 0 {
 		return ""
 	}

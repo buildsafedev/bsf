@@ -48,7 +48,7 @@ func TestGetDateBasedVersion(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result := GetDateBasedVersion(test.input, "")
+			result := GetDateBasedVersion(test.input)
 			if result != test.expected {
 				t.Errorf("expected %v, got %v", test.expected, result)
 			}
