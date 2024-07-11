@@ -14,14 +14,24 @@ jobs:
     steps:
       - name: git checkout
         uses: actions/checkout@v3
+
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-      - uses: nicknovitski/nix-develop@v1
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Setup Nix development environment
+        uses: nicknovitski/nix-develop@v1
         with:
           arguments: bsf/.#devShell
-      - name: run tests
+
+      - name: Run tests
         run: task test
-      - name: build app 
-        run : task build
+
+      - name: Build app
+        run: task build
+
+      - name: Run GolangCI-Lint
+        run: task lint
         continue-on-error: true

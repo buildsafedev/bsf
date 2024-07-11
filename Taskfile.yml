@@ -9,3 +9,7 @@ tasks:
     desc: "Build the project"
     cmds:
       - go run main.go build
+  lint:
+    desc: "Run golangci-lint"
+    cmds:
+      - golangci-lint run ./...
