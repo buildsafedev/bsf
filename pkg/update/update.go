@@ -1,6 +1,7 @@
 package update
 
 import (
+	"sort"
 	"strings"
 
 	buildsafev1 "github.com/buildsafedev/bsf-apis/go/buildsafe/v1"
@@ -52,20 +53,12 @@ func GetDateBasedVersion(v *buildsafev1.FetchPackagesResponse, version string) s
 		return ""
 	}
 
-	var latestVersion string
-	var latestDate string
+	// sorting epochs
+	sort.Slice(v.Packages, func(i, j int) bool {
+		return v.Packages[i].EpochSeconds > v.Packages[j].EpochSeconds
+	})
 
-	for _, pkg := range v.Packages {
-		if strings.HasPrefix(pkg.Version, version[:4]) {
-			datePart := strings.TrimPrefix(pkg.Version, version[:4]+".")
-			if datePart > latestDate {
-				latestDate = datePart
-				latestVersion = pkg.Version
-			}
-		}
-	}
-
-	return latestVersion
+	return v.Packages[0].Version
 }
 
 // GetLatestPatchVersion returns the latest patch version for the given version.

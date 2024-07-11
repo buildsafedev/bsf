@@ -28,7 +28,7 @@ var UpdateCmd = &cobra.Command{
 	Long: `Updates can be done for development and runtime dependencies based on constraints. Following constraints are supported:
 		~ : latest patch version
 		^ : latest minor version
-
+		# : latest calver version
 		Currently, only packages following semver versioning are supported.
 
 		`,
