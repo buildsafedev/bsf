@@ -180,7 +180,7 @@ var OCICmd = &cobra.Command{
 var Login = &cobra.Command{
 	Use:   "login",
 	Short: "login to the registry",
-	Long:  ``,
+	Long:  `bsf oci login docker.io`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) > 0 {
