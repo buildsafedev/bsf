@@ -1,7 +1,7 @@
 package git
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,8 +9,12 @@ import (
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 	"github.com/go-git/go-git/v5"
 )
-
-var ErrFilesNotAddedToVersionControl = errors.New("files like 'package-lock.json', 'Cargo.lock', 'go.mod', 'poetry.lock' are not added to version control")
+type ErrFileNotAddedToVersionControl struct{
+	fileName string
+}
+func (e *ErrFileNotAddedToVersionControl) Error() string {
+	return fmt.Sprint(e.fileName, " is not added to version control")
+}
 
 // Add adds the path to the git work tree
 func Add(path string) error {
@@ -64,7 +68,9 @@ func Add(path string) error {
 	// 63 code represents that file is untracked
 	// See the StatusCodes of FileStatus for more info
 	if fl.Staging==63{
-		return ErrFilesNotAddedToVersionControl
+		return &ErrFileNotAddedToVersionControl{
+			fileName: entryFile,
+		}
 	}
 	return nil
 }

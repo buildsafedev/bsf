@@ -126,7 +126,7 @@ func TestGitAdd(t *testing.T){
 		if errors==nil{
 			t.Errorf("want error but found nil")	
 		}
-		if errors != ErrFilesNotAddedToVersionControl{
+		if _, ok:=errors.(*ErrFileNotAddedToVersionControl); !ok{
 			t.Errorf("want ErrFilesNotAddedToVersionControl but found %s", errors.Error())
 		}
 		})
@@ -145,7 +145,7 @@ func TestGitAdd(t *testing.T){
 				if errors==nil{
 					t.Errorf("want error but found nil")	
 				}
-				if errors != ErrFilesNotAddedToVersionControl{
+				if  _, ok:=errors.(*ErrFileNotAddedToVersionControl); !ok{
 					t.Errorf("want ErrFilesNotAddedToVersionControl but found %s", errors.Error())
 				}
 			})
