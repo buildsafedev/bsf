@@ -46,7 +46,7 @@ func (gh *GHRelease) GHReleaseCreate(params GHParams) error {
 		return err
 	}
 	if ghRelease == nil {
-		ghRelease, err = gh.createRelease(context.Background())
+		_, err = gh.createRelease(context.Background())
 		if err != nil {
 			return err
 		}
