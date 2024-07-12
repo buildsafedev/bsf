@@ -131,22 +131,6 @@ func convertExportCfgToDockerfileCfg(env hcl2nix.OCIArtifact, platform string) d
 	}
 }
 
-// func createTempDir() (string, error) {
-// 	tmpDir := os.TempDir()
-// 	bsfDir := filepath.Join(tmpDir, "bsf")
-
-// 	if _, err := os.Stat(bsfDir); os.IsNotExist(err) {
-// 		err := os.Mkdir(bsfDir, 0755)
-// 		if err != nil {
-// 			return "", err
-// 		}
-// 	} else if err != nil {
-// 		return "", err
-// 	}
-
-// 	return bsfDir, nil
-// }
-
 func convertEnvsToMap(envs []string) map[string]string {
 	envMap := make(map[string]string)
 
