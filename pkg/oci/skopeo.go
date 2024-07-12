@@ -35,7 +35,6 @@ func LoadPodman(dir, imageName string) error {
 
 // Push image to registry
 func Push(dir, imageName string) error {
-
 	currentuser, err := user.Current()
 	if err != nil {
 		return err
