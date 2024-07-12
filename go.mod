@@ -23,6 +23,7 @@ require (
 	github.com/tidwall/gjson v1.17.1
 	golang.org/x/mod v0.17.0
 	golang.org/x/oauth2 v0.21.0
+	golang.org/x/sync v0.7.0
 	golang.org/x/term v0.21.0
 	google.golang.org/grpc v1.64.1
 	google.golang.org/protobuf v1.34.2
@@ -39,7 +40,6 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
-	golang.org/x/sync v0.7.0 // indirect
 )
 
 require (
