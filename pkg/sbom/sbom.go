@@ -2,8 +2,6 @@ package sbom
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/awalterschulze/gographviz"
@@ -129,7 +127,7 @@ func parseLockfileToSBOMNodes(document *sbom.Document, appNode *sbom.Node, lf *h
 				appNode.Id,
 				sbom.Edge_runtimeDependency,
 			); err != nil {
-				fmt.Fprintf(os.Stderr, "error : %s\n", err)
+				continue
 			}
 		} else {
 			if err := document.NodeList.RelateNodeAtID(
@@ -137,14 +135,14 @@ func parseLockfileToSBOMNodes(document *sbom.Document, appNode *sbom.Node, lf *h
 				appNode.Id,
 				sbom.Edge_devDependency,
 			); err != nil {
-				fmt.Fprintf(os.Stderr, "error : %s\n", err)
+				continue
 			}
 			if err := document.NodeList.RelateNodeAtID(
 				&snode,
 				appNode.Id,
 				sbom.Edge_devTool,
 			); err != nil {
-				fmt.Fprintf(os.Stderr, "error : %s\n", err)
+				continue
 			}
 		}
 	}
@@ -177,7 +175,7 @@ func parseDotGraph(document *sbom.Document, appNode *sbom.Node, graph *gographvi
 			appNode.Id,
 			sbom.Edge_contains,
 		); err != nil {
-			fmt.Fprintf(os.Stderr, "error : %s\n", err)
+			continue
 		}
 	}
 }

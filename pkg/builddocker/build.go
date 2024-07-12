@@ -131,17 +131,6 @@ func convertExportCfgToDockerfileCfg(env hcl2nix.OCIArtifact, platform string) d
 	}
 }
 
-// generateRandomFilename generates a random filename
-// func generateRandomFilename() string {
-// 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-// 	letterRunes := []rune("abcdefghijklmnopqrstuvwxyz")
-// 	b := make([]rune, 10)
-// 	for i := range b {
-// 		b[i] = letterRunes[r.Intn(len(letterRunes))]
-// 	}
-// 	return string(b)
-// }
-
 // func createTempDir() (string, error) {
 // 	tmpDir := os.TempDir()
 // 	bsfDir := filepath.Join(tmpDir, "bsf")
