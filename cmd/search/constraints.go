@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
+	"github.com/buildsafedev/bsf/pkg/generate"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -115,7 +116,7 @@ func (m *versionConstraintsModel) updateVersionConstraint() (tea.Model, tea.Cmd)
 
 	data, err := os.ReadFile("bsf.hcl")
 	if err != nil {
-		m.errorMsg = fmt.Sprintf(errorStyle.Render("Error reading bsf.hcl: %s", err.Error()))
+		m.errorMsg = errorStyle.Render(fmt.Sprintf("Error reading bsf.hcl: %s", err.Error()))
 		return m, tea.Quit
 	}
 
@@ -132,13 +133,19 @@ func (m *versionConstraintsModel) updateVersionConstraint() (tea.Model, tea.Cmd)
 	// changing file handler to allow writes
 	fh.ModFile, err = os.Create("bsf.hcl")
 	if err != nil {
-		m.errorMsg = fmt.Sprintf(errorStyle.Render("Error creating bsf.hcl: %s", err.Error()))
+		m.errorMsg = errorStyle.Render(fmt.Sprintf("Error creating bsf.hcl: %s", err.Error()))
 		return m, tea.Quit
 	}
 
 	err = hcl2nix.AddPackages(data, newConfFromSelectedPackages(m.name, m.version, m.selectedConstraints, m.env), fh.ModFile)
 	if err != nil {
-		m.errorMsg = fmt.Sprintf(errorStyle.Render("Error updating bsf.hcl: %s", err.Error()))
+		m.errorMsg = errorStyle.Render(fmt.Sprintf("Error updating bsf.hcl: %s", err.Error()))
+		return m, tea.Quit
+	}
+
+	err = generate.Generate(fh, sc)
+	if err != nil {
+		m.errorMsg = errorStyle.Render(fmt.Sprintf("Error regenerating bsf.hcl: %s", err.Error()))
 		return m, tea.Quit
 	}
 

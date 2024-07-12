@@ -106,7 +106,9 @@ func ReadConfig(src []byte, dstErr io.Writer) (*Config, error) {
 			78,
 			true,
 		)
-		wr.WriteDiagnostics(diags)
+		if err := wr.WriteDiagnostics(diags); err != nil {
+			return nil, fmt.Errorf("error writing diagnostics: %w", err)
+		}
 		return nil, diags
 	}
 
@@ -119,7 +121,9 @@ func ReadConfig(src []byte, dstErr io.Writer) (*Config, error) {
 			78,
 			true,
 		)
-		wr.WriteDiagnostics(diags)
+		if err := wr.WriteDiagnostics(diags); err != nil {
+			return nil, fmt.Errorf("error writing diagnostics: %w", err)
+		}
 		return nil, diags
 	}
 

@@ -22,7 +22,7 @@ func NewClientWithAddr(addr string, tlsSkip bool) (buildsafev1.SearchServiceClie
 	} else {
 		creds = insecure.NewCredentials()
 	}
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -51,10 +51,7 @@ func SortPackagesWithVersion(packageVersions []*buildsafev1.Package) []*buildsaf
 		packageVersions[i].Version = "v" + packageVersions[i].Version
 	}
 	sort.Slice(packageVersions, func(i, j int) bool {
-		if semver.Compare(packageVersions[i].Version, packageVersions[j].Version) > 0 {
-			return true
-		}
-		return false
+		return semver.Compare(packageVersions[i].Version, packageVersions[j].Version) > 0
 	})
 	for i := range packageVersions {
 		packageVersions[i].Version = packageVersions[i].Version[1:]

@@ -321,13 +321,13 @@ func genOCIAttrName(env, platform string, artifact hcl2nix.OCIArtifact) string {
 	base := fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s_", arch, env)
 
 	if env == "pkgs" {
-		if devDeps || artifact.DevDeps {
+		if devDeps {
 			return base + "dev-as-dir"
 		}
 		return base + "runtime-as-dir"
 	}
 
-	if devDeps || artifact.DevDeps {
+	if devDeps {
 		return base + "app_with_dev-as-dir"
 	}
 	return base + "app-as-dir"

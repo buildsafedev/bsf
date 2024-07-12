@@ -25,8 +25,7 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 
-	pkgType := getPkgType(conf)
-	lockPackages, err := hcl2nix.ResolvePackages(ctx, sc, conf.Packages, pkgType)
+	lockPackages, err := hcl2nix.ResolvePackages(ctx, sc, conf.Packages)
 	if err != nil {
 		return err
 	}
@@ -57,18 +56,6 @@ func Generate(fh *hcl2nix.FileHandlers, sc buildsafev1.SearchServiceClient) erro
 	}
 
 	return nil
-}
-
-func getPkgType(conf *hcl2nix.Config) string {
-	for _, conf := range conf.OCIArtifact {
-		if conf.Artifact == "pkgs" {
-			if conf.DevDeps {
-				return "dev"
-			}
-			return "runtime"
-		}
-	}
-	return "all"
 }
 
 func findLang(conf *hcl2nix.Config) langdetect.ProjectType {

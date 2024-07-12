@@ -91,6 +91,7 @@ func (s *Statement) FromDerivationClosure(drvPath string, drv *derivation.Deriva
 		},
 	}
 
+	//nolint
 	s.Predicate = prov
 
 	return nil

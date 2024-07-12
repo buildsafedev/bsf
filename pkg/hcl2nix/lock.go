@@ -98,16 +98,18 @@ func GenerateLockFile(conf *Config, packages []LockPackage, wr io.Writer) error 
 }
 
 // ResolvePackages resolves a list of packages concurrently
-func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, packages Packages, pkgType string) ([]LockPackage, error) {
-	var selectedPackages []string
-	switch pkgType {
-	case "runtime":
-		selectedPackages = packages.Runtime
-	default:
-		selectedPackages = append(packages.Development, packages.Runtime...)
+func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, packages Packages) ([]LockPackage, error) {
+	var allPackages []string
+
+	if filteredDev := filterNonEmpty(packages.Development); len(filteredDev) > 0 {
+		allPackages = append(allPackages, filteredDev...)
 	}
 
-	allPackages := slices.Compact(selectedPackages)
+	if filteredRuntime := filterNonEmpty(packages.Runtime); len(filteredRuntime) > 0 {
+		allPackages = append(allPackages, filteredRuntime...)
+	}
+
+	allPackages = slices.Compact(allPackages)
 	resolvedPackages := make([]LockPackage, 0, len(allPackages))
 	pkgMap := mapPackageCategory(packages)
 
@@ -160,7 +162,6 @@ func ResolvePackages(ctx context.Context, sc buildsafev1.SearchServiceClient, pa
 func resolvePackage(ctx context.Context, sc buildsafev1.SearchServiceClient, pkg string) (*buildsafev1.Package, error) {
 	var desiredVersion *buildsafev1.FetchPackageVersionResponse
 	var err error
-
 	if !strings.Contains(pkg, "@") {
 		// NOTE- we require user to explicitly mention package versions.
 		// This allows us to regenerate lock file and other Nix files from bsf.hcl itself.
@@ -242,4 +243,14 @@ func mapPackageCategory(packages Packages) map[string][]Category {
 	addCategory(packages.Development, Development)
 
 	return m
+}
+
+func filterNonEmpty(strings []string) []string {
+	var result []string
+	for _, str := range strings {
+		if str != "" {
+			result = append(result, str)
+		}
+	}
+	return result
 }
