@@ -7,6 +7,8 @@ import (
 	"os/user"
 )
 
+var registries = []string{"docker.io"}
+
 // LoadDocker loads the image to the docker daemon
 func LoadDocker(daemon, dir, imageName string) error {
 	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "--dest-daemon-host="+daemon, "dir:"+dir, "docker-daemon:"+imageName)
@@ -50,22 +52,29 @@ func Push(dir, imageName string) error {
 
 	return nil
 }
-func Auth() error {
-	currentuser, err := user.Current()
-	if err != nil {
-		return err
-	}
-	fmt.Println("Logging in to registry")
-	authFile := currentuser.HomeDir + "/.skopeo/config.json"
-	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "login", "--authfile", authFile, "docker.io")
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+func Auth(registryName string) error {
 
-	err = cmd.Run()
-	if err != nil {
-		return err
+	for _, reg := range registries {
+		if reg == registryName {
+			currentuser, err := user.Current()
+			if err != nil {
+				return err
+			}
+			fmt.Println("Logging in to registry")
+			authFile := currentuser.HomeDir + "/.skopeo/config.json"
+			cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "login", "--authfile", authFile, registryName)
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+
+			err = cmd.Run()
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
 	}
 
-	return nil
+	return fmt.Errorf("Registry not found")
 }

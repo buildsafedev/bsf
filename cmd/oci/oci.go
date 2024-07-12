@@ -182,9 +182,15 @@ var Login = &cobra.Command{
 	Short: "login to the registry",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := oci.Auth()
-		if err != nil {
-			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+
+		if len(args) > 0 {
+			err := oci.Auth(args[0])
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println(styles.ErrorStyle.Render("error:", "Registry name is required"))
 			os.Exit(1)
 		}
 	},
