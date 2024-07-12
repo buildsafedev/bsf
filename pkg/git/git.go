@@ -55,22 +55,12 @@ func Add(path string) error {
 	if err !=nil{
 		return err
 	}
-	var fileName string
-	pd, _, err:=langdetect.FindProjectType()
+	pt, _, err:=langdetect.FindProjectType()
 	if err!=nil{
 		return err
 	}
-	switch pd{
-	case langdetect.GoModule:
-		fileName = "go.mod"
-	case langdetect.RustCargo:
-		fileName = "Cargo.lock"
-	case langdetect.JsNpm:
-		fileName = "package-lock.json"
-	case langdetect.PythonPoetry:
-		fileName = "poetry.lock"
-	}
-	fl:= status.File(fileName)
+	entryFile:= langdetect.GetEntryFileOfProject(pt)
+	fl:= status.File(entryFile)
 	// 63 code represents that file is untracked
 	// See the StatusCodes of FileStatus for more info
 	if fl.Staging==63{

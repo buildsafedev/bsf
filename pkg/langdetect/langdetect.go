@@ -101,3 +101,18 @@ func binaryFromModule(mod *modfile.File) string {
 	// Otherwise, return the last part
 	return lastPart
 }
+
+func GetEntryFileOfProject(pt ProjectType) string {
+	var fileName string
+	switch pt{
+	case GoModule:
+		fileName = "go.mod"
+	case RustCargo:
+		fileName = "Cargo.lock"
+	case JsNpm:
+		fileName = "package-lock.json"
+	case PythonPoetry:
+		fileName = "poetry.lock"
+	}
+	return fileName
+}
