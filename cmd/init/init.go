@@ -107,9 +107,8 @@ func IOprompt(label string, defaultvalue any) any {
 		if s == "" {
 			return nil
 		}
-
-		return &s
 	}
+	return &s
 }
 
 // GetBSFInitializers generates the nix files
