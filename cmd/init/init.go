@@ -36,16 +36,27 @@ var InitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		isBaseImage := yesNoPrompt("Do you want to build a base image?")
+		isBaseImage, err := yesNoPrompt("Do you want to build a base image?")
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
 		var imageName string
 		var pt langdetect.ProjectType
+
 		if isBaseImage {
-			imageName = *ioPrompt("What should the image name be?").(*string)
+			imageName, err = ioPrompt("What should the image name be?")
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
 			pt = langdetect.BaseImage
 		}
 
 		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
 		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
 		}
 
@@ -57,34 +68,40 @@ var InitCmd = &cobra.Command{
 	},
 }
 
-func yesNoPrompt(label string) bool {
+func yesNoPrompt(label string) (bool, error) {
 	choices := "Y/n"
 
 	r := bufio.NewReader(os.Stdin)
 	var s string
-	fmt.Fprintf(os.Stderr, "%s (%s) ", strings.TrimSpace(label), choices)
-	s, _ = r.ReadString('\n')
+	fmt.Fprintf(os.Stderr, styles.HighlightStyle.Render("%s (%s) "), strings.TrimSpace(label), choices)
+	s, err := r.ReadString('\n')
+	if err != nil {
+		return false, err
+	}
 	s = strings.TrimSpace(s)
 	s = strings.ToLower(s)
 	if s == "y" || s == "yes" {
-		return true
+		return true, nil
 	}
 	if s == "n" || s == "no" {
-		return false
+		return false, nil
 	}
-	return false
+	return false, nil
 }
 
-func ioPrompt(label string) any {
+func ioPrompt(label string) (string, error) {
 	r := bufio.NewReader(os.Stdin)
 	var s string
-	fmt.Fprintf(os.Stderr, "%s : ", strings.TrimSpace(label))
-	s, _ = r.ReadString('\n')
+	fmt.Fprintf(os.Stderr, styles.HighlightStyle.Render("%s : "), strings.TrimSpace(label))
+	s, err := r.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
 	s = strings.TrimSpace(s)
 	if s == "" {
-		return nil
+		return "", fmt.Errorf("please define a proper name for the image")
 	}
-	return &s
+	return s, nil
 }
 
 // GetBSFInitializers generates the nix files

@@ -44,9 +44,6 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 }
 
 func generateEmptyConf(imageName string) hcl2nix.Config {
-	if imageName == "" {
-		imageName = "ttl.sh/base"
-	}
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
 			Development: commonDevDeps,
