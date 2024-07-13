@@ -1,8 +1,10 @@
 package init
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -13,6 +15,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/buildsafedev/bsf/pkg/clients/search"
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
+	"github.com/buildsafedev/bsf/pkg/langdetect"
 )
 
 // InitCmd represents the init command
@@ -33,17 +36,80 @@ var InitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		res := YesNoPrompt("Do you want docker file to be initialized", false)
+
+		var pd langdetect.ProjectDetails
+		var pt langdetect.ProjectType
+		if res {
+			pd.Name = *IOprompt("What should the name be?", "").(*string)
+		} else {
+			var projName = IOprompt("What type of projects you are setting up ? (Go/Rust/JavaScript/Poetry)", nil)
+			fmt.Println("TYPE : ", projName)
+			var lang langdetect.ProjectType
+			switch projName.(string) {
+			case "Go":
+				lang = langdetect.GoModule
+			case "Rust":
+				lang = langdetect.RustCargo
+			case "JS":
+				lang = langdetect.JsNpm
+			case "Poetry":
+				lang = langdetect.PythonPoetry
+			}
+			pt = lang
+		}
+
 		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
 		if err != nil {
 			os.Exit(1)
 		}
 
-		m := model{sc: sc}
+		m := model{sc: sc, pd: &pd, pt: pt}
 		m.resetSpinner()
 		if _, err := tea.NewProgram(m).Run(); err != nil {
 			os.Exit(1)
 		}
 	},
+}
+
+func YesNoPrompt(label string, defaultChoice bool) bool {
+	choices := "Y/n"
+	if !defaultChoice {
+		choices = "y/N"
+	}
+
+	r := bufio.NewReader(os.Stdin)
+	var s string
+	for {
+		fmt.Fprintf(os.Stderr, "%s (%s) ", strings.TrimSpace(label), choices)
+		s, _ = r.ReadString('\n')
+		s = strings.TrimSpace(s)
+		if s == "" {
+			return defaultChoice
+		}
+		s = strings.ToLower(s)
+		if s == "y" || s == "yes" {
+			return true
+		}
+		if s == "n" || s == "no" {
+			return false
+		}
+	}
+}
+
+func IOprompt(label string, defaultvalue any) any {
+	r := bufio.NewReader(os.Stdin)
+	var s string
+	for {
+		fmt.Fprintf(os.Stderr, "%s : ", strings.TrimSpace(label))
+		s, _ = r.ReadString('\n')
+		s = strings.TrimSpace(s)
+		if s == "" {
+			return nil
+		}
+
+		return &s
+	}
 }
 
 // GetBSFInitializers generates the nix files
