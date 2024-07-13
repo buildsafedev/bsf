@@ -122,7 +122,7 @@ const (
 			{{ if eq .Language "JsNpm"}} inherit buildNodeModules; {{end}}
 		};
 	  });
-	
+	{{end}}
 	  devShells = forEachSupportedSystem ({ pkgs, 
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
@@ -137,7 +137,7 @@ const (
 		  ];
 		};
 	  });
-	{{end}}
+	
 	  runtimeEnvs = forEachSupportedSystem ({ pkgs,
 		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
 		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
