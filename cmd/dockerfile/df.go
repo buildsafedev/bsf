@@ -10,11 +10,10 @@ import (
 )
 
 var (
-	output, platform string
+	platform string
 )
 
 func init() {
-	DFCmd.Flags().StringVarP(&output, "output", "o", "", "location of the dockerfile generated")
 	DFCmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
 	DFCmd.AddCommand(DGCmd)
 }
