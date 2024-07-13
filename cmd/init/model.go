@@ -21,7 +21,7 @@ var (
 	textStyle    = styles.TextStyle.Render
 	sucessStyle  = styles.SucessStyle.Render
 	spinnerStyle = styles.SpinnerStyle
-	helpStyle    = styles.HelpStyle.Render
+	// helpStyle    = styles.HelpStyle.Render
 	errorStyle   = styles.ErrorStyle.Render
 	stages       = 4
 )

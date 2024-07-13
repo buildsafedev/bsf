@@ -13,7 +13,6 @@ import (
 var (
 	commonDevDeps = []string{"coreutils-full@9.5", "bash@5.2.15"}
 	commonRTDeps  = []string{"cacert@3.95"}
-	baseImageName = "ttl.sh/base"
 )
 
 func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails, baseImgName string) (hcl2nix.Config, error) {
