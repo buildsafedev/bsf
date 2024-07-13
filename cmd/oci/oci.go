@@ -76,13 +76,7 @@ var OCICmd = &cobra.Command{
 				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 				os.Exit(1)
 			}
-			oldName := artifact.Name
 			artifact.Name = newName
-			err = hcl2nix.ModifyConfig(oldName, artifact, conf)
-			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-				os.Exit(1)
-			}
 		}
 
 		if dfSwap {

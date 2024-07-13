@@ -68,33 +68,6 @@ func WriteConfig(config Config, wr io.Writer) error {
 	return nil
 }
 
-// ModifyConfig modifes the config
-func ModifyConfig(oldName string, artifact OCIArtifact, config *Config) error {
-	updated := false
-	for i, existingArtifact := range config.OCIArtifact {
-		if existingArtifact.Name == oldName {
-			config.OCIArtifact[i] = artifact
-			updated = true
-			break
-		}
-	}
-
-	if updated {
-		var buf bytes.Buffer
-		err := WriteConfig(*config, &buf)
-		if err != nil {
-			return err
-		}
-
-		err = os.WriteFile("bsf.hcl", buf.Bytes(), 0644)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // ReadConfig reads config from bytes and returns Config. If any errors are encountered, they are written to dstErr
 func ReadConfig(src []byte, dstErr io.Writer) (*Config, error) {
 	parser := hclparse.NewParser()
