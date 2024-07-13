@@ -29,10 +29,19 @@ func initializeTestEnv(fileName string) (string, string, *os.File, error) {
 	if(err!=nil){
 		return "","",nil, err
 	}
-	os.Mkdir(newDir+"/bsf-temp", 0777)
-	os.Chdir(newDir+"/bsf-temp")
+	err=os.Mkdir(newDir+"/bsf-temp", 0777)
+	if err!=nil {
+		return "","",nil,err
+	}
+	err=os.Chdir(newDir+"/bsf-temp")
+	if err!=nil {
+		return "","",nil,err
+	}
 	file, err:=os.Create(fileName)
-	os.Create("sample.txt")
+	if err!=nil{
+		return "","",nil,err
+	}
+	_,err = os.Create("sample.txt")
 	if err!=nil{
 		return "","",nil,err
 	}
@@ -41,7 +50,10 @@ func initializeTestEnv(fileName string) (string, string, *os.File, error) {
 }
 
 func initiateGitEnv() (*git.Worktree, error) {
-	git.PlainInit(".", false)
+	_, err:=git.PlainInit(".", false)
+	if err!=nil{
+		return nil, err
+	}
 	r, err := git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
 	if err!=nil{
 		return nil, err
@@ -60,8 +72,14 @@ func initiateGitEnv() (*git.Worktree, error) {
 }
 
 func cleanTestEnv(oldDir string, newDir string) error {
-	 os.RemoveAll(newDir+"/bsf-temp")
-	 os.Chdir(oldDir)
+	 err:=os.RemoveAll(newDir+"/bsf-temp")
+	 if err!=nil{
+		return err
+	 }
+	 err = os.Chdir(oldDir)
+	 if err!=nil{
+		return err
+	 }
 	 return nil	
 }
 
@@ -72,11 +90,19 @@ func TestGitAdd(t *testing.T){
 		if err!=nil{
 			t.Fatal()
 		}
-		defer cleanTestEnv(oldDir, newDir)
+		defer func (){
+			err = cleanTestEnv(oldDir, newDir)
+		}()
 		goContent:=`module test`
-		file.WriteString(goContent)
-		initiateGitEnv()
-		Add("./")
+		_, err = file.WriteString(goContent)
+		if err!=nil{
+			t.Fatalf(err.Error())
+		}
+		_, err = initiateGitEnv()
+		if err!=nil{
+			t.Fatalf(err.Error())
+		}
+		err = Add("./")
 	})
 
 	tests:=[]struct{
@@ -103,8 +129,13 @@ func TestGitAdd(t *testing.T){
 			if err!=nil{
 				t.Fatal()
 			}
-			defer cleanTestEnv(oldDir, newDir)
-			initiateGitEnv()
+			defer func (){
+				err = cleanTestEnv(oldDir, newDir)
+			}()
+			_, err = initiateGitEnv()
+		if err!=nil{
+			t.Fatalf(err.Error())
+		}
 			errors:=Add("./")
 			if errors!=nil{
 				t.Errorf("want nil but found error: %s", errors.Error())
@@ -117,11 +148,22 @@ func TestGitAdd(t *testing.T){
 		if err!=nil{
 			t.Fatal()
 		}
-		defer cleanTestEnv(oldDir, newDir)
+		defer func (){
+			err = cleanTestEnv(oldDir, newDir)
+		}()
 		goContent:=`module test`
-		file.WriteString(goContent)
-		git.PlainInit(".", false)
-		git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
+		_, err = file.WriteString(goContent)
+		if err!=nil{
+			t.Fatalf(err.Error())
+		}
+		_, err = git.PlainInit(".", false)
+		if err!=nil{
+			t.Fatalf(err.Error())
+		}
+		_, err = git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
+		if err!=nil{
+			t.Fatalf(err.Error())
+		}
 		errors:= Add("sample.txt")
 		if errors==nil{
 			t.Errorf("want error but found nil")	
@@ -138,9 +180,17 @@ func TestGitAdd(t *testing.T){
 				if err!=nil{
 					t.Fatal()
 				}
-				defer cleanTestEnv(oldDir, newDir)
-				git.PlainInit(".", false)
-				git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
+				defer func (){
+					err = cleanTestEnv(oldDir, newDir)
+				}()
+				_, err = git.PlainInit(".", false)
+				if err!=nil{
+					t.Fatalf(err.Error())
+				}
+				_, err = git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
+				if err!=nil{
+					t.Fatalf(err.Error())
+				}
 				errors:= Add("sample.txt")
 				if errors==nil{
 					t.Errorf("want error but found nil")	
@@ -158,8 +208,10 @@ func TestGitIgnore(t *testing.T){
 		if err!=nil{
 			t.Errorf(err.Error())
 		}
-		defer cleanTestEnv(oldDir, newDir)
-		Ignore("sample.txt")
+		defer func (){
+			err = cleanTestEnv(oldDir, newDir)
+		}()
+		err = Ignore("sample.txt")
 		file, err:=os.ReadFile(".gitignore")
 		if err!=nil{
 			t.Fatal()
@@ -174,17 +226,19 @@ func TestGitIgnore(t *testing.T){
 		if err!=nil{
 			t.Errorf(err.Error())
 		}
-		defer cleanTestEnv(oldDir, newDir)
+		defer func (){
+			err = cleanTestEnv(oldDir, newDir)
+		}()
 		fl, err:= os.Create(".gitignore")
 		if err!=nil{
 			t.Fatal()
 		}
-		fl.WriteString(`
+		_,err = fl.WriteString(`
 		/path/to/be/added/1
 		/path/to/be/added/2
 		/path/to/be/added/3
 		`)
-		Ignore("sample.txt")
+		err = Ignore("sample.txt")
 		file, err:=os.ReadFile(".gitignore")
 		if err!=nil{
 			t.Fatal()
@@ -205,18 +259,20 @@ func TestGitIgnore(t *testing.T){
 		if err!=nil{
 			t.Errorf(err.Error())
 		}
-		defer cleanTestEnv(oldDir, newDir)
+		defer func (){
+			err = cleanTestEnv(oldDir, newDir)
+		}()
 		fl, err:= os.Create(".gitignore")
 		if err!=nil{
 			t.Fatal()
 		}
-		fl.WriteString(`
+		_, err = fl.WriteString(`
 		/path/to/be/added/1
 		/path/to/be/added/2
 		/path/to/be/added/3
 		sample.txt
 		`)
-		Ignore("sample.txt")
+		err = Ignore("sample.txt")
 		file, err:=os.ReadFile(".gitignore")
 		if err!=nil{
 			t.Fatal()

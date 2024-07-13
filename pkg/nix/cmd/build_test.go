@@ -25,17 +25,23 @@ func TestManageStdErr(t *testing.T){
 		strArr:= getRandomStringForTest()
 		origStderr := os.Stderr
 	defer func() { os.Stderr = origStderr }()
-	r, w, _ := os.Pipe()
+	r, w, err := os.Pipe()
+			if err!=nil{
+				t.Fatalf(err.Error())
+			}
 			os.Stderr = w
 			inputStr:= strings.Join(strArr, "\n")
 			input := strings.NewReader(inputStr)
-			err := ManageStdErr(io.NopCloser(input))
+			err = ManageStdErr(io.NopCloser(input))
 			if err != nil {
 				t.Fatalf("ManageStdErr returned error: %v", err)
 			}
 			w.Close()
 			var buf bytes.Buffer
-			io.Copy(&buf, r)
+			_, err = io.Copy(&buf, r)
+			if err!=nil{
+				t.Fatalf(err.Error())
+			}
 			str:= buf.String()
 			expectedStr := strings.Join(strArr, "\n") + "\n"
 			if str!=expectedStr{
@@ -54,10 +60,16 @@ func TestManageStdErr(t *testing.T){
 			}
 			inputStr:= fmt.Sprintf("warning: Git tree '%s' is dirty", dir)
 			input := strings.NewReader(inputStr)
-			ManageStdErr(io.NopCloser(input))
+			err = ManageStdErr(io.NopCloser(input))
+			if err!=nil{
+				t.Fatalf(err.Error())
+			}
 			w.Close()
 			var buf bytes.Buffer
-			io.Copy(&buf, r)
+			_,err = io.Copy(&buf, r)
+			if err!=nil{
+				t.Fatalf(err.Error())
+			}
 			str:= buf.String()
 			expectedStr := fmt.Sprintf("warning: Git tree '%s' is dirty.\nThis implies you have not checked-in files in the git work tree (hint: git add)\n", dir)
 			if str!=expectedStr{
@@ -81,7 +93,10 @@ func TestManageStdOutput(t *testing.T){
 			}
 			w.Close()
 			var buf bytes.Buffer
-			io.Copy(&buf, r)
+			_, err = io.Copy(&buf, r)
+			if err!=nil{
+				t.Fatalf(err.Error())
+			}
 			str:= buf.String()
 			expectedStr := strings.Join(strArr, "\n") + "\n"
 			if str!=expectedStr{

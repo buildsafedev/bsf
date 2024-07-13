@@ -64,12 +64,14 @@ func Add(path string) error {
 		return err
 	}
 	entryFile:= langdetect.GetEntryFileOfProject(pt)
-	fl:= status.File(entryFile)
-	// 63 code represents that file is untracked
-	// See the StatusCodes of FileStatus for more info
-	if fl.Staging==63{
-		return &ErrFileNotAddedToVersionControl{
-			fileName: entryFile,
+	_, exis:= status[entryFile]
+	// We need to assume that if file is not in status map, then it is comitted
+	if exis{
+		fl:= status.File(entryFile)
+		if fl.Staging==git.Untracked{
+			return &ErrFileNotAddedToVersionControl{
+				fileName: entryFile,
+			}
 		}
 	}
 	return nil
