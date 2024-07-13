@@ -36,27 +36,12 @@ var InitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		res := YesNoPrompt("Do you want docker file to be initialized", false)
-
-		var pd langdetect.ProjectDetails
+		isBaseImage := yesNoPrompt("Do you want to build a base image?")
+		var imageName string
 		var pt langdetect.ProjectType
-		if res {
-			pd.Name = *IOprompt("What should the name be?", "").(*string)
-		} else {
-			var projName = IOprompt("What type of projects you are setting up ? (Go/Rust/JavaScript/Poetry)", nil)
-			fmt.Println("TYPE : ", projName)
-			var lang langdetect.ProjectType
-			switch projName.(string) {
-			case "Go":
-				lang = langdetect.GoModule
-			case "Rust":
-				lang = langdetect.RustCargo
-			case "JS":
-				lang = langdetect.JsNpm
-			case "Poetry":
-				lang = langdetect.PythonPoetry
-			}
-			pt = lang
+		if isBaseImage {
+			imageName = *ioPrompt("What should the image name be?").(*string)
+			pt = langdetect.BaseImage
 		}
 
 		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
@@ -64,7 +49,7 @@ var InitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		m := model{sc: sc, pd: &pd, pt: pt}
+		m := model{sc: sc, pt: pt, baseImgName: imageName}
 		m.resetSpinner()
 		if _, err := tea.NewProgram(m).Run(); err != nil {
 			os.Exit(1)
@@ -72,41 +57,32 @@ var InitCmd = &cobra.Command{
 	},
 }
 
-func YesNoPrompt(label string, defaultChoice bool) bool {
+func yesNoPrompt(label string) bool {
 	choices := "Y/n"
-	if !defaultChoice {
-		choices = "y/N"
-	}
 
 	r := bufio.NewReader(os.Stdin)
 	var s string
-	for {
-		fmt.Fprintf(os.Stderr, "%s (%s) ", strings.TrimSpace(label), choices)
-		s, _ = r.ReadString('\n')
-		s = strings.TrimSpace(s)
-		if s == "" {
-			return defaultChoice
-		}
-		s = strings.ToLower(s)
-		if s == "y" || s == "yes" {
-			return true
-		}
-		if s == "n" || s == "no" {
-			return false
-		}
+	fmt.Fprintf(os.Stderr, "%s (%s) ", strings.TrimSpace(label), choices)
+	s, _ = r.ReadString('\n')
+	s = strings.TrimSpace(s)
+	s = strings.ToLower(s)
+	if s == "y" || s == "yes" {
+		return true
 	}
+	if s == "n" || s == "no" {
+		return false
+	}
+	return false
 }
 
-func IOprompt(label string, defaultvalue any) any {
+func ioPrompt(label string) any {
 	r := bufio.NewReader(os.Stdin)
 	var s string
-	for {
-		fmt.Fprintf(os.Stderr, "%s : ", strings.TrimSpace(label))
-		s, _ = r.ReadString('\n')
-		s = strings.TrimSpace(s)
-		if s == "" {
-			return nil
-		}
+	fmt.Fprintf(os.Stderr, "%s : ", strings.TrimSpace(label))
+	s, _ = r.ReadString('\n')
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil
 	}
 	return &s
 }

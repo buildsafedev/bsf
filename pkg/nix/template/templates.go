@@ -208,7 +208,7 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 	}
 
 	if conf.OCIArtifact != nil {
-		isBase := checkForBase(conf.OCIArtifact)
+		isBase := checkForBase(conf)
 		fl.IsBase = isBase
 		artifacts := hclOCIToOCIArtifact(conf.OCIArtifact)
 		artifacttAttr, err := GenerateOCIAttr(artifacts)
@@ -234,13 +234,20 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 	return nil
 }
 
-func checkForBase(confs []hcl2nix.OCIArtifact) bool {
-	var isBase bool
-	for _, conf := range confs {
-		if conf.Artifact == "pkgs" {
-			isBase = true
-		}
-	}		
+func checkForBase(conf *hcl2nix.Config) bool {
+	isBase := true
+	if conf.GoModule != nil{
+		return false
+	}
+	if conf.PoetryApp != nil{
+		return false
+	}
+	if conf.RustApp != nil{
+		return false
+	}
+	if conf.JsNpmApp != nil{
+		return false
+	}
 	return isBase
 }
 
