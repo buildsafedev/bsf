@@ -73,7 +73,7 @@ func Execute() {
 		rootCmd.AddCommand(precheck.PreCheckCmd)
 	}
 	rootCmd.AddCommand(oci.OCICmd)
-	rootCmd.AddCommand(dockerfile.DGCmd)
+	rootCmd.AddCommand(dockerfile.DFCmd)
 	rootCmd.AddCommand(release.ReleaseCmd)
 
 	err := rootCmd.ExecuteContext(context.Background())
