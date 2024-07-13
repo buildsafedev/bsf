@@ -17,29 +17,34 @@ var (
 )
 
 func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
+	fmt.Println("IN GENERATE HCL NIX CONFIG -------------------------------------------")
+	fmt.Println("NAME: ", pd.Name)
 	switch pt {
 	case langdetect.GoModule:
 		return genGoModuleConf(pd), nil
 	case langdetect.PythonPoetry:
-		return genPythonPoetryConf(), nil
+		return genPythonPoetryConf(pd), nil
 	case langdetect.RustCargo:
-		config, err := genRustCargoConf()
+		config, err := genRustCargoConf(pd)
 		if err != nil {
 			return hcl2nix.Config{}, err
 		}
 		return config, nil
 	case langdetect.JsNpm:
-		config, err := genJsNpmConf()
+		config, err := genJsNpmConf(pd)
 		if err != nil {
 			return hcl2nix.Config{}, err
 		}
 		return config, nil
 	default:
-		return generateEmptyConf(), nil
+		return generateEmptyConf(pd), nil
 	}
 }
 
-func generateEmptyConf() hcl2nix.Config {
+func generateEmptyConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
+	if pd.Name == "" {
+		pd.Name = "expl"
+	}
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
 			Development: commonDevDeps,
@@ -58,7 +63,10 @@ func generateEmptyConf() hcl2nix.Config {
 		},
 	}
 }
-func genRustCargoConf() (hcl2nix.Config, error) {
+func genRustCargoConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
+	if pd.Name == "" {
+		pd.Name = "expl"
+	}
 	content, err := os.ReadFile("Cargo.toml")
 	if err != nil {
 		return hcl2nix.Config{}, fmt.Errorf("error reading file: %v", err)
@@ -104,7 +112,7 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 	}, nil
 }
 
-func genPythonPoetryConf() hcl2nix.Config {
+func genPythonPoetryConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 	// TODO: maybe we should note down the path of the poetry.lock file and use it here.
 	poetryDevDeps := append(commonDevDeps, "python3@3.12.2", "poetry@1.8.2")
 	return hcl2nix.Config{
@@ -123,6 +131,7 @@ func genPythonPoetryConf() hcl2nix.Config {
 		OCIArtifact: []hcl2nix.OCIArtifact{
 			{
 				Artifact:      "pkgs",
+
 				Name:          baseImageName,
 				Cmd:           []string{},
 				Entrypoint:    []string{},
@@ -135,6 +144,9 @@ func genPythonPoetryConf() hcl2nix.Config {
 }
 
 func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
+	if pd.Name == "" {
+		pd.Name = "expl"
+	}
 	var name, entrypoint string
 	if pd != nil {
 		name = pd.Name
@@ -171,7 +183,10 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 
 }
 
-func genJsNpmConf() (hcl2nix.Config, error) {
+func genJsNpmConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
+	if pd.Name == "" {
+		pd.Name = "expl"
+	}
 	data, err := os.ReadFile("package-lock.json")
 	if err != nil {
 		return hcl2nix.Config{}, fmt.Errorf("error reading file: %v", err)

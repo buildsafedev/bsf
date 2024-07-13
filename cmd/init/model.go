@@ -90,7 +90,7 @@ func (m *model) processStages(stage int) error {
 		return nil
 	case 1:
 		// var err error
-		pt, pd, err := langdetect.FindProjectType()
+		pt, _, err := langdetect.FindProjectType()
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err
@@ -100,7 +100,6 @@ func (m *model) processStages(stage int) error {
 			m.permMsg = errorStyle("Project language isn't currently supported. Some features might not work.")
 		}
 		m.pt = pt
-		m.pd = pd
 		return nil
 	case 2:
 		m.stageMsg = textStyle("Resolving dependencies... ")
@@ -116,7 +115,6 @@ func (m *model) processStages(stage int) error {
 		defer fh.LockFile.Close()
 		defer fh.FlakeFile.Close()
 		defer fh.DefFlakeFile.Close()
-
 		conf, err := generatehcl2NixConf(m.pt, m.pd)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
