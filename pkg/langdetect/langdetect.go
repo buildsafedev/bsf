@@ -22,6 +22,8 @@ const (
 	RustCargo ProjectType = "RustCargo"
 	// JsNpm is the project type for Javascript NPM projects
 	JsNpm ProjectType = "JsNpm"
+	// BaseImage is the project type for creating base images
+	BaseImage ProjectType = "BaseImg"
 	// Unknown is the project type for unknown project types
 	Unknown ProjectType = "Unknown"
 )
