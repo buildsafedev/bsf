@@ -10,6 +10,12 @@ import (
 	"github.com/buildsafedev/bsf/pkg/langdetect"
 )
 
+var (
+	commonDevDeps = []string{"coreutils-full@9.5", "bash@5.2.15"}
+	commonRTDeps  = []string{"cacert@3.95"}
+	baseImageName = "ttl.sh/base"
+)
+
 func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
 	switch pt {
 	case langdetect.GoModule:
@@ -36,17 +42,17 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 func generateEmptyConf() hcl2nix.Config {
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: []string{""},
-			Runtime:     []string{"cacert@3.95"},
+			Development: commonDevDeps,
+			Runtime:     commonRTDeps,
 		},
 		OCIArtifact: []hcl2nix.OCIArtifact{
 			{
-				Artifact: "pkgs",
-				Name:     "bsf-base-image",
-				Cmd:      []string{},
-				Entrypoint: []string{},
-				EnvVars:    []string{},
-				ExposedPorts: []string{},
+				Artifact:      "pkgs",
+				Name:          baseImageName,
+				Cmd:           []string{},
+				Entrypoint:    []string{},
+				EnvVars:       []string{},
+				ExposedPorts:  []string{},
 				ImportConfigs: []string{},
 			},
 		},
@@ -71,10 +77,12 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 	} else {
 		CrateName = "my-project"
 	}
+
+	rustDevDeps := append(commonDevDeps, "cargo@1.75.0")
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: []string{"cargo@1.75.0"},
-			Runtime:     []string{"cacert@3.95"},
+			Development: rustDevDeps,
+			Runtime:     commonRTDeps,
 		},
 		RustApp: &hcl2nix.RustApp{
 			WorkspaceSrc: "./.",
@@ -84,12 +92,12 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 		},
 		OCIArtifact: []hcl2nix.OCIArtifact{
 			{
-				Artifact: "pkgs",
-				Name:     "bsf-base-image",
-				Cmd:      []string{},
-				Entrypoint: []string{},
-				EnvVars:    []string{},
-				ExposedPorts: []string{},
+				Artifact:      "pkgs",
+				Name:          baseImageName,
+				Cmd:           []string{},
+				Entrypoint:    []string{},
+				EnvVars:       []string{},
+				ExposedPorts:  []string{},
 				ImportConfigs: []string{},
 			},
 		},
@@ -98,10 +106,11 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 
 func genPythonPoetryConf() hcl2nix.Config {
 	// TODO: maybe we should note down the path of the poetry.lock file and use it here.
+	poetryDevDeps := append(commonDevDeps, "python3@3.12.2", "poetry@1.8.2")
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: []string{"python3@3.12.2", "poetry@1.8.2"},
-			Runtime:     []string{"cacert@3.95"},
+			Development: poetryDevDeps,
+			Runtime:     commonRTDeps,
 		},
 		PoetryApp: &hcl2nix.PoetryApp{
 			ProjectDir:   "./.",
@@ -113,12 +122,12 @@ func genPythonPoetryConf() hcl2nix.Config {
 		},
 		OCIArtifact: []hcl2nix.OCIArtifact{
 			{
-				Artifact: "pkgs",
-				Name:     "bsf-base-image",
-				Cmd:      []string{},
-				Entrypoint: []string{},
-				EnvVars:    []string{},
-				ExposedPorts: []string{},
+				Artifact:      "pkgs",
+				Name:          baseImageName,
+				Cmd:           []string{},
+				Entrypoint:    []string{},
+				EnvVars:       []string{},
+				ExposedPorts:  []string{},
 				ImportConfigs: []string{},
 			},
 		},
@@ -135,11 +144,13 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 		}
 
 	}
+
+	goDevDeps := append(commonDevDeps, "go@1.22.3", "gotools@0.18.0", "delve@1.22.1")
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: []string{"go@1.22.3", "gotools@0.18.0", "delve@1.22.1"},
+			Development: goDevDeps,
 			// todo: maybe we should dynamically inject the latest version of such runtime packages(cacert)?
-			Runtime: []string{"cacert@3.95"},
+			Runtime: commonRTDeps,
 		},
 		GoModule: &hcl2nix.GoModule{
 			Name:       name,
@@ -147,12 +158,12 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 		},
 		OCIArtifact: []hcl2nix.OCIArtifact{
 			{
-				Artifact: "pkgs",
-				Name:     "bsf-base-image",
-				Cmd:      []string{},
-				Entrypoint: []string{},
-				EnvVars:    []string{},
-				ExposedPorts: []string{},
+				Artifact:      "pkgs",
+				Name:          baseImageName,
+				Cmd:           []string{},
+				Entrypoint:    []string{},
+				EnvVars:       []string{},
+				ExposedPorts:  []string{},
 				ImportConfigs: []string{},
 			},
 		},
@@ -175,10 +186,12 @@ func genJsNpmConf() (hcl2nix.Config, error) {
 	if !ok {
 		return hcl2nix.Config{}, fmt.Errorf("error fetching project name: %v", err)
 	}
+
+	nodeDevDeps := append(commonDevDeps, "nodejs@20.11.1")
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: []string{"nodejs@20.11.1"},
-			Runtime:     []string{"cacert@3.95"},
+			Development: nodeDevDeps,
+			Runtime:     commonRTDeps,
 		},
 		JsNpmApp: &hcl2nix.JsNpmApp{
 			PackageName: name,
@@ -186,12 +199,12 @@ func genJsNpmConf() (hcl2nix.Config, error) {
 		},
 		OCIArtifact: []hcl2nix.OCIArtifact{
 			{
-				Artifact: "pkgs",
-				Name:     "bsf-base-image",
-				Cmd:      []string{},
-				Entrypoint: []string{},
-				EnvVars:    []string{},
-				ExposedPorts: []string{},
+				Artifact:      "pkgs",
+				Name:          baseImageName,
+				Cmd:           []string{},
+				Entrypoint:    []string{},
+				EnvVars:       []string{},
+				ExposedPorts:  []string{},
 				ImportConfigs: []string{},
 			},
 		},
