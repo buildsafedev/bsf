@@ -31,7 +31,7 @@ var DGCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		var dgMap = make(map[string]string)
+		dgMap := make(map[string]string)
 
 		line, err := readByte(file)
 		if err != nil {
