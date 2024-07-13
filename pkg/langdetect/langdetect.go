@@ -34,7 +34,7 @@ type ProjectDetails struct {
 	Name       string
 }
 
-var supportedLanguages = []string{string(GoModule), string(PythonPoetry), string(RustCargo)}
+// var supportedLanguages = []string{string(GoModule), string(PythonPoetry), string(RustCargo)}
 
 // FindProjectType detects the programming language/package manager of the current project.
 func FindProjectType() (ProjectType, *ProjectDetails, error) {
