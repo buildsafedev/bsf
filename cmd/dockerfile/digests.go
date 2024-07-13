@@ -31,15 +31,13 @@ var DGCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		dgMap := make(map[string]string)
-
 		line, err := readByte(file)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error in parsing Dockerfile contents", err.Error()))
 			os.Exit(1)
 		}
 
-		dgMap, err = getDigest(line)
+		dgMap, err := getDigest(line)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("Error retrieving digest", err.Error()))
 			os.Exit(1)
