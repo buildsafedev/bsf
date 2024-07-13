@@ -128,7 +128,7 @@ var OCICmd = &cobra.Command{
 
 		symlink := "/result"
 
-		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Artifact, platform, artifact))
+		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Artifact, platform))
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -306,7 +306,7 @@ func getNewName(artifact hcl2nix.OCIArtifact, tag string) (string, error) {
 	return newName, nil
 }
 
-func genOCIAttrName(env, platform string, artifact hcl2nix.OCIArtifact) string {
+func genOCIAttrName(env, platform string) string {
 	var arch string
 
 	switch platform {

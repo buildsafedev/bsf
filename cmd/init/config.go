@@ -16,34 +16,36 @@ var (
 	baseImageName = "ttl.sh/base"
 )
 
-func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
-	fmt.Println("IN GENERATE HCL NIX CONFIG -------------------------------------------")
-	fmt.Println("NAME: ", pd.Name)
+func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails, baseImgName string) (hcl2nix.Config, error) {
 	switch pt {
 	case langdetect.GoModule:
 		return genGoModuleConf(pd), nil
 	case langdetect.PythonPoetry:
-		return genPythonPoetryConf(pd), nil
+		return genPythonPoetryConf(), nil
 	case langdetect.RustCargo:
-		config, err := genRustCargoConf(pd)
+		config, err := genRustCargoConf()
 		if err != nil {
 			return hcl2nix.Config{}, err
 		}
 		return config, nil
 	case langdetect.JsNpm:
-		config, err := genJsNpmConf(pd)
+		config, err := genJsNpmConf()
 		if err != nil {
 			return hcl2nix.Config{}, err
 		}
 		return config, nil
+	case langdetect.BaseImage:
+		return generateEmptyConf(baseImgName), nil
 	default:
-		return generateEmptyConf(pd), nil
+		return hcl2nix.Config{
+			Packages: hcl2nix.Packages{},
+		}, fmt.Errorf("language is not supported")
 	}
 }
 
-func generateEmptyConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
-	if pd.Name == "" {
-		pd.Name = "expl"
+func generateEmptyConf(imageName string) hcl2nix.Config {
+	if imageName == "" {
+		imageName = "ttl.sh/base"
 	}
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
@@ -53,7 +55,7 @@ func generateEmptyConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 		OCIArtifact: []hcl2nix.OCIArtifact{
 			{
 				Artifact:      "pkgs",
-				Name:          baseImageName,
+				Name:          imageName,
 				Cmd:           []string{},
 				Entrypoint:    []string{},
 				EnvVars:       []string{},
@@ -63,10 +65,8 @@ func generateEmptyConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 		},
 	}
 }
-func genRustCargoConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
-	if pd.Name == "" {
-		pd.Name = "expl"
-	}
+func genRustCargoConf() (hcl2nix.Config, error) {
+
 	content, err := os.ReadFile("Cargo.toml")
 	if err != nil {
 		return hcl2nix.Config{}, fmt.Errorf("error reading file: %v", err)
@@ -98,21 +98,10 @@ func genRustCargoConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
 			RustVersion:  "1.75.0",
 			Release:      true,
 		},
-		OCIArtifact: []hcl2nix.OCIArtifact{
-			{
-				Artifact:      "pkgs",
-				Name:          baseImageName,
-				Cmd:           []string{},
-				Entrypoint:    []string{},
-				EnvVars:       []string{},
-				ExposedPorts:  []string{},
-				ImportConfigs: []string{},
-			},
-		},
 	}, nil
 }
 
-func genPythonPoetryConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
+func genPythonPoetryConf() hcl2nix.Config {
 	// TODO: maybe we should note down the path of the poetry.lock file and use it here.
 	poetryDevDeps := append(commonDevDeps, "python3@3.12.2", "poetry@1.8.2")
 	return hcl2nix.Config{
@@ -127,18 +116,6 @@ func genPythonPoetryConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 			Poetrylock:   "./poetry.lock",
 			PreferWheels: false,
 			CheckGroups:  []string{"dev"},
-		},
-		OCIArtifact: []hcl2nix.OCIArtifact{
-			{
-				Artifact:      "pkgs",
-
-				Name:          baseImageName,
-				Cmd:           []string{},
-				Entrypoint:    []string{},
-				EnvVars:       []string{},
-				ExposedPorts:  []string{},
-				ImportConfigs: []string{},
-			},
 		},
 	}
 }
@@ -168,25 +145,11 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 			Name:       name,
 			SourcePath: entrypoint,
 		},
-		OCIArtifact: []hcl2nix.OCIArtifact{
-			{
-				Artifact:      "pkgs",
-				Name:          baseImageName,
-				Cmd:           []string{},
-				Entrypoint:    []string{},
-				EnvVars:       []string{},
-				ExposedPorts:  []string{},
-				ImportConfigs: []string{},
-			},
-		},
 	}
 
 }
 
-func genJsNpmConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
-	if pd.Name == "" {
-		pd.Name = "expl"
-	}
+func genJsNpmConf() (hcl2nix.Config, error) {
 	data, err := os.ReadFile("package-lock.json")
 	if err != nil {
 		return hcl2nix.Config{}, fmt.Errorf("error reading file: %v", err)
@@ -211,17 +174,6 @@ func genJsNpmConf(pd *langdetect.ProjectDetails) (hcl2nix.Config, error) {
 		JsNpmApp: &hcl2nix.JsNpmApp{
 			PackageName: name,
 			PackageRoot: "./.",
-		},
-		OCIArtifact: []hcl2nix.OCIArtifact{
-			{
-				Artifact:      "pkgs",
-				Name:          baseImageName,
-				Cmd:           []string{},
-				Entrypoint:    []string{},
-				EnvVars:       []string{},
-				ExposedPorts:  []string{},
-				ImportConfigs: []string{},
-			},
 		},
 	}, nil
 }

@@ -22,6 +22,8 @@ const (
 	RustCargo ProjectType = "RustCargo"
 	// JsNpm is the project type for Javascript NPM projects
 	JsNpm ProjectType = "JsNpm"
+	// BaseImage is the project type for creating base images
+	BaseImage ProjectType = "BaseImg"
 	// Unknown is the project type for unknown project types
 	Unknown ProjectType = "Unknown"
 )
@@ -32,7 +34,7 @@ type ProjectDetails struct {
 	Name       string
 }
 
-// var supportedLanguages = []string{string(GoModule), string(PythonPoetry), string(RustCargo)}
+var supportedLanguages = []string{string(GoModule), string(PythonPoetry), string(RustCargo)}
 
 // FindProjectType detects the programming language/package manager of the current project.
 func FindProjectType() (ProjectType, *ProjectDetails, error) {
@@ -102,9 +104,10 @@ func binaryFromModule(mod *modfile.File) string {
 	return lastPart
 }
 
+// GetEntryFileOfProject gets the entry file of the project
 func GetEntryFileOfProject(pt ProjectType) string {
 	var fileName string
-	switch pt{
+	switch pt {
 	case GoModule:
 		fileName = "go.mod"
 	case RustCargo:
