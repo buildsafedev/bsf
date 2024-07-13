@@ -79,3 +79,40 @@ func TestBinaryFromModule(t *testing.T) {
 		})
 	}
 }
+
+func TestGetEntryFileOfProject(t *testing.T){
+	tests:= []struct{
+		name string
+		pType ProjectType
+		wantFileName string
+	}{
+		{
+			name: "Test for Rust",
+			pType: RustCargo,
+			wantFileName: "Cargo.lock",
+		},
+		{
+			name: "Test for Go",
+			pType: GoModule,
+			wantFileName: "go.mod",
+		},
+		{
+			name: "Test for Js",
+			pType: JsNpm,
+			wantFileName: "package-lock.json",
+		},
+		{
+			name: "Test for Poetry",
+			pType: PythonPoetry,
+			wantFileName: "poetry.lock",
+		},
+	}
+
+	for _,tt:= range tests{
+		t.Run(tt.name, func(t *testing.T) {
+			if wantFileName:= GetEntryFileOfProject(tt.pType); wantFileName!= tt.wantFileName{
+				t.Errorf("GetEntryFileOfProject() = %v, want %v", wantFileName, tt.wantFileName)
+			}
+		})
+	}
+}

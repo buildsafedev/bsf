@@ -1,12 +1,20 @@
 package git
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/buildsafedev/bsf/pkg/langdetect"
 	"github.com/go-git/go-git/v5"
 )
+type ErrFileNotAddedToVersionControl struct{
+	fileName string
+}
+func (e *ErrFileNotAddedToVersionControl) Error() string {
+	return fmt.Sprint(e.fileName, " is not added to version control")
+}
 
 // Add adds the path to the git work tree
 func Add(path string) error {
@@ -40,13 +48,31 @@ func Add(path string) error {
 	if leafDir != "" {
 		path = leafDir + "/" + path
 	}
-
 	// Add all changes to the working directory
 	err = w.AddWithOptions(&git.AddOptions{
 		Path: path,
 	})
 	if err != nil {
 		return err
+	}
+	status, err :=w.Status()
+	if err !=nil{
+		return err
+	}
+	pt, _, err:=langdetect.FindProjectType()
+	if err!=nil{
+		return err
+	}
+	entryFile:= langdetect.GetEntryFileOfProject(pt)
+	_, exis:= status[entryFile]
+	// We need to assume that if file is not in status map, then it is comitted
+	if exis{
+		fl:= status.File(entryFile)
+		if fl.Staging==git.Untracked{
+			return &ErrFileNotAddedToVersionControl{
+				fileName: entryFile,
+			}
+		}
 	}
 	return nil
 }

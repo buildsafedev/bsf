@@ -3,8 +3,8 @@
 	description = "";
 	
 	inputs = {
-		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746.url = "github:nixos/nixpkgs/a731d0cb71c58f56895f71a5b02eda2962a46746";
 		 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14.url = "github:nixos/nixpkgs/ac5c1886fd9fe49748d7ab80accc4c847481df14";
+		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746.url = "github:nixos/nixpkgs/a731d0cb71c58f56895f71a5b02eda2962a46746";
 		 nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4.url = "github:nixos/nixpkgs/7445ccd775d8b892fc56448d17345443a05f7fb4";
 			
 		nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -26,8 +26,8 @@
 	
 	
 	
-	 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746, 
 	 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14, 
+	 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746, 
 	 nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4, 
 	 }: let
 	  supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
@@ -36,8 +36,8 @@
 	  forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
 		inherit system;
 		
-		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs = import nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746 { inherit system; };
 		 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs = import nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14 { inherit system; };
+		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs = import nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746 { inherit system; };
 		 nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs = import nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4 { inherit system; };
 		
 		 buildGoApplication = gomod2nix.legacyPackages.${system}.buildGoApplication;
@@ -51,8 +51,8 @@
 		 buildGoApplication, 
 		
 		
-		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs, 
 		 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs, 
+		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs, 
 		 nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs, 
 		 ... }: {
 		default = pkgs.callPackage ./default.nix {
@@ -68,8 +68,8 @@
 		 buildGoApplication, 
 		
 		
-		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs, 
 		 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs, 
+		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs, 
 		 nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs, 
 		 ... }: {
 		devShell = pkgs.mkShell {
@@ -89,7 +89,7 @@
 		 buildGoApplication, 
 		
 		
-		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs,  nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs,  nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs,  ... }: {
+		 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs,  nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs,  nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs,  ... }: {
 		runtime = pkgs.buildEnv {
 		  name = "runtimeenv";
 		  paths = [ 
@@ -103,7 +103,7 @@
 		 buildGoApplication, 
 		
 		
-	    nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs,  nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs,  nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs,  ... }: {
+	    nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs,  nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs,  nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs,  ... }: {
 		development = pkgs.buildEnv {
 		  name = "devenv";
 		  paths = [ 

@@ -60,6 +60,11 @@ var BuildCmd = &cobra.Command{
 
 		err = bgit.Add("bsf/")
 		if err != nil {
+			if _, ok:=err.(*bgit.ErrFileNotAddedToVersionControl); ok{
+				fmt.Println(styles.ErrorStyle.Render(err.Error() + "\n Please ensure all necessary files are added/committed in your version control system"))
+				fmt.Println(styles.HintStyle.Render("hint: run git add .  "))
+				os.Exit(1)
+			}
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
 		}
