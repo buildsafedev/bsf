@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/google/go-containerregistry/pkg/crane"
@@ -31,13 +32,13 @@ var DGCmd = &cobra.Command{
 
 		var dgMap = map[string]string{}
 
-		dgMap, err = readByte(file)
+		line, err := readByte(file)
 		if err != nil {
 			fmt.Printf("Error in readByte %v\n", err)
 			os.Exit(1)
 		}
 
-		dgMap, err = getDigest(dgMap)
+		dgMap, err = getDigest(line)
 		if err != nil {
 			fmt.Printf("Error retrieving digest %v\n", err)
 			os.Exit(1)
@@ -53,36 +54,46 @@ var DGCmd = &cobra.Command{
 			fmt.Printf("Error writing updated Dockerfile: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Println("Changes made in")
-		for _, data := range updatedData {
-			fmt.Println(string(data))
-		}
 	},
 }
 
-func getDigest(dgMap map[string]string) (map[string]string, error) {
+func getDigest(lines []string) (map[string]string, error) {
+	var (
+		dgMap = make(map[string]string)
+		wg    sync.WaitGroup
+		mu    sync.Mutex
+	)
 
-	for img := range dgMap {
-		dg, err := crane.Digest(img)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get manifest for %w", err)
-		}
-		dgMap[img] = dg
+	for _, line := range lines {
+		wg.Add(1)
+		go func(line string) {
+			defer wg.Done()
+			dg, err := crane.Digest(line)
+			if err != nil {
+				fmt.Println(styles.WarnStyle.Render("warning:", "skipping ", line, "can't find"))
+				return
+			}
+			mu.Lock()
+			dgMap[line] = dg
+			mu.Unlock()
+		}(line)
 	}
+
+	wg.Wait()
 	return dgMap, nil
 }
 
-func readByte(file []byte) (map[string]string, error) {
+func readByte(file []byte) ([]string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(string(file)))
 	re := regexp.MustCompile(`FROM\s+(\S+):(\S+)`)
-	var lines = make(map[string]string)
+	var lines []string
 
 	for scanner.Scan() {
 		line := scanner.Text()
 		if matches := re.FindStringSubmatch(line); matches != nil {
 			image := matches[1]
 			tag := matches[2]
-			lines[fmt.Sprintf("%s:%s", image, tag)] = ""
+			lines = append(lines, fmt.Sprintf("%s:%s", image, tag))
 		}
 	}
 	return lines, nil
@@ -95,9 +106,7 @@ func updateDockerfileWithDigests(data []byte, digestMap map[string]string) ([]by
 	for scanner.Scan() {
 		line := scanner.Text()
 		for tag, digest := range digestMap {
-			if strings.Contains(line, tag) {
-				line = strings.Replace(line, tag, digest, 1)
-			}
+			line = strings.Replace(line, tag, digest, 1)
 		}
 		updatedLines = append(updatedLines, line)
 	}
