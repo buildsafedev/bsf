@@ -9,12 +9,7 @@ import (
 	"github.com/buildsafedev/bsf/cmd/styles"
 )
 
-var (
-	platform string
-)
-
 func init() {
-	DFCmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
 	DFCmd.AddCommand(DGCmd)
 }
 
@@ -25,8 +20,6 @@ var DFCmd = &cobra.Command{
 	Aliases: []string{"df"},
 	Long: `
 	bsf dockerfile <artifact> 
-	bsf dockerfile <artifact> --platform <platform>
-	bsf dockerfile <artifact> --platform <platform> --output <output filename>
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(styles.HintStyle.Render("hint: use bsf dockerfile with a subcomand"))
