@@ -1,4 +1,4 @@
-package oci
+package skopeo
 
 import (
     "context"
@@ -6,19 +6,24 @@ import (
     "io"
     "github.com/containers/image/v5/copy"
     "github.com/containers/image/v5/signature"
-    "github.com/buildsafedev/bsf/pkg/skopeo"
+    "github.com/containers/image/v5/transports/alltransports"
 )
 
-// LoadDocker loads the image to the docker daemon
-func LoadDocker(daemon, dir, imageName string, out io.Writer) error {
+// ParseImageName parses the image reference
+func ParseImageName(ref string) (alltransports.ImageReference, error) {
+    return alltransports.ParseImageName(ref)
+}
+
+// LoadImageToDocker loads the image to the Docker daemon
+func LoadImageToDocker(dir, imageName string, out io.Writer) error {
     ctx := context.Background()
 
     // Parsed the source and destination image references
-    srcRef, err := skopeo.ParseImageName("dir:" + dir)
+    srcRef, err := ParseImageName("dir:" + dir)
     if err != nil {
         return fmt.Errorf("parsing source image reference: %w", err)
     }
-    destRef, err := skopeo.ParseImageName("docker-daemon://" + daemon + "/" + imageName)
+    destRef, err := ParseImageName("docker-daemon:" + imageName)
     if err != nil {
         return fmt.Errorf("parsing destination image reference: %w", err)
     }
@@ -35,21 +40,21 @@ func LoadDocker(daemon, dir, imageName string, out io.Writer) error {
         ReportWriter: out,
     })
     if err != nil {
-        return fmt.Errorf("copying image: %w", err)
+        return fmt.Errorf("copying image to Docker: %w", err)
     }
 
     return nil
 }
 
-// LoadPodman loads the image to the podman
-func LoadPodman(dir, imageName string, out io.Writer) error {
+// LoadImageToPodman loads the image to Podman storage
+func LoadImageToPodman(dir, imageName string, out io.Writer) error {
     ctx := context.Background()
 
-    srcRef, err := skopeo.ParseImageName("dir:" + dir)
+    srcRef, err := ParseImageName("dir:" + dir)
     if err != nil {
         return fmt.Errorf("parsing source image reference: %w", err)
     }
-    destRef, err := skopeo.ParseImageName("containers-storage:" + imageName)
+    destRef, err := ParseImageName("containers-storage:" + imageName)
     if err != nil {
         return fmt.Errorf("parsing destination image reference: %w", err)
     }
@@ -64,21 +69,21 @@ func LoadPodman(dir, imageName string, out io.Writer) error {
         ReportWriter: out,
     })
     if err != nil {
-        return fmt.Errorf("copying image: %w", err)
+        return fmt.Errorf("copying image to Podman: %w", err)
     }
 
     return nil
 }
 
-// Push image to registry
-func Push(dir, imageName string, out io.Writer) error {
+// PushImage pushes an image to a Docker registry
+func PushImage(dir, imageName string, out io.Writer) error {
     ctx := context.Background()
 
-    srcRef, err := skopeo.ParseImageName("dir:" + dir)
+    srcRef, err := ParseImageName("dir:" + dir)
     if err != nil {
         return fmt.Errorf("parsing source image reference: %w", err)
     }
-    destRef, err := skopeo.ParseImageName("docker://" + imageName)
+    destRef, err := ParseImageName("docker://" + imageName)
     if err != nil {
         return fmt.Errorf("parsing destination image reference: %w", err)
     }
@@ -93,7 +98,7 @@ func Push(dir, imageName string, out io.Writer) error {
         ReportWriter: out,
     })
     if err != nil {
-        return fmt.Errorf("copying image: %w", err)
+        return fmt.Errorf("pushing image to Docker registry: %w", err)
     }
 
     return nil
