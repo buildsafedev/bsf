@@ -3,6 +3,7 @@ package skopeo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 )
 
@@ -18,7 +19,10 @@ func CopyImage(ctx context.Context, policyContext *PolicyContext, destRef, srcRe
 	}
 
 	if options.ReportWriter != nil {
-		io.WriteString(options.ReportWriter, "Copying image...\n")
+		_, err := io.WriteString(options.ReportWriter, "Copying image...\n")
+		if err != nil {
+			return nil, fmt.Errorf("failed to write to report writer: %w", err)
+		}
 	}
 
 	return &Image{}, nil

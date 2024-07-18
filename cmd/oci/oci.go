@@ -190,7 +190,7 @@ var OCICmd = &cobra.Command{
 				}
 				os.Exit(1)
 			}
-		
+
 			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to docker daemon", artifact.Name)))
 		}		
 
