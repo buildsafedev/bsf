@@ -1,8 +1,11 @@
 package oci
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/google/go-containerregistry/pkg/crane"
 )
 
 // LoadDocker loads the image to the docker daemon
@@ -41,5 +44,15 @@ func Push(dir, imageName string) error {
 		return err
 	}
 
+	return nil
+}
+
+func GetDigest(image string) error {
+	digest, err := crane.Digest(image)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Digest:", digest)
 	return nil
 }

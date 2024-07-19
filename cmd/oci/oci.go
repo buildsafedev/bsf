@@ -21,8 +21,8 @@ import (
 )
 
 var (
-	platform, output, tag, path                   string
-	push, loadDocker, loadPodman, devDeps, dfSwap bool
+	platform, output, tag, path                           string
+	push, loadDocker, loadPodman, devDeps, dfSwap, digest bool
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
@@ -38,6 +38,7 @@ func init() {
 	OCICmd.Flags().BoolVarP(&dfSwap, "df-swap", "", false, "Modify base images in Dockerfile")
 	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "The tag that will be replaced with original tag in Dockerfile")
 	OCICmd.Flags().StringVar(&path, "path", "", "The path to Dockerfile")
+	OCICmd.Flags().BoolVar(&digest, "digest", false, "Get the digest of the image")
 }
 
 // OCICmd represents the export command
@@ -76,13 +77,7 @@ var OCICmd = &cobra.Command{
 				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 				os.Exit(1)
 			}
-			oldName := artifact.Name
 			artifact.Name = newName
-			err = hcl2nix.ModifyConfig(oldName, artifact, conf)
-			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-				os.Exit(1)
-			}
 		}
 
 		if dfSwap {
@@ -218,6 +213,15 @@ var OCICmd = &cobra.Command{
 				os.Exit(1)
 			}
 			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", artifact.Name)))
+
+			if digest {
+				fmt.Println(styles.HighlightStyle.Render("Getting digest of the image..."))
+				err = oci.GetDigest(artifact.Name)
+				if err != nil {
+					fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+					os.Exit(1)
+				}
+			}
 		}
 	},
 }
