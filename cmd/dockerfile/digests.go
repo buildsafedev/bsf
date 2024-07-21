@@ -2,16 +2,16 @@ package dockerfile
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"sync"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/spf13/cobra"
+	"github.com/stacklok/frizbee/pkg/replacer"
+	"github.com/stacklok/frizbee/pkg/utils/config"
 )
 
 var DGCmd = &cobra.Command{
@@ -25,19 +25,32 @@ var DGCmd = &cobra.Command{
 		}
 
 		dockerfile := args[0]
-		file, err := os.ReadFile(dockerfile)
+		file, err := os.Open(dockerfile)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", "opening dockerfile:", err.Error()))
 			os.Exit(1)
 		}
+		defer file.Close()
 
-		line, err := readByte(file)
+		r := replacer.NewContainerImagesReplacer(config.DefaultConfig())
+
+		res, err := r.ListInFile(file)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error in parsing Dockerfile contents", err.Error()))
 			os.Exit(1)
 		}
 
-		dgMap, err := getDigest(line)
+		// line, err := readByte(file)
+		// if err != nil {
+		// 	fmt.Println(styles.ErrorStyle.Render("error in parsing Dockerfile contents", err.Error()))
+		// 	os.Exit(1)
+		// }
+
+		img := []string{}
+		for _, name := range res.Entities {
+			img = append(img, fmt.Sprintf("%s:%s", name.Name, name.Ref))
+		}
+		dgMap, err := getDigest(img)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("Error retrieving digest", err.Error()))
 			os.Exit(1)
@@ -82,24 +95,11 @@ func getDigest(lines []string) (map[string]string, error) {
 	return dgMap, nil
 }
 
-func readByte(file []byte) ([]string, error) {
-	scanner := bufio.NewScanner(bytes.NewReader(file))
-	re := regexp.MustCompile(`FROM\s+(\S+):(\S+)`)
-	var lines []string
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if matches := re.FindStringSubmatch(line); matches != nil {
-			image := matches[1]
-			tag := matches[2]
-			lines = append(lines, fmt.Sprintf("%s:%s", image, tag))
-		}
+func updateDockerfileWithDigests(data *os.File, digestMap map[string]string) ([]byte, error) {
+	if _, err := data.Seek(0, 0); err != nil {
+		return nil, fmt.Errorf("error seeking to the beginning of the file: %v", err)
 	}
-	return lines, nil
-}
-
-func updateDockerfileWithDigests(data []byte, digestMap map[string]string) ([]byte, error) {
-	scanner := bufio.NewScanner(strings.NewReader(string(data)))
+	scanner := bufio.NewScanner(data)
 	var updatedLines []string
 
 	for scanner.Scan() {
