@@ -160,7 +160,7 @@ var OCICmd = &cobra.Command{
 
 		if loadDocker {
 			fmt.Println(styles.HighlightStyle.Render("Loading image to docker daemon..."))
-
+		
 			expectedInstall := true
 			currentContext, err := builddocker.GetCurrentContext()
 			if err != nil {
@@ -176,12 +176,13 @@ var OCICmd = &cobra.Command{
 			if contextEP == nil {
 				contextEP = make(map[string]string)
 			}
-
+		
 			if _, ok := contextEP[currentContext]; !ok {
 				contextEP[currentContext] = "unix:///var/run/docker.sock"
 			}
-
-			err = oci.LoadDocker(contextEP[currentContext], output+"/result", artifact.Name)
+		
+			// Pass os.Stdout as the output writer
+			err = oci.LoadDocker(contextEP[currentContext], output+"/result", artifact.Name, os.Stdout)
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 				if !expectedInstall {
@@ -191,12 +192,11 @@ var OCICmd = &cobra.Command{
 			}
 
 			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to docker daemon", artifact.Name)))
-
-		}
+		}		
 
 		if loadPodman {
 			fmt.Println(styles.HighlightStyle.Render("Loading image to podman..."))
-			err = oci.LoadPodman(output+"/result", artifact.Name)
+			err = oci.LoadPodman(output+"/result", artifact.Name, os.Stdout)
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 				os.Exit(1)
@@ -206,7 +206,7 @@ var OCICmd = &cobra.Command{
 
 		if push {
 			fmt.Println(styles.HighlightStyle.Render("Pushing image to registry..."))
-			err = oci.Push(output+"/result", artifact.Name)
+			err = oci.Push(output+"/result", artifact.Name, os.Stdout)
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 				os.Exit(1)

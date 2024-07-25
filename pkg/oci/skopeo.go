@@ -1,45 +1,51 @@
 package oci
 
 import (
-	"os"
-	"os/exec"
+	"context"
+	"fmt"
+	"io"
+	"github.com/buildsafedev/bsf/pkg/skopeo"
 )
 
-// LoadDocker loads the image to the docker daemon
-func LoadDocker(daemon, dir, imageName string) error {
-	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "--dest-daemon-host="+daemon, "dir:"+dir, "docker-daemon:"+imageName)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+func handleImageOperation(srcType, destType, dir, imageName string, out io.Writer) error {
+	ctx := context.Background()
+
+	srcRef, err := skopeo.ParseImageName(fmt.Sprintf("%s:%s", srcType, dir))
 	if err != nil {
-		return err
+		return fmt.Errorf("parsing source image reference: %w", err)
+	}
+	destRef, err := skopeo.ParseImageName(fmt.Sprintf("%s:%s", destType, imageName))
+	if err != nil {
+		return fmt.Errorf("parsing destination image reference: %w", err)
+	}
+
+	policy := &skopeo.Policy{}
+	policyContext, err := skopeo.NewPolicyContext(policy)
+	if err != nil {
+		return fmt.Errorf("creating policy context: %w", err)
+	}
+	defer policyContext.Destroy()
+
+	options := &skopeo.Options{
+		ReportWriter: out,
+	}
+
+	_, err = skopeo.CopyImage(ctx, policyContext, destRef, srcRef, options)
+	if err != nil {
+		return fmt.Errorf("copying image: %w", err)
 	}
 
 	return nil
 }
 
-// LoadPodman loads the image to the poadman
-func LoadPodman(dir, imageName string) error {
-	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "containers-storage:"+imageName)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return err
-	}
-
-	return nil
+func LoadDocker(daemon, dir, imageName string, out io.Writer) error {
+	return handleImageOperation("dir", "docker-daemon", dir, daemon+"/"+imageName, out)
 }
 
-// Push image to registry
-func Push(dir, imageName string) error {
-	cmd := exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "docker://"+imageName)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return err
-	}
+func LoadPodman(dir, imageName string, out io.Writer) error {
+	return handleImageOperation("dir", "containers-storage", dir, imageName, out)
+}
 
-	return nil
+func Push(dir, imageName string, out io.Writer) error {
+	return handleImageOperation("dir", "docker", dir, imageName, out)
 }
