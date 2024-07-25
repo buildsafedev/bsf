@@ -47,10 +47,6 @@ func processOutput(path string, processed []string, modified map[string]string) 
 	bfs := osfs.New(basedir, osfs.WithBoundOS())
 	var out io.Writer
 
-	for _, p := range processed {
-		fmt.Printf("Processed: %s\n", p)
-	}
-
 	for path, content := range modified {
 		f, err := bfs.OpenFile(path, os.O_WRONLY|os.O_TRUNC, 0644)
 		if err != nil {
