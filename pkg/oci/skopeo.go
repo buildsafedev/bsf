@@ -10,24 +10,27 @@ import (
 func handleImageOperation(srcType, destType, dir, imageName string, out io.Writer) error {
 	ctx := context.Background()
 
-	srcRef, err := skopeo.ParseImageName(srcType + ":" + dir)
+	srcRef, err := skopeo.ParseImageName(fmt.Sprintf("%s:%s", srcType, dir))
 	if err != nil {
 		return fmt.Errorf("parsing source image reference: %w", err)
 	}
-	destRef, err := skopeo.ParseImageName(destType + ":" + imageName)
+	destRef, err := skopeo.ParseImageName(fmt.Sprintf("%s:%s", destType, imageName))
 	if err != nil {
 		return fmt.Errorf("parsing destination image reference: %w", err)
 	}
 
-	policyContext, err := skopeo.NewPolicyContext(&skopeo.Policy{})
+	policy := &skopeo.Policy{}
+	policyContext, err := skopeo.NewPolicyContext(policy)
 	if err != nil {
 		return fmt.Errorf("creating policy context: %w", err)
 	}
 	defer policyContext.Destroy()
 
-	_, err = skopeo.CopyImage(ctx, policyContext, destRef, srcRef, &skopeo.Options{
+	options := &skopeo.Options{
 		ReportWriter: out,
-	})
+	}
+
+	_, err = skopeo.CopyImage(ctx, policyContext, destRef, srcRef, options)
 	if err != nil {
 		return fmt.Errorf("copying image: %w", err)
 	}
@@ -36,7 +39,7 @@ func handleImageOperation(srcType, destType, dir, imageName string, out io.Write
 }
 
 func LoadDocker(daemon, dir, imageName string, out io.Writer) error {
-	return handleImageOperation("dir", "docker-daemon://"+daemon+"/"+imageName, dir, imageName, out)
+	return handleImageOperation("dir", "docker-daemon", dir, daemon+"/"+imageName, out)
 }
 
 func LoadPodman(dir, imageName string, out io.Writer) error {

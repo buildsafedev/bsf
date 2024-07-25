@@ -1,16 +1,21 @@
 package skopeo
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type Policy struct{}
 
-type PolicyContext struct{}
+type PolicyContext struct {
+	policy *Policy
+}
 
 func NewPolicyContext(policy *Policy) (*PolicyContext, error) {
 	if policy == nil {
-		return nil, fmt.Errorf("policy cannot be nil")
+		return nil, errors.New("policy cannot be nil")
 	}
-	return &PolicyContext{}, nil
+	return &PolicyContext{policy: policy}, nil
 }
 
 func (pc *PolicyContext) Destroy() {
@@ -18,4 +23,5 @@ func (pc *PolicyContext) Destroy() {
 		fmt.Println("Warning: Destroy called on a nil PolicyContext")
 		return
 	}
+	pc.policy = nil
 }
