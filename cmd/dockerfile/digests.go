@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/buildsafedev/bsf/cmd/dockerfile/helpers"
 	"github.com/buildsafedev/bsf/cmd/styles"
 	"github.com/spf13/cobra"
 	"github.com/stacklok/frizbee/pkg/replacer"
@@ -16,6 +17,7 @@ var DGCmd = &cobra.Command{
 	Short:   "Replace Dockerfile image tags with immutable digests",
 	Aliases: []string{"dg"},
 	Run: func(cmd *cobra.Command, args []string) {
+		helpers.DeclareFrizbeeFlags(cmd, false)
 		if len(args) < 1 {
 			fmt.Println(styles.HintStyle.Render("hint:", "run `bsf dockerfile digests <Dockerfile>` to replace image tags with digests"))
 			os.Exit(1)
@@ -29,22 +31,35 @@ var DGCmd = &cobra.Command{
 		}
 		defer file.Close()
 
-		r := replacer.NewContainerImagesReplacer(config.DefaultConfig())
+		r := replacer.NewContainerImagesReplacer(config.DefaultConfig()).WithUserRegex(`(?m)^\s*FROM\s+([^\s]+(:[^\s]+)?)(\s+as\s+\w+)?\s*$`)
 
-		ok, str, err := r.ParseFile(context.TODO(), file)
+		str, err := r.ParsePath(context.TODO(), dockerfile)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error in parsing Dockerfile contents", err.Error()))
 			os.Exit(1)
 		}
-		if err := os.WriteFile(dockerfile, []byte(str), 0644); err != nil {
-			fmt.Println(styles.ErrorStyle.Render("Error writing updated Dockerfile", err.Error()))
-			os.Exit(1)
+		fmt.Println(str)
+
+		cliflags, err := helpers.NewHelper(cmd)
+		if err != nil {
+			fmt.Println("error in declaring new helper: ", err)
+			return
 		}
-		if ok {
-			fmt.Println(styles.SucessStyle.Render("Dockerfile changed !!!"))
-		} else {
-			fmt.Println(styles.ErrorStyle.Render("Dockerfile unchanged !!!"))
+
+		if err = cliflags.ProcessOutput(dockerfile, str.Processed, str.Modified); err != nil {
+			fmt.Println("error in po : ", err)
+			return
 		}
+
+		// if err := os.WriteFile(dockerfile, []byte(str.Modified), 0644); err != nil {
+		// 	fmt.Println(styles.ErrorStyle.Render("Error writing updated Dockerfile", err.Error()))
+		// 	os.Exit(1)
+		// }
+		// if ok {
+		// 	fmt.Println(styles.SucessStyle.Render("Dockerfile changed !!!"))
+		// } else {
+		// 	fmt.Println(styles.ErrorStyle.Render("Dockerfile unchanged !!!"))
+		// }
 	},
 }
 
