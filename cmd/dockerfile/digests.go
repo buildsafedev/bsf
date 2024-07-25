@@ -35,14 +35,14 @@ var DGCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if err = processOutput(dockerfile, str.Processed, str.Modified); err != nil {
+		if err = processOutput(dockerfile, str.Modified); err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error in writing Dockerfile contents", err.Error()))
 			os.Exit(1)
 		}
 	},
 }
 
-func processOutput(path string, processed []string, modified map[string]string) error {
+func processOutput(path string, modified map[string]string) error {
 	basedir := filepath.Dir(path)
 	bfs := osfs.New(basedir, osfs.WithBoundOS())
 	var out io.Writer
