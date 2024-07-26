@@ -15,6 +15,7 @@ import (
 	"github.com/stacklok/frizbee/pkg/utils/config"
 )
 
+// DGCmd represents the digest command
 var DGCmd = &cobra.Command{
 	Use:     "digests",
 	Short:   "Replace Dockerfile image tags with immutable digests",
@@ -53,15 +54,11 @@ func processOutput(path string, modified map[string]string) error {
 			return fmt.Errorf("failed to open file %s: %w", path, err)
 		}
 
-		var deferErr error
 		defer func(f billy.File) {
 			if err := f.Close(); err != nil {
-				deferErr = fmt.Errorf("failed to close file %s: %w", path, err)
+				fmt.Println(styles.ErrorStyle.Render("failed to close file %s: %v", path, err.Error()))
 			}
 		}(f)
-		if deferErr != nil {
-			return deferErr
-		}
 
 		out = f
 
