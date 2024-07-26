@@ -53,11 +53,15 @@ func processOutput(path string, modified map[string]string) error {
 			return fmt.Errorf("failed to open file %s: %w", path, err)
 		}
 
+		var deferErr error
 		defer func(f billy.File) {
 			if err := f.Close(); err != nil {
-				fmt.Println(styles.ErrorStyle.Render("failed to close file %s: %v", path, err.Error()))
+				deferErr = fmt.Errorf("failed to close file %s: %w", path, err)
 			}
 		}(f)
+		if deferErr != nil {
+			return deferErr
+		}
 
 		out = f
 
