@@ -36,7 +36,7 @@ var InitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		isBaseImage, err := yesNoPrompt("Do you want to build a base image?")
+		isBaseImage, err := YesNoPrompt("Do you want to build a base image?")
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
@@ -46,7 +46,7 @@ var InitCmd = &cobra.Command{
 		var pt langdetect.ProjectType
 
 		if isBaseImage {
-			imageName, err = ioPrompt("What should the image name be?")
+			imageName, err = IoPrompt("What should the image name be?")
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 				os.Exit(1)
@@ -68,7 +68,8 @@ var InitCmd = &cobra.Command{
 	},
 }
 
-func yesNoPrompt(label string) (bool, error) {
+// YesNoPrompt is used to promt a user for a bool based answer
+func YesNoPrompt(label string) (bool, error) {
 	choices := "Y/n"
 
 	r := bufio.NewReader(os.Stdin)
@@ -89,7 +90,8 @@ func yesNoPrompt(label string) (bool, error) {
 	return false, nil
 }
 
-func ioPrompt(label string) (string, error) {
+// IoPrompt is used to promt a user for a string based answer
+func IoPrompt(label string) (string, error) {
 	r := bufio.NewReader(os.Stdin)
 	var s string
 	fmt.Fprintf(os.Stderr, styles.HighlightStyle.Render("%s : "), strings.TrimSpace(label))
