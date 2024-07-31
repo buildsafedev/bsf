@@ -3,13 +3,12 @@
 	description = "";
 	
 	inputs = {
+		 nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7.url = "github:nixos/nixpkgs/1ebb7d7bba2953a4223956cfb5f068b0095f84a7";
 		 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14.url = "github:nixos/nixpkgs/ac5c1886fd9fe49748d7ab80accc4c847481df14";
-		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746.url = "github:nixos/nixpkgs/a731d0cb71c58f56895f71a5b02eda2962a46746";
 		 nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4.url = "github:nixos/nixpkgs/7445ccd775d8b892fc56448d17345443a05f7fb4";
 			
 		nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-		 gomod2nix.url = "github:nix-community/gomod2nix";
-		gomod2nix.inputs.nixpkgs.follows = "nixpkgs";
+		
 		
 		
 		
@@ -18,16 +17,17 @@
 		
 
 		 
+		 nix2container.url = "github:nlewo/nix2container";
 	};
 	
 	outputs = inputs@{ self, nixpkgs, 
-	 gomod2nix, 
 	
 	
 	
 	
+	 nix2container , 
+	 nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7, 
 	 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14, 
-	 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746, 
 	 nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4, 
 	 }: let
 	  supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
@@ -35,61 +35,41 @@
 	  
 	  forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
 		inherit system;
-		
+		 nix2containerPkgs = nix2container.packages.${system}; 
+		 nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7-pkgs = import nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7 { inherit system; };
 		 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs = import nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14 { inherit system; };
-		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs = import nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746 { inherit system; };
 		 nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs = import nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4 { inherit system; };
 		
-		 buildGoApplication = gomod2nix.legacyPackages.${system}.buildGoApplication;
+		
 		pkgs = import nixpkgs { inherit system;  };
 		
 		
 	  });
 	in {
 	
-	packages = forEachSupportedSystem ({ pkgs,
-		 buildGoApplication, 
-		
-		
-		 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs, 
-		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs, 
-		 nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs, 
-		 ... }: {
-		default = pkgs.callPackage ./default.nix {
-			 inherit buildGoApplication;
-			go = pkgs.go_1_22; 
-			
-			
-			
-		};
-	  });
-	
 	  devShells = forEachSupportedSystem ({ pkgs, 
-		 buildGoApplication, 
 		
 		
+		
+		 nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7-pkgs, 
 		 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs, 
-		 nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs, 
 		 nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs, 
 		 ... }: {
 		devShell = pkgs.mkShell {
 		  # The Nix packages provided in the environment
 		  packages =  [
-			nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs.delve  
-			nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs.go  
-			nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.go-task  
-			nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.golangci-lint  
-			nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs.gotools  
+			nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7-pkgs.bash  
+			nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.coreutils-full  
 			
 		  ];
 		};
 	  });
 	
 	  runtimeEnvs = forEachSupportedSystem ({ pkgs,
-		 buildGoApplication, 
 		
 		
-		 nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs,  nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs,  nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs,  ... }: {
+		
+		 nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7-pkgs,  nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs,  nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs,  ... }: {
 		runtime = pkgs.buildEnv {
 		  name = "runtimeenv";
 		  paths = [ 
@@ -100,24 +80,88 @@
 	   });
 
 	   devEnvs = forEachSupportedSystem ({ pkgs,
-		 buildGoApplication, 
 		
 		
-	    nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs,  nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs,  nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs,  ... }: {
+		
+	    nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7-pkgs,  nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs,  nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs,  ... }: {
 		development = pkgs.buildEnv {
 		  name = "devenv";
 		  paths = [ 
-			nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs.delve  
-			nixpkgs-a731d0cb71c58f56895f71a5b02eda2962a46746-pkgs.go  
-			nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.go-task  
-			nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.golangci-lint  
-			nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs.gotools  
+			nixpkgs-1ebb7d7bba2953a4223956cfb5f068b0095f84a7-pkgs.bash  
+			nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.coreutils-full  
 			
 		   ];
 		};
 	   });
        
 	   
+	   
+	   
+	ociImages = forEachSupportedSystem ({ pkgs, nix2containerPkgs, system , ...}: {
+		
+		
+
+		
+		ociImage_pkgs_runtime = nix2containerPkgs.nix2container.buildImage {
+			name = "aa";
+			config = {
+				cmd = [  ];
+
+				entrypoint = [  ];
+				env = [
+					
+				];
+				ExposedPorts = {
+					
+				};
+			};
+			maxLayers = 100;
+			layers = [
+				(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.runtimeEnvs.${system}.runtime
+						
+					];
+				})
+			];      
+		};
+
+		ociImage_pkgs_dev = nix2containerPkgs.nix2container.buildImage {
+			name = "aa";
+			config = {
+				cmd = [  ];
+
+				entrypoint = [  ];
+				env = [
+					
+				];
+				ExposedPorts = {
+					
+				};
+			};
+			maxLayers = 100;
+			layers = [
+				(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.runtimeEnvs.${system}.runtime
+						
+						inputs.self.devEnvs.${system}.development
+					];
+				})
+			];      
+		};
+		
+		
+
+		
+		
+		
+		ociImage_pkgs_runtime-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_pkgs_runtime.copyTo}/bin/copy-to dir:$out";
+		ociImage_pkgs_dev-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImages.${system}.ociImage_pkgs_dev.copyTo}/bin/copy-to dir:$out";
+		
+		
+	});
+
 	   
 	};
 }

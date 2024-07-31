@@ -52,6 +52,26 @@ var InitCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			pt = langdetect.BaseImage
+
+			isAddDeps, err := YesNoPrompt("Would you like to add common Go dependencies (compiler, linter, debugger, etc)?")
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+
+			if isAddDeps {
+				// Create configuration with Go dependencies
+				config := genGoModuleConf(&langdetect.ProjectDetails{Name: imageName})
+
+				// Write the configuration to the file
+				err = hcl2nix.WriteConfig(config, os.Stdout)
+				if err != nil {
+					fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+					os.Exit(1)
+				}
+
+				fmt.Println(styles.HighlightStyle.Render("Base image configuration with common Go dependencies has been generated."))
+			}
 		}
 
 		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
