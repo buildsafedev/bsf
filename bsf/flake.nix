@@ -103,7 +103,11 @@
 
 		
 		ociImage_pkgs_runtime = nix2containerPkgs.nix2container.buildImage {
+<<<<<<< HEAD
 			name = "aa";
+=======
+			name = "a";
+>>>>>>> 71669621e30c14c7ccbd1405d8d029ab5814c295
 			config = {
 				cmd = [  ];
 
@@ -127,7 +131,11 @@
 		};
 
 		ociImage_pkgs_dev = nix2containerPkgs.nix2container.buildImage {
+<<<<<<< HEAD
 			name = "aa";
+=======
+			name = "a";
+>>>>>>> 71669621e30c14c7ccbd1405d8d029ab5814c295
 			config = {
 				cmd = [  ];
 

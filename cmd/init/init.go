@@ -44,6 +44,7 @@ var InitCmd = &cobra.Command{
 
 		var imageName string
 		var pt langdetect.ProjectType
+		var pd *langdetect.ProjectDetails
 
 		if isBaseImage {
 			imageName, err = IoPrompt("What should the image name be?")
@@ -75,6 +76,18 @@ var InitCmd = &cobra.Command{
 		}
 
 		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		config, err := generatehcl2NixConf(pt, pd, imageName)
+		if err != nil {
+			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+			os.Exit(1)
+		}
+
+		err = hcl2nix.WriteConfig(config, os.Stdout)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 			os.Exit(1)
