@@ -1,19 +1,14 @@
 
 packages {
-  development = ["go@1.21.6", "gotools@0.16.1", "delve@1.22.0", "go-task@~3.37.2", "golangci-lint@~1.59.0"]
+  development = ["coreutils-full@9.5", "bash@5.2.15"]
   runtime     = ["cacert@3.95"]
 }
 
-gomodule {
-  name    = "bsf"
-  src     = "./."
-  ldFlags = null
-  tags    = null
-  doCheck = false
-}
-
-githubRelease "bsf" {
-  owner = "buildsafedev"
-  repo  = "bsf"
-  dir   = ""
+oci "pkgs" {
+  name          = "aa"
+  cmd           = []
+  entrypoint    = []
+  envVars       = []
+  exposedPorts  = []
+  importConfigs = []
 }
