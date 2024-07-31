@@ -3,6 +3,7 @@ module github.com/buildsafedev/bsf
 go 1.22.4
 
 require (
+	github.com/BalaadityaPatanjali/image/v5 v5.0.0-20240731105319-93e6f73bb244
 	github.com/BurntSushi/toml v1.4.0
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/bom-squad/protobom v0.3.0
@@ -10,7 +11,6 @@ require (
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.7.1
-	github.com/containers/image/v5 v5.32.0
 	github.com/elewis787/boa v0.1.2
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/google/go-cmp v0.6.0
@@ -40,6 +40,7 @@ require (
 	github.com/containerd/cgroups/v3 v3.0.3 // indirect
 	github.com/containerd/errdefs v0.1.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
+	github.com/containers/image/v5 v5.32.0 // indirect
 	github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 // indirect
 	github.com/containers/ocicrypt v1.2.0 // indirect
 	github.com/containers/storage v1.55.0 // indirect
@@ -192,4 +193,4 @@ require (
 	sigs.k8s.io/release-utils v0.8.2 // indirect
 )
 
-replace github.com/containers/image/v5 => github.com/BalaadityaPatanjali/image/v5 v0.0.0-20240728000000-11058e65add0b79775e068c73a199a339e8adf64
+replace github.com/BalaadityaPatanjali/image/v5 => github.com/BalaadityaPatanjali/image/v5 v5.0.0-20240731105319-93e6f73bb244
