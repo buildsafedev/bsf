@@ -9,7 +9,7 @@ import (
     "github.com/BalaadityaPatanjali/image/v5/transports/alltransports"
 )
 
-// PerformImageOperation performs the image operation based on provided source and destination references.
+// PerformImageOperation performs the image operation based on provided source and destination references
 func PerformImageOperation(srcRef, destRef string) error {
     ctx := context.Background()
 
