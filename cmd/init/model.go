@@ -22,19 +22,21 @@ var (
 	sucessStyle  = styles.SucessStyle.Render
 	spinnerStyle = styles.SpinnerStyle
 	// helpStyle    = styles.HelpStyle.Render
-	errorStyle   = styles.ErrorStyle.Render
-	stages       = 4
+	errorStyle = styles.ErrorStyle.Render
+	stages     = 4
 )
 
 type model struct {
-	spinner     spinner.Model
-	sc          buildsafev1.SearchServiceClient
-	stageMsg    string
-	permMsg     string
-	stage       int
-	pt          langdetect.ProjectType
-	pd          *langdetect.ProjectDetails
-	baseImgName string
+	spinner        spinner.Model
+	sc             buildsafev1.SearchServiceClient
+	stageMsg       string
+	permMsg        string
+	stage          int
+	pt             langdetect.ProjectType
+	pd             *langdetect.ProjectDetails
+	baseImgName    string
+	addCommonDeps  bool
+	commonDepsType string
 }
 
 func (m model) Init() tea.Cmd {
@@ -100,7 +102,7 @@ func (m *model) processStages(stage int) error {
 		if m.baseImgName != "" {
 			pt = langdetect.BaseImage
 		}
-		
+
 		m.stageMsg = textStyle("Detected language as " + string(pt))
 		if m.pt == langdetect.Unknown {
 			m.permMsg = errorStyle("Project language isn't currently supported. Some features might not work.")
@@ -123,7 +125,7 @@ func (m *model) processStages(stage int) error {
 		defer fh.LockFile.Close()
 		defer fh.FlakeFile.Close()
 		defer fh.DefFlakeFile.Close()
-		conf, err := generatehcl2NixConf(m.pt, m.pd, m.baseImgName)
+		conf, err := generatehcl2NixConf(m.pt, m.pd, m.baseImgName, m.addCommonDeps, m.commonDepsType)
 		if err != nil {
 			m.stageMsg = errorStyle(err.Error())
 			return err

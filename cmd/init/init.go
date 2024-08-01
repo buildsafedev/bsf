@@ -44,6 +44,8 @@ var InitCmd = &cobra.Command{
 
 		var imageName string
 		var pt langdetect.ProjectType
+		var includeCommonDeps bool
+		var commonDeps string
 
 		if isBaseImage {
 			imageName, err = IoPrompt("What should the image name be?")
@@ -51,7 +53,20 @@ var InitCmd = &cobra.Command{
 				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 				os.Exit(1)
 			}
-			pt = langdetect.BaseImage
+
+			includeCommonDeps, err = YesNoPrompt("Would you like to add common dependencies (compiler, linter, debugger, etc.)?")
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+
+			if includeCommonDeps {
+				commonDeps, err = IoPrompt("Which common deps would you like to add? (Go/Python/Rust/JsNpm)")
+				if err != nil {
+					fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+					os.Exit(1)
+				}
+			}
 		}
 
 		sc, err := search.NewClientWithAddr(conf.BuildSafeAPI, conf.BuildSafeAPITLS)
@@ -60,7 +75,7 @@ var InitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		m := model{sc: sc, pt: pt, baseImgName: imageName}
+		m := model{sc: sc, pt: pt, baseImgName: imageName, addCommonDeps: includeCommonDeps, commonDepsType: commonDeps}
 		m.resetSpinner()
 		if _, err := tea.NewProgram(m).Run(); err != nil {
 			os.Exit(1)

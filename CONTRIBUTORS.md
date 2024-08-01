@@ -15,4 +15,3 @@ We contributors to BuildSafe:
 * Hanshal(@hanshal101)
 * Manik(@manik2708)
 * Balaaditya(@BalaadityaPatanjali)
-
