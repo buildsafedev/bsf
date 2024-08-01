@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
 	"github.com/buildsafedev/bsf/pkg/langdetect"
@@ -13,9 +14,13 @@ import (
 var (
 	commonDevDeps = []string{"coreutils-full@9.5", "bash@5.2.15"}
 	commonRTDeps  = []string{"cacert@3.95"}
+	rustDeps      = []string{"cargo@1.75.0"}
+	pythonDeps    = []string{"python3@3.12.2", "poetry@1.8.2"}
+	goDeps        = []string{"go@1.22.3", "gotools@0.18.0", "delve@1.22.1"}
+	jsNpmDeps     = []string{"nodejs@20.11.1"}
 )
 
-func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails, baseImgName string) (hcl2nix.Config, error) {
+func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails, baseImgName string, addCommonDeps bool, commonDepsType string) (hcl2nix.Config, error) {
 	switch pt {
 	case langdetect.GoModule:
 		return genGoModuleConf(pd), nil
@@ -34,7 +39,7 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 		}
 		return config, nil
 	case langdetect.BaseImage:
-		return generateEmptyConf(baseImgName), nil
+		return generateEmptyConf(baseImgName, addCommonDeps, commonDepsType), nil
 	default:
 		return hcl2nix.Config{
 			Packages: hcl2nix.Packages{},
@@ -42,10 +47,24 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 	}
 }
 
-func generateEmptyConf(imageName string) hcl2nix.Config {
+func generateEmptyConf(imageName string, addCommonDeps bool, commonDepsType string) hcl2nix.Config {
+	devDeps := commonDevDeps
+	if addCommonDeps {
+		commonDepsType :=  strings.ToLower(strings.TrimSpace(commonDepsType))
+		switch commonDepsType {
+		case "go":
+			devDeps = append(devDeps, goDeps...)
+		case "python":
+			devDeps = append(devDeps, pythonDeps...)
+		case "rust":
+			devDeps = append(devDeps, rustDeps...)
+		case "jsnpm":
+			devDeps = append(devDeps, jsNpmDeps...)
+		}
+	}
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: commonDevDeps,
+			Development: devDeps,
 			Runtime:     commonRTDeps,
 		},
 		OCIArtifact: []hcl2nix.OCIArtifact{
@@ -82,7 +101,7 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 		CrateName = "my-project"
 	}
 
-	rustDevDeps := append(commonDevDeps, "cargo@1.75.0")
+	rustDevDeps := append(commonDevDeps, rustDeps...)
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
 			Development: rustDevDeps,
@@ -99,7 +118,7 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 
 func genPythonPoetryConf() hcl2nix.Config {
 	// TODO: maybe we should note down the path of the poetry.lock file and use it here.
-	poetryDevDeps := append(commonDevDeps, "python3@3.12.2", "poetry@1.8.2")
+	poetryDevDeps := append(commonDevDeps, pythonDeps...)
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
 			Development: poetryDevDeps,
@@ -130,7 +149,7 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 
 	}
 
-	goDevDeps := append(commonDevDeps, "go@1.22.3", "gotools@0.18.0", "delve@1.22.1")
+	goDevDeps := append(commonDevDeps, goDeps...)
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
 			Development: goDevDeps,
@@ -161,7 +180,7 @@ func genJsNpmConf() (hcl2nix.Config, error) {
 		return hcl2nix.Config{}, fmt.Errorf("error fetching project name: %v", err)
 	}
 
-	nodeDevDeps := append(commonDevDeps, "nodejs@20.11.1")
+	nodeDevDeps := append(commonDevDeps, jsNpmDeps...)
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
 			Development: nodeDevDeps,
