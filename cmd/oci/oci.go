@@ -21,8 +21,8 @@ import (
 )
 
 var (
-	platform, output, tag, path                   string
-	push, loadDocker, loadPodman, devDeps, dfSwap bool
+	platform, output, tag, path, destcreds                string
+	push, loadDocker, loadPodman, devDeps, dfSwap, digest bool
 )
 var (
 	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
@@ -38,6 +38,8 @@ func init() {
 	OCICmd.Flags().BoolVarP(&dfSwap, "df-swap", "", false, "Modify base images in Dockerfile")
 	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "The tag that will be replaced with original tag in Dockerfile")
 	OCICmd.Flags().StringVar(&path, "path", "", "The path to Dockerfile")
+	OCICmd.Flags().BoolVar(&digest, "digest", false, "push image by digest")
+	OCICmd.Flags().StringVar(&destcreds, "dest-creds", "", "Authenticate to the registry")
 }
 
 // OCICmd represents the export command
@@ -47,6 +49,8 @@ var OCICmd = &cobra.Command{
 	Long: `
 	bsf oci <artifact> 
 	bsf oci <artifact> --platform <platform>
+	bsf oci <artifact> --push --digest
+	bsf oci <artifact> --push --dest-creds user:password
 	bsf oci <artifact> --platform <platform> --output <output directory>
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -206,12 +210,20 @@ var OCICmd = &cobra.Command{
 
 		if push {
 			fmt.Println(styles.HighlightStyle.Render("Pushing image to registry..."))
-			err = oci.Push(output+"/result", artifact.Name)
+			err = oci.Push(output+"/result", artifact.Name, digest, destcreds, output+"/digest")
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 				os.Exit(1)
 			}
 			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", artifact.Name)))
+			if digest {
+				digest, err := os.ReadFile(output + "/digest")
+				if err != nil {
+					fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+					os.Exit(1)
+				}
+				fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Digest: %s", string(digest))))
+			}
 		}
 	},
 }
