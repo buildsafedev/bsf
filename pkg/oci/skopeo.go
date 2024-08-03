@@ -35,7 +35,7 @@ func LoadPodman(dir, imageName string) error {
 func Push(dir, imageName string, digest bool, destcreds string, digestPath string) error {
 	var cmd *exec.Cmd
 	if digest {
-		cmd = exec.Command("skopeo", "copy", "--insecure-policy", "dir:"+dir, "docker://"+imageName+"@@unknown-digest@@", "--digestfile="+digestPath, "--dest-creds", destcreds)
+		cmd = exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "docker://"+imageName+"@@unknown-digest@@", "--digestfile="+digestPath, "--dest-creds", destcreds)
 
 	} else {
 		cmd = exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "docker://"+imageName, "--dest-creds", destcreds)
