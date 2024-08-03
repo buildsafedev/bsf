@@ -32,9 +32,9 @@ func LoadPodman(dir, imageName string) error {
 }
 
 // Push image to registry
-func Push(dir, imageName string, digest bool, destcreds string, digestPath string) error {
+func Push(dir, imageName string, destcreds string, digestPath string) error {
 	var cmd *exec.Cmd
-	if digest {
+	if digestPath != "" {
 		cmd = exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "docker://"+imageName+"@@unknown-digest@@", "--digestfile="+digestPath, "--dest-creds", destcreds)
 
 	} else {
