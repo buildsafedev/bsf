@@ -210,19 +210,27 @@ var OCICmd = &cobra.Command{
 
 		if push {
 			fmt.Println(styles.HighlightStyle.Render("Pushing image to registry..."))
-			err = oci.Push(output+"/result", artifact.Name, digest, destcreds, output+"/digest")
-			if err != nil {
-				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
-				os.Exit(1)
-			}
-			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", artifact.Name)))
 			if digest {
+				err = oci.Push(output+"/result", artifact.Name, destcreds, output+"/digest")
+				if err != nil {
+					fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+					os.Exit(1)
+				}
+
+				fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", artifact.Name)))
 				digest, err := os.ReadFile(output + "/digest")
 				if err != nil {
 					fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
 					os.Exit(1)
 				}
 				fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Digest: %s", string(digest))))
+			} else {
+				err = oci.Push(output+"/result", artifact.Name, destcreds, "")
+				if err != nil {
+					fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+					os.Exit(1)
+				}
+				fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", artifact.Name)))
 			}
 		}
 	},
