@@ -26,10 +26,10 @@
         getBinaryHash = { system }:
           let 
           hash = {
-            "aarch64-darwin" = "sha256-FA2RKw3CizsbiQ+vBR2Fk2K/731vWDQZS3ZEewP9ipU=";
-            "x86_64-linux" = "sha256-m9aHXoq9Vt+tZWxi6v9g3CNF5w8Pui3/6Rl725aZES8=";
-            "x86_64-darwin" = "sha256-dkIrndJLsGauGa6sdMw4y2qLr5nN27H4e34eu13SPaU=";
-            "aarch64-linux" = "sha256-NKI/I4ODT/TkM2nxEMgfFnu1ZGGjR7oLNdhY4UcprhE=";
+            "aarch64-darwin" = "sha256-/eAYgPDrWZJQM8kN3QlriBwuN9yW26/iedkIZz3jAFY=";
+            "x86_64-linux" = "sha256-+59b6N6dRvxs6pwRyV21Lws9Hsu26/ol10r1YeywX4s=";
+            "x86_64-darwin" = "sha256-2ZU3ekAIn+061e3razVX5PkRSTMsf3UhJ41VTLckhQY=";
+            "aarch64-linux" = "sha256-Goi+151cfu8cu3ELSK8Yo9l3NeSWWdTv1BbZxINyK9s=";
           };
           in hash.${system};
         
