@@ -26,10 +26,10 @@
         getBinaryHash = { system }:
           let 
           hash = {
-            "aarch64-darwin" = "sha256-/eAYgPDrWZJQM8kN3QlriBwuN9yW26/iedkIZz3jAFY=";
-            "x86_64-linux" = "sha256-+59b6N6dRvxs6pwRyV21Lws9Hsu26/ol10r1YeywX4s=";
-            "x86_64-darwin" = "sha256-2ZU3ekAIn+061e3razVX5PkRSTMsf3UhJ41VTLckhQY=";
-            "aarch64-linux" = "sha256-Goi+151cfu8cu3ELSK8Yo9l3NeSWWdTv1BbZxINyK9s=";
+            "aarch64-darwin" = "sha256-S4LRa0gQNMKiDDsXfnlJQHDYBwRJYcynGB0Tq39R31w=";
+            "x86_64-linux" = "sha256-vKUGNW0vIP96H761bgVsi6X3I7zEj9hJXGK4LsXVq3U=";
+            "x86_64-darwin" = "sha256-tfhLWj0gaunXowMkmNCfeA06mwyx/BoDT0TwFt2mE3E=";
+            "aarch64-linux" = "sha256-93zm+CIIaBvm/cTJg42v+UhGD5ilCa+zt5Bq7I2lisE=";
           };
           in hash.${system};
         
@@ -38,7 +38,7 @@
       packages = forEachSystem ({ pkgs, ... }: {
         default = pkgs.stdenvNoCC.mkDerivation  rec {
           name = "bsf";
-          version = "0.2.2";
+          version = "0.2.3";
 
           src = pkgs.fetchurl {
             url = getBinaryUrl { system = pkgs.system; version = version; };
