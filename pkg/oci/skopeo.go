@@ -33,13 +33,19 @@ func LoadPodman(dir, imageName string) error {
 
 // Push image to registry
 func Push(dir, imageName string, destcreds string, digestPath string) error {
+	skoepoCmd := []string{"nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:" + dir}
+
 	var cmd *exec.Cmd
 	if digestPath != "" {
-		cmd = exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "docker://"+imageName+"@@unknown-digest@@", "--digestfile="+digestPath, "--dest-creds", destcreds)
-
+		skoepoCmd = append(skoepoCmd, "docker://"+imageName+"@@unknown-digest@@", "--digestfile", digestPath)
 	} else {
-		cmd = exec.Command("nix", "run", "nixpkgs#skopeo", "--", "copy", "--insecure-policy", "dir:"+dir, "docker://"+imageName, "--dest-creds", destcreds)
+		skoepoCmd = append(skoepoCmd, "docker://"+imageName)
 	}
+	if destcreds != "" {
+		skoepoCmd = append(skoepoCmd, "--dest-creds", destcreds)
+	}
+
+	cmd = exec.Command(skoepoCmd[0], skoepoCmd[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
