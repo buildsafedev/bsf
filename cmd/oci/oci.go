@@ -1,12 +1,18 @@
 package oci
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"oras.land/oras-go/v2"
+	"oras.land/oras-go/v2/content/file"
 
 	"github.com/buildsafedev/bsf/cmd/build"
 	binit "github.com/buildsafedev/bsf/cmd/init"
@@ -18,6 +24,7 @@ import (
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 	"github.com/buildsafedev/bsf/pkg/oci"
 	"github.com/buildsafedev/bsf/pkg/platformutils"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 var (
@@ -208,6 +215,8 @@ var OCICmd = &cobra.Command{
 			fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s loaded to podman", artifact.Name)))
 		}
 
+		// artifactType := "application/json"
+
 		if push {
 			fmt.Println(styles.HighlightStyle.Render("Pushing image to registry..."))
 			if digest {
@@ -232,8 +241,111 @@ var OCICmd = &cobra.Command{
 				}
 				fmt.Println(styles.SucessStyle.Render(fmt.Sprintf("Image %s pushed to registry", artifact.Name)))
 			}
+			ctx := context.Background()
+			attestationFile := "bsf-result/attestation.jsonl"
+			artifactType := "application/json"
+
+			store, err := file.New("")
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+			defer store.Close()
+
+			descs, err := loadFiles(ctx, store, nil, []string{attestationFile})
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error:", err.Error()))
+				os.Exit(1)
+			}
+
+			fetchOpts := oras.DefaultResolveOptions
+			subject, err := oras.Resolve(ctx, &file.Store{}, artifact.Name, fetchOpts)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("failed to resolve subject image:", err.Error()))
+				os.Exit(1)
+			}
+
+			packOpts := oras.PackManifestOptions{
+				Subject: &subject,
+				Layers:  descs,
+			}
+			root, err := oras.PackManifest(ctx, store, oras.PackManifestVersion1_1, artifactType, packOpts)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error packing manifest:", err.Error()))
+				os.Exit(1)
+			}
+
+			err = oras.CopyGraph(ctx, store, nil, root, oras.DefaultCopyGraphOptions)
+			if err != nil {
+				fmt.Println(styles.ErrorStyle.Render("error copying graph:", err.Error()))
+				os.Exit(1)
+			}
 		}
+
 	},
+}
+
+func loadFiles(ctx context.Context, store *file.Store, annotations map[string]map[string]string, fileRefs []string) ([]ocispec.Descriptor, error) {
+	var files []ocispec.Descriptor
+	for _, fileRef := range fileRefs {
+		filename, mediaType, err := Parse(fileRef, "")
+		if err != nil {
+			return nil, err
+		}
+
+		// get shortest absolute path as unique name
+		name := filepath.Clean(filename)
+		if !filepath.IsAbs(name) {
+			name = filepath.ToSlash(name)
+		}
+
+		file, err := addFile(ctx, store, name, mediaType, filename)
+		if err != nil {
+			return nil, err
+		}
+		if value, ok := annotations[filename]; ok {
+			if file.Annotations == nil {
+				file.Annotations = value
+			} else {
+				for k, v := range value {
+					file.Annotations[k] = v
+				}
+			}
+		}
+		files = append(files, file)
+	}
+
+	if len(files) == 0 {
+		return nil, nil
+	}
+
+	return files, nil
+}
+
+func addFile(ctx context.Context, store *file.Store, name string, mediaType string, filename string) (ocispec.Descriptor, error) {
+	file, err := store.Add(ctx, name, mediaType, filename)
+	if err != nil {
+		var pathErr *fs.PathError
+		if errors.As(err, &pathErr) {
+			err = pathErr
+		}
+		return ocispec.Descriptor{}, err
+	}
+	return file, nil
+}
+
+// Parse parses file reference on unix.
+func Parse(reference string, defaultMetadata string) (filePath, metadata string, err error) {
+	i := strings.LastIndex(reference, ":")
+	if i < 0 {
+		filePath, metadata = reference, defaultMetadata
+	} else {
+		filePath, metadata = reference[:i], reference[i+1:]
+	}
+	if filePath == "" {
+		return "", "", fmt.Errorf("found empty file path in %q", reference)
+	}
+	return filePath, metadata, nil
 }
 
 // ProcessPlatformAndConfig processes the platform and config file
