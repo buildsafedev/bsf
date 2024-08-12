@@ -8,7 +8,7 @@ import (
 )
 
 // Develop opens a BSF development shell
-func Develop() error {
+func Develop(pureshell bool) error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -19,7 +19,24 @@ func Develop() error {
 	shell := os.Getenv("SHELL")
 
 	// using the `path:` will let users work on the project without having to interact with git
-	if shell == "" {
+	if pureshell {
+		// Prepare the command with `--ignore-environment` and necessary `--keep` variables
+		keepVars := []string{
+			"HOME", "USER", "LOGNAME", "DISPLAY", "TERM", "IN_NIX_SHELL",
+			"NIX_SHELL_PRESERVE_PROMPT", "TZ", "PAGER", "NIX_BUILD_SHELL", "SHLVL",
+			"NIX_PATH", "NIX_SSL_CERT_FILE", "NIX_SSL_CERT_DIR",
+		}
+		// Add --keep flags for each variable
+		var keepFlags []string
+		for _, v := range keepVars {
+			keepFlags = append(keepFlags, "--keep", v)
+		}
+
+		args := append([]string{"nix", "develop", "--ignore-environment"}, keepFlags...)
+		args = append(args, fmt.Sprintf("path:%s/bsf/.#devShell", dir))
+
+		cmd = exec.Command(args[0], args[1:]...)
+	} else if shell == "" {
 		cmd = exec.Command("nix", "develop", fmt.Sprintf("path:%s/bsf/.#devShell", dir))
 	} else {
 		if strings.Contains(shell, " ") {

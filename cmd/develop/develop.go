@@ -13,6 +13,14 @@ import (
 	nixcmd "github.com/buildsafedev/bsf/pkg/nix/cmd"
 )
 
+var (
+	pureshell bool
+)
+
+func init() {
+	DevCmd.Flags().BoolVarP(&pureshell, "pure", "p", false, "Use a pure shell")
+}
+
 // DevCmd represents the Develop command
 var DevCmd = &cobra.Command{
 	Use:   "develop",
@@ -38,7 +46,7 @@ var DevCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		err = nixcmd.Develop()
+		err = nixcmd.Develop(pureshell)
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
