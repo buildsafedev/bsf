@@ -10,6 +10,10 @@ type OCIArtifact struct {
 	Artifact string `hcl:"environment,label"`
 	// Name of the image . Ex: ttl.sh/myproject/app:1h
 	Name string `hcl:"name"`
+	// OCI Layers in the image
+	Layers []string `hcl:"layers,optional"`
+	// OCI Layers in the image
+	IsBase bool `hcl:"isBase,optional"`
 	// Cmd defines the default arguments to the entrypoint of the container.
 	Cmd []string `hcl:"cmd,optional"`
 	// Entrypoint defines a list of arguments to use as the command to execute when the container starts.
@@ -22,7 +26,7 @@ type OCIArtifact struct {
 	ImportConfigs []string `hcl:"importConfigs,optional"`
 }
 
-// Validate validates ExportConfig
+// Validate validates OCI Config
 func (c *OCIArtifact) Validate(conf *Config) *string {
 	if len(c.EnvVars) != 0 {
 		if !validateEnvVars((c.EnvVars)) {

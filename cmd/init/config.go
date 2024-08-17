@@ -50,7 +50,7 @@ func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetail
 func generateEmptyConf(imageName string, addCommonDeps bool, commonDepsType string) hcl2nix.Config {
 	devDeps := commonDevDeps
 	if addCommonDeps {
-		commonDepsType :=  strings.ToLower(strings.TrimSpace(commonDepsType))
+		commonDepsType := strings.ToLower(strings.TrimSpace(commonDepsType))
 		switch commonDepsType {
 		case "go":
 			devDeps = append(devDeps, goDeps...)
@@ -71,6 +71,8 @@ func generateEmptyConf(imageName string, addCommonDeps bool, commonDepsType stri
 			{
 				Artifact:      "pkgs",
 				Name:          imageName,
+				IsBase:        true,
+				Layers:        []string{},
 				Cmd:           []string{},
 				Entrypoint:    []string{},
 				EnvVars:       []string{},

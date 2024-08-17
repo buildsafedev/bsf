@@ -126,7 +126,7 @@ var OCICmd = &cobra.Command{
 
 		symlink := "/result"
 
-		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Artifact, platform))
+		err = nixcmd.Build(output+symlink, genOCIAttrName(artifact.Artifact, platform, artifact.IsBase))
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -260,7 +260,7 @@ func ProcessPlatformAndConfig(conf *hcl2nix.Config, plat string, envName string)
 	for _, ec := range conf.OCIArtifact {
 		errStr := ec.Validate(conf)
 		if errStr != nil {
-			return hcl2nix.OCIArtifact{}, "", fmt.Errorf("Config for export block %s is invalid\n Error: %s", ec.Name, *errStr)
+			return hcl2nix.OCIArtifact{}, "", fmt.Errorf("Config for oci block %s is invalid\n Error: %s", ec.Name, *errStr)
 		}
 
 		if ec.Artifact == envName {
@@ -320,7 +320,7 @@ func getNewName(artifact hcl2nix.OCIArtifact, tag string) (string, error) {
 	return newName, nil
 }
 
-func genOCIAttrName(env, platform string) string {
+func genOCIAttrName(env, platform string, isBase bool) string {
 	var arch string
 
 	switch platform {
@@ -334,7 +334,7 @@ func genOCIAttrName(env, platform string) string {
 
 	base := fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s_", arch, env)
 
-	if env == "pkgs" {
+	if isBase {
 		if devDeps {
 			return base + "dev-as-dir"
 		}
