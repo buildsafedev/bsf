@@ -17,11 +17,10 @@ type OCIArtifact struct {
 	ImportConfigs []string
 	ExposedPorts  []string
 	Base          bool
-	Layer         *string
 }
 
 const (
-	ociTmpl = `
+    ociTmpl = `
 	ociImages = forEachSupportedSystem ({ pkgs, nix2containerPkgs, system , ...}: {
 		{{range $artifact := .}}
 		{{ if ne ($artifact.Base) true }}
@@ -44,15 +43,18 @@ const (
 				};
 			};
 			maxLayers = 100;
-			layers = [
-				(nix2containerPkgs.nix2container.buildLayer { 
-					copyToRoot = [
-						inputs.self.runtimeEnvs.${system}.runtime
-						{{range $config := $artifact.ImportConfigs}}
-						inputs.self.configs.${system}.config_{{ . }} {{end}}
-					];
-				})
-			];      
+			layers = builtins.concatLists [
+				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
+					copyToRoot = [ pkg ];
+				}) inputs.self.runtimeEnvsForOCI.${system}.runtime)
+
+				{{range $config := $artifact.ImportConfigs}}
+				(nix2containerPkgs.nix2container.buildLayer {
+					copyToRoot = [ inputs.self.configs.${system}.config_{{ . }} ];
+				}),
+				{{end}}
+
+			];     
 		};
 
 		ociImage_{{$artifact.Artifact}}_app_with_dev = nix2containerPkgs.nix2container.buildImage {
@@ -74,16 +76,21 @@ const (
 				};
 			};
 			maxLayers = 100;
-			layers = [
-				(nix2containerPkgs.nix2container.buildLayer { 
-					copyToRoot = [
-						inputs.self.runtimeEnvs.${system}.runtime
-						{{range $config := $artifact.ImportConfigs}}
-						inputs.self.configs.${system}.config_{{ . }} {{end}}
-						inputs.self.devEnvs.${system}.development
-					];
-				})
-			];      
+			layers = builtins.concatLists [
+				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
+					copyToRoot = [ pkg ];
+				}) inputs.self.runtimeEnvsForOCI.${system}.runtime)
+
+				{{range $config := $artifact.ImportConfigs}}
+				(nix2containerPkgs.nix2container.buildLayer {
+					copyToRoot = [ inputs.self.configs.${system}.config_{{ . }} ];
+				}),
+				{{end}}
+
+				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
+					copyToRoot = [ pkg ];
+				}) inputs.self.devEnvsForOCI.${system}.development)
+			];     
 		};
 		{{end}}
 
@@ -106,22 +113,18 @@ const (
 				};
 			};
 			maxLayers = 100;
-			layers = [
-				{{range $runtime := inputs.self.runtimeEnvs.${system}.runtime}}
-					(nix2containerPkgs.nix2container.buildLayer { 
-						copyToRoot = [
-							{{ . }}
-						];
-					})
-				{{end}}
+			layers = builtins.concatLists [
+				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
+					copyToRoot = [ pkg ];
+				}) inputs.self.runtimeEnvsForOCI.${system}.runtime)
+
 				{{range $config := $artifact.ImportConfigs}}
-					(nix2containerPkgs.nix2container.buildLayer { 
-						copyToRoot = [
-							inputs.self.configs.${system}.config_{{ . }}
-						];
-					})
+				(nix2containerPkgs.nix2container.buildLayer {
+					copyToRoot = [ inputs.self.configs.${system}.config_{{ . }} ];
+				}),
 				{{end}}
-			];      
+
+			];
 		};
 
 		ociImage_{{$artifact.Artifact}}_dev = nix2containerPkgs.nix2container.buildImage {
@@ -142,16 +145,21 @@ const (
 				};
 			};
 			maxLayers = 100;
-			layers = [
-				(nix2containerPkgs.nix2container.buildLayer { 
-					copyToRoot = [
-						inputs.self.runtimeEnvs.${system}.runtime
-						{{range $config := $artifact.ImportConfigs}}
-						inputs.self.configs.${system}.config_{{ . }} {{end}}
-						inputs.self.devEnvs.${system}.development
-					];
-				})
-			];      
+			layers = builtins.concatLists [
+				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
+					copyToRoot = [ pkg ];
+				}) inputs.self.runtimeEnvsForOCI.${system}.runtime)
+
+				{{range $config := $artifact.ImportConfigs}}
+				(nix2containerPkgs.nix2container.buildLayer {
+					copyToRoot = [ inputs.self.configs.${system}.config_{{ . }} ];
+				}),
+				{{end}}
+
+				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
+					copyToRoot = [ pkg ];
+				}) inputs.self.devEnvsForOCI.${system}.development)
+			];
 		};
 		{{end}}
 		{{end}}
@@ -168,19 +176,8 @@ const (
 		{{end}}
 	});
 `
-
-	runtimeLayer = `
-	layers = [
-		(nix2containerPkgs.nix2container.buildLayer { 
-			copyToRoot = [
-				inputs.self.runtimeEnvs.${system}.runtime
-				{{range $config := $artifact.ImportConfigs}}
-				inputs.self.configs.${system}.config_{{ . }} {{end}}
-			];
-		})
-	]; 
-`
 )
+
 
 func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
 	converted := make([]OCIArtifact, len(ociArtifacts))
@@ -195,11 +192,9 @@ func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
 			ImportConfigs: ociArtifact.ImportConfigs,
 			ExposedPorts:  ociArtifact.ExposedPorts,
 		}
-		// converted[i].Layer = getLayer(ociArtifact.Layers)
 		if ociArtifact.IsBase {
 			converted[i].Base = true
 		}
-
 	}
 	return converted
 }
@@ -223,7 +218,3 @@ func GenerateOCIAttr(artifacts []OCIArtifact) (*string, error) {
 	result := buf.String()
 	return &result, nil
 }
-
-// func getLayer([]string) *string {
-	
-// }

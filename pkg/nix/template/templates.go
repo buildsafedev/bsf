@@ -165,6 +165,28 @@ const (
 		   ];
 		};
 	   });
+
+	   runtimeEnvsForOCI = forEachSupportedSystem ({ pkgs,
+		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
+		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
+		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
+		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} ... }: {
+		runtime = [ 
+			{{ range $key, $value := .RuntimePackages }}nixpkgs-{{ $value  }}-pkgs.{{$key}}   
+			{{ end }}
+		   ];
+	   });
+
+	   devEnvsForOCI = forEachSupportedSystem ({ pkgs,
+		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
+		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
+		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
+	   {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} ... }: {
+		development = [ 
+			{{ range $key, $value :=.DevPackages }}nixpkgs-{{ $value  }}-pkgs.{{ $key }}  
+			{{ end }}
+		   ];
+	   });
        
 	   {{if .ConfigAttribute}}
 	   {{.ConfigAttribute}}
