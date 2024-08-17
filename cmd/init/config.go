@@ -69,10 +69,13 @@ func generateEmptyConf(imageName string, addCommonDeps bool, commonDepsType stri
 		},
 		OCIArtifact: []hcl2nix.OCIArtifact{
 			{
-				Artifact:      "pkgs",
-				Name:          imageName,
-				IsBase:        true,
-				Layers:        []string{},
+				Artifact: "pkgs",
+				Name:     imageName,
+				IsBase:   true,
+				Layers: []string{
+					"split(pkgs.runtime)",
+					"split(pkgs.dev)",
+				},
 				Cmd:           []string{},
 				Entrypoint:    []string{},
 				EnvVars:       []string{},

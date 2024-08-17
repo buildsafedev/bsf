@@ -9,20 +9,22 @@ import (
 
 // OCIArtifact holds parameters for OCI artifacts
 type OCIArtifact struct {
-	Artifact      string
-	Name          string
-	Cmd           []string
-	Entrypoint    []string
-	EnvVars       []string
-	ImportConfigs []string
-	ExposedPorts  []string
-	Base          bool
+	Artifact            string
+	Name                string
+	Layers              []string
+	Cmd                 []string
+	Entrypoint          []string
+	EnvVars             []string
+	ImportConfigs       []string
+	ExposedPorts        []string
+	Base                bool
+	NixPackageRevisions []string
 }
 
 const (
-    ociTmpl = `
-	ociImages = forEachSupportedSystem ({ pkgs, nix2containerPkgs, system , ...}: {
+	ociTmpl = `
 		{{range $artifact := .}}
+		ociImages = forEachSupportedSystem ({ pkgs, nix2containerPkgs, system ,  {{ range $artifact.NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} ...}: {
 		{{ if ne ($artifact.Base) true }}
 		ociImage_{{$artifact.Artifact}}_app = nix2containerPkgs.nix2container.buildImage {
 			name = "{{$artifact.Name}}";
@@ -43,17 +45,16 @@ const (
 				};
 			};
 			maxLayers = 100;
-			layers = builtins.concatLists [
-				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
-					copyToRoot = [ pkg ];
-				}) inputs.self.runtimeEnvsForOCI.${system}.runtime)
+			layers = [
+				{{range $layer := .Layers}}
+					{{$layer}}
+				{{end}}
 
 				{{range $config := $artifact.ImportConfigs}}
 				(nix2containerPkgs.nix2container.buildLayer {
 					copyToRoot = [ inputs.self.configs.${system}.config_{{ . }} ];
 				}),
 				{{end}}
-
 			];     
 		};
 
@@ -76,21 +77,17 @@ const (
 				};
 			};
 			maxLayers = 100;
-			layers = builtins.concatLists [
-				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
-					copyToRoot = [ pkg ];
-				}) inputs.self.runtimeEnvsForOCI.${system}.runtime)
+			layers = [
+				{{range $layer := .Layers}}
+					{{$layer}}
+				{{end}}
 
 				{{range $config := $artifact.ImportConfigs}}
 				(nix2containerPkgs.nix2container.buildLayer {
 					copyToRoot = [ inputs.self.configs.${system}.config_{{ . }} ];
 				}),
 				{{end}}
-
-				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
-					copyToRoot = [ pkg ];
-				}) inputs.self.devEnvsForOCI.${system}.development)
-			];     
+			];    
 		};
 		{{end}}
 
@@ -113,17 +110,16 @@ const (
 				};
 			};
 			maxLayers = 100;
-			layers = builtins.concatLists [
-				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
-					copyToRoot = [ pkg ];
-				}) inputs.self.runtimeEnvsForOCI.${system}.runtime)
+			layers = [
+				{{range $layer := .Layers}}
+					{{$layer}}
+				{{end}}
 
 				{{range $config := $artifact.ImportConfigs}}
 				(nix2containerPkgs.nix2container.buildLayer {
 					copyToRoot = [ inputs.self.configs.${system}.config_{{ . }} ];
 				}),
 				{{end}}
-
 			];
 		};
 
@@ -145,20 +141,16 @@ const (
 				};
 			};
 			maxLayers = 100;
-			layers = builtins.concatLists [
-				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
-					copyToRoot = [ pkg ];
-				}) inputs.self.runtimeEnvsForOCI.${system}.runtime)
+			layers = [
+				{{range $layer := .Layers}}
+					{{$layer}}
+				{{end}}
 
 				{{range $config := $artifact.ImportConfigs}}
 				(nix2containerPkgs.nix2container.buildLayer {
 					copyToRoot = [ inputs.self.configs.${system}.config_{{ . }} ];
 				}),
 				{{end}}
-
-				(map (pkg: nix2containerPkgs.nix2container.buildLayer {
-					copyToRoot = [ pkg ];
-				}) inputs.self.devEnvsForOCI.${system}.development)
 			];
 		};
 		{{end}}
@@ -178,23 +170,25 @@ const (
 `
 )
 
-
-func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact) []OCIArtifact {
+func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact, fl Flake) []OCIArtifact {
 	converted := make([]OCIArtifact, len(ociArtifacts))
 
 	for i, ociArtifact := range ociArtifacts {
 		converted[i] = OCIArtifact{
-			Artifact:      ociArtifact.Artifact,
-			Name:          ociArtifact.Name,
-			Cmd:           ociArtifact.Cmd,
-			Entrypoint:    ociArtifact.Entrypoint,
-			EnvVars:       ociArtifact.EnvVars,
-			ImportConfigs: ociArtifact.ImportConfigs,
-			ExposedPorts:  ociArtifact.ExposedPorts,
+			Artifact:            ociArtifact.Artifact,
+			Name:                ociArtifact.Name,
+			Layers:              getLayers(ociArtifact.Layers, fl),
+			Cmd:                 ociArtifact.Cmd,
+			Entrypoint:          ociArtifact.Entrypoint,
+			EnvVars:             ociArtifact.EnvVars,
+			ImportConfigs:       ociArtifact.ImportConfigs,
+			ExposedPorts:        ociArtifact.ExposedPorts,
+			NixPackageRevisions: fl.NixPackageRevisions,
 		}
 		if ociArtifact.IsBase {
 			converted[i].Base = true
 		}
+
 	}
 	return converted
 }
@@ -217,4 +211,80 @@ func GenerateOCIAttr(artifacts []OCIArtifact) (*string, error) {
 
 	result := buf.String()
 	return &result, nil
+}
+
+func getLayers(layers []string, fl Flake) []string {
+	reqPkgs := getReqPkgs(layers, fl)
+
+	var layerBlocks []string
+
+	for _, pkg := range reqPkgs {
+		var layerBlock string
+
+		if pkg == "pkgs.runtime" {
+			layerBlock = `
+			(nix2containerPkgs.nix2container.buildLayer { 
+				copyToRoot = [
+					inputs.self.runtimeEnvs.${system}.runtime
+				];
+			})`
+		} else if pkg == "pkgs.dev" {
+			layerBlock = `
+			(nix2containerPkgs.nix2container.buildLayer { 
+				copyToRoot = [
+					inputs.self.devEnvs.${system}.development
+				];
+			})`
+		} else {
+			layerBlock = `
+			(nix2containerPkgs.nix2container.buildLayer { 
+				copyToRoot = [
+					` + pkg + `
+				];
+			})`
+		}
+
+		layerBlocks = append(layerBlocks, layerBlock)
+	}
+	return layerBlocks
+}
+
+func getReqPkgs(layers []string, fl Flake) []string {
+	var newLayers []string
+
+	for _, l := range layers {
+		if l == "split(pkgs.runtime)" {
+			for key, value := range fl.RuntimePackages {
+				newLayer := "nixpkgs-" + value + "-pkgs." + key
+				newLayers = append(newLayers, newLayer)
+			}
+		} else if l == "split(pkgs.dev)" {
+			for key, value := range fl.DevPackages {
+				newLayer := "nixpkgs-" + value + "-pkgs." + key
+				newLayers = append(newLayers, newLayer)
+			}
+		} else if len(l) > 8 && l[:9] == "pkgs.dev." {
+			pkgName := l[9:]
+			for key, value := range fl.DevPackages {
+				if key == pkgName {
+					newLayer := "nixpkgs-" + value + "-pkgs." + key
+					newLayers = append(newLayers, newLayer)
+					break
+				}
+			}
+		} else if len(l) > 12 && l[:13] == "pkgs.runtime." {
+			pkgName := l[13:]
+			for key, value := range fl.RuntimePackages {
+				if key == pkgName {
+					newLayer := "nixpkgs-" + value + "-pkgs." + key
+					newLayers = append(newLayers, newLayer)
+					break
+				}
+			}
+		} else {
+			newLayers = append(newLayers, l)
+		}
+	}
+
+	return newLayers
 }

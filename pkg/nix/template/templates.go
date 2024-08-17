@@ -165,28 +165,6 @@ const (
 		   ];
 		};
 	   });
-
-	   runtimeEnvsForOCI = forEachSupportedSystem ({ pkgs,
-		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
-		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
-		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
-		{{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} ... }: {
-		runtime = [ 
-			{{ range $key, $value := .RuntimePackages }}nixpkgs-{{ $value  }}-pkgs.{{$key}}   
-			{{ end }}
-		   ];
-	   });
-
-	   devEnvsForOCI = forEachSupportedSystem ({ pkgs,
-		{{if eq .Language "GoModule"}} buildGoApplication, {{end}}
-		{{if eq .Language "PythonPoetry"}} mkPoetryApplication, {{end}}
-		{{ if eq .Language "JsNpm"}} buildNodeModules, {{end}}
-	   {{ range .NixPackageRevisions }} nixpkgs-{{ .}}-pkgs, {{ end }} ... }: {
-		development = [ 
-			{{ range $key, $value :=.DevPackages }}nixpkgs-{{ $value  }}-pkgs.{{ $key }}  
-			{{ end }}
-		   ];
-	   });
        
 	   {{if .ConfigAttribute}}
 	   {{.ConfigAttribute}}
@@ -230,9 +208,8 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 	}
 
 	if conf.OCIArtifact != nil {
-		isBase := checkForBase(conf)
-		fl.IsBase = isBase
-		artifacts := hclOCIToOCIArtifact(conf.OCIArtifact)
+		fl.IsBase = checkForBase(conf)
+		artifacts := hclOCIToOCIArtifact(conf.OCIArtifact, fl)
 		artifacttAttr, err := GenerateOCIAttr(artifacts)
 		if err != nil {
 			return err
@@ -257,20 +234,12 @@ func GenerateFlake(fl Flake, wr io.Writer, conf *hcl2nix.Config) error {
 }
 
 func checkForBase(conf *hcl2nix.Config) bool {
-	isBase := true
-	if conf.GoModule != nil{
-		return false
+	for _, o := range conf.OCIArtifact {
+		if o.IsBase {
+			return true
+		}
 	}
-	if conf.PoetryApp != nil{
-		return false
-	}
-	if conf.RustApp != nil{
-		return false
-	}
-	if conf.JsNpmApp != nil{
-		return false
-	}
-	return isBase
+	return false
 }
 
 // parentFolder returns the parent folder of the given path. ex: ( ./ -> ../ )
