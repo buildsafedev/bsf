@@ -85,7 +85,7 @@ var OCICmd = &cobra.Command{
 
 		if dfSwap {
 			if tag != "" {
-				if err = modifyDockerfileWithTag(path, tag, devDeps); err != nil {
+				if err = modifyDockerfileWithTag(path, tag); err != nil {
 					fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 					os.Exit(1)
 				}
@@ -278,7 +278,7 @@ func ProcessPlatformAndConfig(conf *hcl2nix.Config, plat string, envName string)
 	return artifact, plat, nil
 }
 
-func modifyDockerfileWithTag(path, tag string, devDeps bool) error {
+func modifyDockerfileWithTag(path, tag string) error {
 	var dockerfilePath string
 	if path != "" {
 		dockerfilePath = path + "/Dockerfile"
@@ -332,17 +332,11 @@ func genOCIAttrName(env, platform string, isBase bool) string {
 		arch = "unknown"
 	}
 
-	base := fmt.Sprintf("bsf/.#ociImages.%s.ociImage_%s_", arch, env)
+	base := fmt.Sprintf("bsf/.#ociImage_%s.%s.ociImage_%s_", env, arch, env)
 
 	if isBase {
-		if devDeps {
-			return base + "dev-as-dir"
-		}
-		return base + "runtime-as-dir"
+		return base + "base-as-dir"
 	}
 
-	if devDeps {
-		return base + "app_with_dev-as-dir"
-	}
 	return base + "app-as-dir"
 }
