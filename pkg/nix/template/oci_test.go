@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGenerateOCIAttr(t *testing.T) {
@@ -48,8 +50,191 @@ func TestGenerateOCIAttr(t *testing.T) {
 		t.Errorf("Generated template does not contain expected exposed ports for Test2")
 	}
 
-	if !strings.Contains(*result, "inputs.self.devEnvs.${system}.development") {
-		t.Errorf("Generated template does not contain expected devEnvs reference")
-	}
 	fmt.Println(*result)
+}
+
+func TestGetReqPkgs(t *testing.T) {
+	tests := []struct {
+		name     string
+		layers   []string
+		fl       Flake
+		expected []string
+	}{
+		{
+			name:   "Split runtime packages",
+			layers: []string{"split(pkgs.runtime)"},
+			fl: Flake{
+				RuntimePackages: map[string]string{
+					"go":    "d919897915f0f91216d2501b617d670deee993a0",
+					"nginx": "e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0",
+				},
+			},
+			expected: []string{
+				"nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go",
+				"nixpkgs-e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0-pkgs.nginx",
+			},
+		},
+		{
+			name:   "Split dev packages",
+			layers: []string{"split(pkgs.dev)"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+					"zsh":  "a5b69c8e5b6d78364c4f938ac142c8e6a6b2d3a0",
+				},
+			},
+			expected: []string{
+				"nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash",
+				"nixpkgs-a5b69c8e5b6d78364c4f938ac142c8e6a6b2d3a0-pkgs.zsh",
+			},
+		},
+		{
+			name:   "Specific dev package",
+			layers: []string{"pkgs.dev.bash"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+					"zsh":  "a5b69c8e5b6d78364c4f938ac142c8e6a6b2d3a0",
+				},
+			},
+			expected: []string{
+				"nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash",
+			},
+		},
+		{
+			name:   "Specific runtime package",
+			layers: []string{"pkgs.runtime.go"},
+			fl: Flake{
+				RuntimePackages: map[string]string{
+					"go":    "d919897915f0f91216d2501b617d670deee993a0",
+					"nginx": "e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0",
+				},
+			},
+			expected: []string{
+				"nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go",
+			},
+		},
+		{
+			name:   "Non-split layer",
+			layers: []string{"someOtherLayer"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+				},
+				RuntimePackages: map[string]string{
+					"go": "d919897915f0f91216d2501b617d670deee993a0",
+				},
+			},
+			expected: []string{"someOtherLayer"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getReqPkgs(tt.layers, tt.fl)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetLayers(t *testing.T) {
+	tests := []struct {
+		name     string
+		layers   []string
+		fl       Flake
+		expected []string
+	}{
+		{
+			name:   "Basic runtime and dev split",
+			layers: []string{"split(pkgs.runtime)", "split(pkgs.dev)"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+				},
+				RuntimePackages: map[string]string{
+					"go": "d919897915f0f91216d2501b617d670deee993a0",
+				},
+			},
+			expected: []string{
+				`
+			(nix2containerPkgs.nix2container.buildLayer { 
+				copyToRoot = [
+					nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go
+				];
+			})`,
+				`
+			(nix2containerPkgs.nix2container.buildLayer { 
+				copyToRoot = [
+					nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash
+				];
+			})`,
+			},
+		},
+		{
+			name:   "Specific dev package with runtime split",
+			layers: []string{"pkgs.dev.bash", "split(pkgs.runtime)"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+				},
+				RuntimePackages: map[string]string{
+					"go":    "d919897915f0f91216d2501b617d670deee993a0",
+					"nginx": "e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0",
+				},
+			},
+			expected: []string{
+				`
+			(nix2containerPkgs.nix2container.buildLayer { 
+				copyToRoot = [
+					nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash
+				];
+			})`,
+				`
+			(nix2containerPkgs.nix2container.buildLayer { 
+				copyToRoot = [
+					nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go
+				];
+			})`,
+				`
+			(nix2containerPkgs.nix2container.buildLayer { 
+				copyToRoot = [
+					nixpkgs-e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0-pkgs.nginx
+				];
+			})`,
+			},
+		},
+		{
+			name:   "No split, just raw layers",
+			layers: []string{"pkgs.runtime", "pkgs.dev"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+				},
+				RuntimePackages: map[string]string{
+					"go": "d919897915f0f91216d2501b617d670deee993a0",
+				},
+			},
+			expected: []string{
+				`
+			(nix2containerPkgs.nix2container.buildLayer { 
+				copyToRoot = [
+					inputs.self.runtimeEnvs.${system}.runtime
+				];
+			})`,
+				`
+			(nix2containerPkgs.nix2container.buildLayer { 
+				copyToRoot = [
+					inputs.self.devEnvs.${system}.development
+				];
+			})`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getLayers(tt.layers, tt.fl)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
 }
