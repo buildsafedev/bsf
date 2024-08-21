@@ -2,6 +2,7 @@ package template
 
 import (
 	"bytes"
+	"strings"
 	"text/template"
 
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
@@ -86,7 +87,6 @@ ociImage_{{$artifact.Artifact}} = forEachSupportedSystem ({ pkgs, nix2containerP
 {{end}}
 
 `
-
 )
 
 func hclOCIToOCIArtifact(ociArtifacts []hcl2nix.OCIArtifact, fl Flake) []OCIArtifact {
@@ -137,72 +137,97 @@ func getLayers(layers []string, fl Flake) []string {
 
 	var layerBlocks []string
 
-	for _, pkg := range reqPkgs {
-		var layerBlock string
-
-		if pkg == "pkgs.runtime" {
-			layerBlock = `
-			(nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-					inputs.self.runtimeEnvs.${system}.runtime
-				];
-			})`
-		} else if pkg == "pkgs.dev" {
-			layerBlock = `
-			(nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-					inputs.self.devEnvs.${system}.development
-				];
-			})`
-		} else {
-			layerBlock = `
-			(nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-					` + pkg + `
-				];
-			})`
-		}
-
+	for _, pkgSet := range reqPkgs {
+		layerBlock :=
+			`(nix2containerPkgs.nix2container.buildLayer { 
+			copyToRoot = [
+				` + strings.Join(pkgSet, "\n") + `
+			];
+		})`
 		layerBlocks = append(layerBlocks, layerBlock)
 	}
+
 	return layerBlocks
 }
 
-func getReqPkgs(layers []string, fl Flake) []string {
-	var newLayers []string
+func getReqPkgs(layers []string, fl Flake) [][]string {
+	var newLayers [][]string
 
 	for _, l := range layers {
-		if l == "split(pkgs.runtime)" {
-			for key, value := range fl.RuntimePackages {
-				newLayer := "nixpkgs-" + value + "-pkgs." + key
-				newLayers = append(newLayers, newLayer)
-			}
-		} else if l == "split(pkgs.dev)" {
-			for key, value := range fl.DevPackages {
-				newLayer := "nixpkgs-" + value + "-pkgs." + key
-				newLayers = append(newLayers, newLayer)
-			}
-		} else if len(l) > 8 && l[:9] == "pkgs.dev." {
-			pkgName := l[9:]
-			for key, value := range fl.DevPackages {
-				if key == pkgName {
-					newLayer := "nixpkgs-" + value + "-pkgs." + key
-					newLayers = append(newLayers, newLayer)
-					break
-				}
-			}
-		} else if len(l) > 12 && l[:13] == "pkgs.runtime." {
-			pkgName := l[13:]
-			for key, value := range fl.RuntimePackages {
-				if key == pkgName {
-					newLayer := "nixpkgs-" + value + "-pkgs." + key
-					newLayers = append(newLayers, newLayer)
-					break
-				}
-			}
+		if strings.Contains(l, " + ") {
+			combinedLayer := handleCombinedLayers(l, fl)
+			newLayers = append(newLayers, combinedLayer)
 		} else {
-			newLayers = append(newLayers, l)
+			individualLayers := handleIndividualLayers(l, fl)
+			newLayers = append(newLayers, individualLayers...)
 		}
+	}
+
+	return newLayers
+}
+
+func handleCombinedLayers(layer string, fl Flake) []string {
+	var combinedLayer []string
+	parts := strings.Split(layer, " + ")
+
+	for _, part := range parts {
+		switch {
+		case part == "split(pkgs.runtime)":
+			for key, value := range fl.RuntimePackages {
+				combinedLayer = append(combinedLayer, "nixpkgs-"+value+"-pkgs."+key)
+			}
+		case part == "split(pkgs.dev)":
+			for key, value := range fl.DevPackages {
+				combinedLayer = append(combinedLayer, "nixpkgs-"+value+"-pkgs."+key)
+			}
+		case part == "pkgs.runtime":
+			combinedLayer = append(combinedLayer, "inputs.self.runtimeEnvs.${system}.runtime")
+		case part == "pkgs.dev":
+			combinedLayer = append(combinedLayer, "inputs.self.devEnvs.${system}.development")
+		case strings.HasPrefix(part, "pkgs.dev."):
+			pkgName := strings.TrimPrefix(part, "pkgs.dev.")
+			if value, exists := fl.DevPackages[pkgName]; exists {
+				combinedLayer = append(combinedLayer, "nixpkgs-"+value+"-pkgs."+pkgName)
+			}
+		case strings.HasPrefix(part, "pkgs.runtime."):
+			pkgName := strings.TrimPrefix(part, "pkgs.runtime.")
+			if value, exists := fl.RuntimePackages[pkgName]; exists {
+				combinedLayer = append(combinedLayer, "nixpkgs-"+value+"-pkgs."+pkgName)
+			}
+		}
+	}
+
+	return combinedLayer
+}
+
+func handleIndividualLayers(layer string, fl Flake) [][]string {
+	var newLayers [][]string
+
+	switch {
+	case layer == "split(pkgs.runtime)":
+		for key, value := range fl.RuntimePackages {
+			newLayers = append(newLayers, []string{"nixpkgs-" + value + "-pkgs." + key})
+		}
+	case layer == "split(pkgs.dev)":
+		for key, value := range fl.DevPackages {
+			newLayers = append(newLayers, []string{"nixpkgs-" + value + "-pkgs." + key})
+		}
+	case layer == "pkgs.runtime":
+		newLayers = append(newLayers, []string{"inputs.self.runtimeEnvs.${system}.runtime"})
+	case layer == "pkgs.dev":
+		newLayers = append(newLayers, []string{"inputs.self.devEnvs.${system}.development"})
+	case strings.HasPrefix(layer, "pkgs.dev."):
+		pkgName := strings.TrimPrefix(layer, "pkgs.dev.")
+		if value, exists := fl.DevPackages[pkgName]; exists {
+			newLayers = append(newLayers, []string{"nixpkgs-" + value + "-pkgs." + pkgName})
+		}
+	case strings.HasPrefix(layer, "pkgs.runtime."):
+		pkgName := strings.TrimPrefix(layer, "pkgs.runtime.")
+		if value, exists := fl.RuntimePackages[pkgName]; exists {
+			newLayers = append(newLayers, []string{"nixpkgs-" + value + "-pkgs." + pkgName})
+		}
+	default:
+		newLayers = append(newLayers, []string{layer})
 	}
 
 	return newLayers

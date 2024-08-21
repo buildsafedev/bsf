@@ -58,7 +58,7 @@ func TestGetReqPkgs(t *testing.T) {
 		name     string
 		layers   []string
 		fl       Flake
-		expected []string
+		expected [][]string
 	}{
 		{
 			name:   "Split runtime packages",
@@ -69,9 +69,9 @@ func TestGetReqPkgs(t *testing.T) {
 					"nginx": "e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0",
 				},
 			},
-			expected: []string{
-				"nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go",
-				"nixpkgs-e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0-pkgs.nginx",
+			expected: [][]string{
+				{"nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go"},
+				{"nixpkgs-e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0-pkgs.nginx"},
 			},
 		},
 		{
@@ -83,9 +83,9 @@ func TestGetReqPkgs(t *testing.T) {
 					"zsh":  "a5b69c8e5b6d78364c4f938ac142c8e6a6b2d3a0",
 				},
 			},
-			expected: []string{
-				"nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash",
-				"nixpkgs-a5b69c8e5b6d78364c4f938ac142c8e6a6b2d3a0-pkgs.zsh",
+			expected: [][]string{
+				{"nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash"},
+				{"nixpkgs-a5b69c8e5b6d78364c4f938ac142c8e6a6b2d3a0-pkgs.zsh"},
 			},
 		},
 		{
@@ -97,8 +97,8 @@ func TestGetReqPkgs(t *testing.T) {
 					"zsh":  "a5b69c8e5b6d78364c4f938ac142c8e6a6b2d3a0",
 				},
 			},
-			expected: []string{
-				"nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash",
+			expected: [][]string{
+				{"nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash"},
 			},
 		},
 		{
@@ -110,22 +110,45 @@ func TestGetReqPkgs(t *testing.T) {
 					"nginx": "e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0",
 				},
 			},
-			expected: []string{
-				"nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go",
+			expected: [][]string{
+				{"nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go"},
 			},
 		},
 		{
-			name:   "Non-split layer",
-			layers: []string{"someOtherLayer"},
+			name:   "Combined dev and runtime packages",
+			layers: []string{"pkgs.dev.go + pkgs.runtime.nginx"},
 			fl: Flake{
 				DevPackages: map[string]string{
-					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
-				},
-				RuntimePackages: map[string]string{
 					"go": "d919897915f0f91216d2501b617d670deee993a0",
 				},
+				RuntimePackages: map[string]string{
+					"nginx": "e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0",
+				},
 			},
-			expected: []string{"someOtherLayer"},
+			expected: [][]string{
+				{
+					"nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go",
+					"nixpkgs-e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0-pkgs.nginx",
+				},
+			},
+		},
+		{
+			name:   "Combined dev pkg and whole runtime",
+			layers: []string{"pkgs.dev.go + pkgs.runtime"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"go": "d919897915f0f91216d2501b617d670deee993a0",
+				},
+				RuntimePackages: map[string]string{
+					"nginx": "e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0",
+				},
+			},
+			expected: [][]string{
+				{
+					"nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go",
+					"inputs.self.runtimeEnvs.${system}.runtime",
+				},
+			},
 		},
 	}
 
@@ -156,56 +179,126 @@ func TestGetLayers(t *testing.T) {
 				},
 			},
 			expected: []string{
-				`
-			(nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-					nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go
-				];
-			})`,
-				`
-			(nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-					nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash
-				];
-			})`,
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go
+					];
+				})`,
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash
+					];
+				})`,
 			},
 		},
 		{
-			name:   "Specific dev package with runtime split",
-			layers: []string{"pkgs.dev.bash", "split(pkgs.runtime)"},
+			name:   "Combined dev pkg and split runtime",
+			layers: []string{"pkgs.dev.go + split(pkgs.runtime)"},
 			fl: Flake{
 				DevPackages: map[string]string{
-					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+					"go": "7445ccd775d8b892fc56448d17345443a05f7fb4",
 				},
 				RuntimePackages: map[string]string{
-					"go":    "d919897915f0f91216d2501b617d670deee993a0",
-					"nginx": "e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0",
+					"cacert": "ac5c1886fd9fe49748d7ab80accc4c847481df14",
 				},
 			},
 			expected: []string{
-				`
-			(nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-					nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash
-				];
-			})`,
-				`
-			(nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-					nixpkgs-d919897915f0f91216d2501b617d670deee993a0-pkgs.go
-				];
-			})`,
-				`
-			(nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-					nixpkgs-e3f1b7d7e09f8f5371b2cb1e3a0bc6c3b03f78a0-pkgs.nginx
-				];
-			})`,
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.go
+						nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs.cacert
+					];
+				})`,
+			},
+		},
+		{
+			name:   "Single dev package",
+			layers: []string{"pkgs.dev.go"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"go": "7445ccd775d8b892fc56448d17345443a05f7fb4",
+				},
+				RuntimePackages: map[string]string{},
+			},
+			expected: []string{
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.go
+					];
+				})`,
+			},
+		},
+		{
+			name:   "Combined dev and runtime packages",
+			layers: []string{"pkgs.dev.go + pkgs.runtime.cacert"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"go": "7445ccd775d8b892fc56448d17345443a05f7fb4",
+				},
+				RuntimePackages: map[string]string{
+					"cacert": "ac5c1886fd9fe49748d7ab80accc4c847481df14",
+				},
+			},
+			expected: []string{
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.go
+						nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs.cacert
+					];
+				})`,
+			},
+		},
+		{
+			name:   "Combined dev and whole runtime",
+			layers: []string{"pkgs.dev.go + pkgs.runtime"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"go": "7445ccd775d8b892fc56448d17345443a05f7fb4",
+				},
+				RuntimePackages: map[string]string{},
+			},
+			expected: []string{
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.go
+						inputs.self.runtimeEnvs.${system}.runtime
+					];
+				})`,
+			},
+		},
+		{
+			name:   "Split dev and runtime",
+			layers: []string{"split(pkgs.dev)", "split(pkgs.runtime)"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"go":   "7445ccd775d8b892fc56448d17345443a05f7fb4",
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+				},
+				RuntimePackages: map[string]string{
+					"cacert": "ac5c1886fd9fe49748d7ab80accc4c847481df14",
+				},
+			},
+			expected: []string{
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						nixpkgs-7445ccd775d8b892fc56448d17345443a05f7fb4-pkgs.go
+					];
+				})`,
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						nixpkgs-f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f-pkgs.bash
+					];
+				})`,
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						nixpkgs-ac5c1886fd9fe49748d7ab80accc4c847481df14-pkgs.cacert
+					];
+				})`,
 			},
 		},
 		{
 			name:   "No split, just raw layers",
-			layers: []string{"pkgs.runtime", "pkgs.dev"},
+			layers: []string{"pkgs.dev", "pkgs.runtime"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
@@ -215,18 +308,16 @@ func TestGetLayers(t *testing.T) {
 				},
 			},
 			expected: []string{
-				`
-			(nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-					inputs.self.runtimeEnvs.${system}.runtime
-				];
-			})`,
-				`
-			(nix2containerPkgs.nix2container.buildLayer { 
-				copyToRoot = [
-					inputs.self.devEnvs.${system}.development
-				];
-			})`,
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.devEnvs.${system}.development
+					];
+				})`,
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.runtimeEnvs.${system}.runtime
+					];
+				})`,
 			},
 		},
 	}
@@ -234,7 +325,17 @@ func TestGetLayers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := getLayers(tt.layers, tt.fl)
+			for i := range result {
+				result[i] = normalizeString(result[i])
+			}
+			for i := range tt.expected {
+				tt.expected[i] = normalizeString(tt.expected[i])
+			}
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func normalizeString(s string) string {
+	return strings.Join(strings.Fields(s), " ")
 }
