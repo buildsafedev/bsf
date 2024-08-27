@@ -62,7 +62,7 @@ func TestGetReqPkgs(t *testing.T) {
 	}{
 		{
 			name:   "Split runtime packages",
-			layers: []string{"split(pkgs.runtime)"},
+			layers: []string{"split(packages.runtime)"},
 			fl: Flake{
 				RuntimePackages: map[string]string{
 					"go":    "d919897915f0f91216d2501b617d670deee993a0",
@@ -76,7 +76,7 @@ func TestGetReqPkgs(t *testing.T) {
 		},
 		{
 			name:   "Split dev packages",
-			layers: []string{"split(pkgs.dev)"},
+			layers: []string{"split(packages.dev)"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
@@ -90,7 +90,7 @@ func TestGetReqPkgs(t *testing.T) {
 		},
 		{
 			name:   "Specific dev package",
-			layers: []string{"pkgs.dev.bash"},
+			layers: []string{"packages.dev.bash"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
@@ -103,7 +103,7 @@ func TestGetReqPkgs(t *testing.T) {
 		},
 		{
 			name:   "Specific runtime package",
-			layers: []string{"pkgs.runtime.go"},
+			layers: []string{"packages.runtime.go"},
 			fl: Flake{
 				RuntimePackages: map[string]string{
 					"go":    "d919897915f0f91216d2501b617d670deee993a0",
@@ -116,7 +116,7 @@ func TestGetReqPkgs(t *testing.T) {
 		},
 		{
 			name:   "Combined dev and runtime packages",
-			layers: []string{"pkgs.dev.go + pkgs.runtime.nginx"},
+			layers: []string{"packages.dev.go + packages.runtime.nginx"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"go": "d919897915f0f91216d2501b617d670deee993a0",
@@ -134,7 +134,7 @@ func TestGetReqPkgs(t *testing.T) {
 		},
 		{
 			name:   "Combined dev pkg and whole runtime",
-			layers: []string{"pkgs.dev.go + pkgs.runtime"},
+			layers: []string{"packages.dev.go + packages.runtime"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"go": "d919897915f0f91216d2501b617d670deee993a0",
@@ -169,7 +169,7 @@ func TestGetLayers(t *testing.T) {
 	}{
 		{
 			name:   "Basic runtime and dev split",
-			layers: []string{"split(pkgs.runtime)", "split(pkgs.dev)"},
+			layers: []string{"split(packages.runtime)", "split(packages.dev)"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
@@ -193,7 +193,7 @@ func TestGetLayers(t *testing.T) {
 		},
 		{
 			name:   "Combined dev pkg and split runtime",
-			layers: []string{"pkgs.dev.go + split(pkgs.runtime)"},
+			layers: []string{"packages.dev.go + split(packages.runtime)"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"go": "7445ccd775d8b892fc56448d17345443a05f7fb4",
@@ -213,7 +213,7 @@ func TestGetLayers(t *testing.T) {
 		},
 		{
 			name:   "Single dev package",
-			layers: []string{"pkgs.dev.go"},
+			layers: []string{"packages.dev.go"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"go": "7445ccd775d8b892fc56448d17345443a05f7fb4",
@@ -230,7 +230,7 @@ func TestGetLayers(t *testing.T) {
 		},
 		{
 			name:   "Combined dev and runtime packages",
-			layers: []string{"pkgs.dev.go + pkgs.runtime.cacert"},
+			layers: []string{"packages.dev.go + packages.runtime.cacert"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"go": "7445ccd775d8b892fc56448d17345443a05f7fb4",
@@ -250,7 +250,7 @@ func TestGetLayers(t *testing.T) {
 		},
 		{
 			name:   "Combined dev and whole runtime",
-			layers: []string{"pkgs.dev.go + pkgs.runtime"},
+			layers: []string{"packages.dev.go + packages.runtime"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"go": "7445ccd775d8b892fc56448d17345443a05f7fb4",
@@ -268,7 +268,7 @@ func TestGetLayers(t *testing.T) {
 		},
 		{
 			name:   "Split dev and runtime",
-			layers: []string{"split(pkgs.dev)", "split(pkgs.runtime)"},
+			layers: []string{"split(packages.dev)", "split(packages.runtime)"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"go":   "7445ccd775d8b892fc56448d17345443a05f7fb4",
@@ -298,7 +298,7 @@ func TestGetLayers(t *testing.T) {
 		},
 		{
 			name:   "No split, just raw layers",
-			layers: []string{"pkgs.dev", "pkgs.runtime"},
+			layers: []string{"packages.dev", "packages.runtime"},
 			fl: Flake{
 				DevPackages: map[string]string{
 					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",

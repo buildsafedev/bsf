@@ -78,7 +78,7 @@ ociImage_{{$artifact.Artifact}} = forEachSupportedSystem ({ pkgs, nix2containerP
   {{end}}
 
   {{ if ne ($artifact.Base) true }}
-  ociImage_{{$artifact.Artifact}}_app-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImage_{{$artifact.Artifact}}.${system}.ociImage_{{$artifact.Artifact}}_app.copyTo}/bin/copy-to dir:$out";
+  ociImage_{{$artifact.Artifact}}_app-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImage_{{$artifact.Artifact}}gs.${system}.ociImage_{{$artifact.Artifact}}_app.copyTo}/bin/copy-to dir:$out";
   {{end}}
   {{ if ($artifact.Base)}}
   ociImage_{{$artifact.Artifact}}_base-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImage_{{$artifact.Artifact}}.${system}.ociImage_{{$artifact.Artifact}}_base.copyTo}/bin/copy-to dir:$out";
@@ -172,25 +172,25 @@ func handleCombinedLayers(layer string, fl Flake) []string {
 
 	for _, part := range parts {
 		switch {
-		case part == "split(pkgs.runtime)":
+		case part == "split(packages.runtime)":
 			for key, value := range fl.RuntimePackages {
 				combinedLayer = append(combinedLayer, "nixpkgs-"+value+"-pkgs."+key)
 			}
-		case part == "split(pkgs.dev)":
+		case part == "split(packages.dev)":
 			for key, value := range fl.DevPackages {
 				combinedLayer = append(combinedLayer, "nixpkgs-"+value+"-pkgs."+key)
 			}
-		case part == "pkgs.runtime":
+		case part == "packages.runtime":
 			combinedLayer = append(combinedLayer, "inputs.self.runtimeEnvs.${system}.runtime")
-		case part == "pkgs.dev":
+		case part == "packages.dev":
 			combinedLayer = append(combinedLayer, "inputs.self.devEnvs.${system}.development")
-		case strings.HasPrefix(part, "pkgs.dev."):
-			pkgName := strings.TrimPrefix(part, "pkgs.dev.")
+		case strings.HasPrefix(part, "packages.dev."):
+			pkgName := strings.TrimPrefix(part, "packages.dev.")
 			if value, exists := fl.DevPackages[pkgName]; exists {
 				combinedLayer = append(combinedLayer, "nixpkgs-"+value+"-pkgs."+pkgName)
 			}
-		case strings.HasPrefix(part, "pkgs.runtime."):
-			pkgName := strings.TrimPrefix(part, "pkgs.runtime.")
+		case strings.HasPrefix(part, "packages.runtime."):
+			pkgName := strings.TrimPrefix(part, "packages.runtime.")
 			if value, exists := fl.RuntimePackages[pkgName]; exists {
 				combinedLayer = append(combinedLayer, "nixpkgs-"+value+"-pkgs."+pkgName)
 			}
@@ -204,25 +204,25 @@ func handleIndividualLayers(layer string, fl Flake) [][]string {
 	var newLayers [][]string
 
 	switch {
-	case layer == "split(pkgs.runtime)":
+	case layer == "split(packages.runtime)":
 		for key, value := range fl.RuntimePackages {
 			newLayers = append(newLayers, []string{"nixpkgs-" + value + "-pkgs." + key})
 		}
-	case layer == "split(pkgs.dev)":
+	case layer == "split(packages.dev)":
 		for key, value := range fl.DevPackages {
 			newLayers = append(newLayers, []string{"nixpkgs-" + value + "-pkgs." + key})
 		}
-	case layer == "pkgs.runtime":
+	case layer == "packages.runtime":
 		newLayers = append(newLayers, []string{"inputs.self.runtimeEnvs.${system}.runtime"})
-	case layer == "pkgs.dev":
+	case layer == "packages.dev":
 		newLayers = append(newLayers, []string{"inputs.self.devEnvs.${system}.development"})
-	case strings.HasPrefix(layer, "pkgs.dev."):
-		pkgName := strings.TrimPrefix(layer, "pkgs.dev.")
+	case strings.HasPrefix(layer, "packages.dev."):
+		pkgName := strings.TrimPrefix(layer, "packages.dev.")
 		if value, exists := fl.DevPackages[pkgName]; exists {
 			newLayers = append(newLayers, []string{"nixpkgs-" + value + "-pkgs." + pkgName})
 		}
-	case strings.HasPrefix(layer, "pkgs.runtime."):
-		pkgName := strings.TrimPrefix(layer, "pkgs.runtime.")
+	case strings.HasPrefix(layer, "packages.runtime."):
+		pkgName := strings.TrimPrefix(layer, "packages.runtime.")
 		if value, exists := fl.RuntimePackages[pkgName]; exists {
 			newLayers = append(newLayers, []string{"nixpkgs-" + value + "-pkgs." + pkgName})
 		}
