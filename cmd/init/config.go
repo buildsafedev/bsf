@@ -73,8 +73,8 @@ func generateEmptyConf(imageName string, addCommonDeps bool, commonDepsType stri
 				Name:     imageName,
 				IsBase:   true,
 				Layers: []string{
-					"split(pkgs.runtime)",
-					"split(pkgs.dev)",
+					"split(packages.runtime)",
+					"split(packages.dev)",
 				},
 				Cmd:           []string{},
 				Entrypoint:    []string{},
