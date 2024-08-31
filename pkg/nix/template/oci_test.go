@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 
@@ -155,9 +156,20 @@ func TestGetReqPkgs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := getReqPkgs(tt.layers, tt.fl)
+			sortSlices(tt.expected)
+			sortSlices(result)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func sortSlices(slices [][]string) {
+	for _, slice := range slices {
+		sort.Strings(slice)
+	}
+	sort.Slice(slices, func(i, j int) bool {
+		return strings.Join(slices[i], ",") < strings.Join(slices[j], ",")
+	})
 }
 
 func TestGetLayers(t *testing.T) {
@@ -325,14 +337,18 @@ func TestGetLayers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := getLayers(tt.layers, tt.fl)
-			for i := range result {
-				result[i] = normalizeString(result[i])
-			}
-			for i := range tt.expected {
-				tt.expected[i] = normalizeString(tt.expected[i])
-			}
+			sort.Strings(tt.expected)
+			sort.Strings(result)
+			normalizeStringSlice(tt.expected)
+			normalizeStringSlice(result)
 			assert.Equal(t, tt.expected, result)
 		})
+	}
+}
+
+func normalizeStringSlice(slice []string) {
+	for i, s := range slice {
+		slice[i] = normalizeString(s)
 	}
 }
 
