@@ -78,7 +78,7 @@ ociImage_{{$artifact.Artifact}} = forEachSupportedSystem ({ pkgs, nix2containerP
   {{end}}
 
   {{ if ne ($artifact.Base) true }}
-  ociImage_{{$artifact.Artifact}}_app-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImage_{{$artifact.Artifact}}gs.${system}.ociImage_{{$artifact.Artifact}}_app.copyTo}/bin/copy-to dir:$out";
+  ociImage_{{$artifact.Artifact}}_app-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImage_{{$artifact.Artifact}}.${system}.ociImage_{{$artifact.Artifact}}_app.copyTo}/bin/copy-to dir:$out";
   {{end}}
   {{ if ($artifact.Base)}}
   ociImage_{{$artifact.Artifact}}_base-as-dir = pkgs.runCommand "image-as-dir" { } "${inputs.self.ociImage_{{$artifact.Artifact}}.${system}.ociImage_{{$artifact.Artifact}}_base.copyTo}/bin/copy-to dir:$out";
