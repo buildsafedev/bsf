@@ -332,6 +332,111 @@ func TestGetLayers(t *testing.T) {
 				})`,
 			},
 		},
+		{
+			name:   "App OCI for Go",
+			layers: []string{"gomodule"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+				},
+				RuntimePackages: map[string]string{
+					"go": "d919897915f0f91216d2501b617d670deee993a0",
+				},
+			},
+			expected: []string{
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.packages.${system}.default
+					];
+				})`,
+			},
+		},
+		{
+			name:   "App OCI for Python",
+			layers: []string{"poetryapp"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+				},
+				RuntimePackages: map[string]string{
+					"go": "d919897915f0f91216d2501b617d670deee993a0",
+				},
+			},
+			expected: []string{
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.packages.${system}.default
+					];
+				})`,
+			},
+		},
+		{
+			name:   "App OCI for Rust",
+			layers: []string{"rustapp"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+				},
+				RuntimePackages: map[string]string{
+					"go": "d919897915f0f91216d2501b617d670deee993a0",
+				},
+			},
+			expected: []string{
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.packages.${system}.default
+					];
+				})`,
+			},
+		},
+		{
+			name:   "App OCI for NPM",
+			layers: []string{"jsnpmapp"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+				},
+				RuntimePackages: map[string]string{
+					"go": "d919897915f0f91216d2501b617d670deee993a0",
+				},
+			},
+			expected: []string{
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.packages.${system}.default
+					];
+				})`,
+			},
+		},
+		{
+			name:   "App and runtime and dev",
+			layers: []string{"packages.dev", "packages.runtime", "gomodule"},
+			fl: Flake{
+				DevPackages: map[string]string{
+					"bash": "f2c55c8e7d3d843f75e2f18c8bf707b8a77c8a0f",
+				},
+				RuntimePackages: map[string]string{
+					"go": "d919897915f0f91216d2501b617d670deee993a0",
+				},
+			},
+			expected: []string{
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.devEnvs.${system}.development
+					];
+				})`,
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.runtimeEnvs.${system}.runtime
+					];
+				})`,
+				`(nix2containerPkgs.nix2container.buildLayer { 
+					copyToRoot = [
+						inputs.self.packages.${system}.default
+					];
+				})`,
+			},
+		},
 	}
 
 	for _, tt := range tests {
