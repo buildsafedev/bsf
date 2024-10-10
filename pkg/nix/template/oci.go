@@ -184,8 +184,8 @@ func handleCombinedLayers(layer string, fl Flake) []string {
 			combinedLayer = append(combinedLayer, "inputs.self.runtimeEnvs.${system}.runtime")
 		case part == "packages.dev":
 			combinedLayer = append(combinedLayer, "inputs.self.devEnvs.${system}.development")
-		// case part == "gomodule" || part == "rustapp" || part == "jsnpmapp" || part == "poetryapp":
-		// 	combinedLayer = append(combinedLayer, "inputs.self.packages.${system}.default")
+		case part == "gomodule" || part == "rustapp" || part == "jsnpmapp" || part == "poetryapp":
+			combinedLayer = append(combinedLayer, "inputs.self.packages.${system}.default")
 		case strings.HasPrefix(part, "packages.dev."):
 			pkgName := strings.TrimPrefix(part, "packages.dev.")
 			if value, exists := fl.DevPackages[pkgName]; exists {
