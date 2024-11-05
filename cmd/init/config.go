@@ -14,10 +14,10 @@ import (
 var (
 	commonDevDeps = []string{"coreutils-full@9.5", "bash@5.2.15"}
 	commonRTDeps  = []string{"cacert@3.95"}
-	rustDeps      = []string{"cargo@1.75.0"}
-	pythonDeps    = []string{"python3@3.12.2", "poetry@1.8.2"}
-	goDeps        = []string{"go@1.22.3", "gotools@0.18.0", "delve@1.22.1"}
-	jsNpmDeps     = []string{"nodejs@20.11.1"}
+	rustDeps      = []string{"cargo@1.82.0"}
+	pythonDeps    = []string{"python3@3.13.0", "poetry@1.8.4"}
+	goDeps        = []string{"go@1.23.2", "gotools@0.25.0", "delve@1.23.1"}
+	jsNpmDeps     = []string{"nodejs@23.1.0"}
 )
 
 func generatehcl2NixConf(pt langdetect.ProjectType, pd *langdetect.ProjectDetails, baseImgName string, addCommonDeps bool, commonDepsType string) (hcl2nix.Config, error) {
