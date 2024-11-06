@@ -15,6 +15,7 @@ import (
 
 	"github.com/buildsafedev/bsf/cmd/attestation"
 	"github.com/buildsafedev/bsf/cmd/build"
+	"github.com/buildsafedev/bsf/cmd/clean"
 	"github.com/buildsafedev/bsf/cmd/configure"
 	"github.com/buildsafedev/bsf/cmd/develop"
 	"github.com/buildsafedev/bsf/cmd/direnv"
@@ -71,6 +72,7 @@ func Execute() {
 		rootCmd.AddCommand(configure.ConfigureCmd)
 		rootCmd.AddCommand(nixgenerate.NixGenCmd)
 		rootCmd.AddCommand(precheck.PreCheckCmd)
+		rootCmd.AddCommand(clean.CleanCmd)
 	}
 	rootCmd.AddCommand(oci.OCICmd)
 	rootCmd.AddCommand(dockerfile.DFCmd)
