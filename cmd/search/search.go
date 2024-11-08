@@ -73,7 +73,7 @@ var SearchCmd = &cobra.Command{
 			fmt.Println(errorStyle.Render(fmt.Errorf("error: %v", err).Error()))
 			os.Exit(1)
 		}
-		items := convLPR2Items(packages)
+		items := convLPR2Items(packages, args...)
 		m := InitSearch(items)
 		if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
 			fmt.Println(errorStyle.Render(fmt.Errorf("error: %v", err).Error()))

@@ -2,6 +2,8 @@ package search
 
 import (
 	"context"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/buildsafedev/bsf/cmd/styles"
@@ -26,11 +28,31 @@ func (i pkgitem) FilterValue() string {
 	return i.name
 }
 
-func convLPR2Items(packages *buildsafev1.ListPackagesResponse) []list.Item {
+func convLPR2Items(packages *buildsafev1.ListPackagesResponse, args ...string) []list.Item {
 	items := make([]list.Item, 0, len(packages.Packages))
-	for _, name := range packages.Packages {
-		items = append(items, pkgitem{name: name})
+
+	if len(args) == 0 || args[0] == "" {
+		return nil
 	}
+
+	for _, pkg := range packages.Packages {
+		if strings.Contains(pkg, args[0]) {
+			items = append(items, pkgitem{name: pkg})
+		}
+	}
+	sort.Slice(items, func(i, j int) bool {
+		nameI := items[i].(pkgitem).name
+		nameJ := items[j].(pkgitem).name
+
+		if strings.HasPrefix(nameI, args[0]) && !strings.HasPrefix(nameJ, args[0]) {
+			return true
+		}
+		if !strings.HasPrefix(nameI, args[0]) && strings.HasPrefix(nameJ, args[0]) {
+			return false
+		}
+
+		return nameI < nameJ
+	})
 
 	return items
 }
