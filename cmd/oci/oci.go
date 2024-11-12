@@ -24,9 +24,8 @@ var (
 	platform, output, tag, path, destcreds                string
 	push, loadDocker, loadPodman, devDeps, dfSwap, digest bool
 )
-var (
-	supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
-)
+
+var supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
 
 func init() {
 	OCICmd.Flags().StringVarP(&platform, "platform", "p", "", "The platform to build the image for")
@@ -83,9 +82,18 @@ var OCICmd = &cobra.Command{
 			artifact.Name = newName
 		}
 
+		var ociArtifactName string
+
+		for _, ociArtifact := range conf.OCIArtifact {
+			if ociArtifact.Artifact == args[0] {
+				prefix := strings.Split(ociArtifact.Name, ":")[0]
+				ociArtifactName = prefix
+			}
+		}
+
 		if dfSwap {
 			if tag != "" {
-				if err = modifyDockerfileWithTag(path, tag); err != nil {
+				if err = modifyDockerfileWithTag(path, tag, ociArtifactName); err != nil {
 					fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 					os.Exit(1)
 				}
@@ -93,7 +101,6 @@ var OCICmd = &cobra.Command{
 			} else {
 				fmt.Println(styles.HintStyle.Render("hint:", "use --tag flag to define a tag"))
 			}
-			os.Exit(1)
 		}
 
 		sc, fh, err := binit.GetBSFInitializers()
@@ -102,7 +109,6 @@ var OCICmd = &cobra.Command{
 			os.Exit(1)
 		}
 		err = generate.Generate(fh, sc)
-
 		if err != nil {
 			fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 			os.Exit(1)
@@ -278,7 +284,7 @@ func ProcessPlatformAndConfig(conf *hcl2nix.Config, plat string, envName string)
 	return artifact, plat, nil
 }
 
-func modifyDockerfileWithTag(path, tag string) error {
+func modifyDockerfileWithTag(path, tag, ociArtifactName string) error {
 	var dockerfilePath string
 	if path != "" {
 		dockerfilePath = path + "/Dockerfile"
@@ -292,7 +298,7 @@ func modifyDockerfileWithTag(path, tag string) error {
 	}
 	defer file.Close()
 
-	resLines, err := builddocker.ModifyDockerfile(file, devDeps, tag)
+	resLines, err := builddocker.ModifyDockerfile(file, ociArtifactName, tag)
 	if err != nil {
 		return err
 	}

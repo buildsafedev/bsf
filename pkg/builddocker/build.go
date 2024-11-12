@@ -42,17 +42,16 @@ func GenerateDockerfile(w io.Writer, env hcl2nix.OCIArtifact, platform string) e
 	}
 
 	return nil
-
 }
 
 // ModifyDockerfile modifies the Dockerfile with the specified tag
-func ModifyDockerfile(file *os.File, dev bool, tag string) ([]string, error) {
+func ModifyDockerfile(file *os.File, ociArgument string, tag string) ([]string, error) {
 	lines, err := readDockerFile(file)
 	if err != nil {
 		return nil, err
 	}
 
-	reslines, err := editDockerfile(lines, dev, tag)
+	reslines, err := editDockerfile(lines, ociArgument, tag)
 	if err != nil {
 		return nil, err
 	}
@@ -72,13 +71,9 @@ func readDockerFile(file *os.File) ([]string, error) {
 	return lines, nil
 }
 
-func editDockerfile(lines []string, dev bool, tag string) ([]string, error) {
+func editDockerfile(lines []string, ociArtifactName, tag string) ([]string, error) {
 	var searchTag string
-	if dev {
-		searchTag = "bsfimage:dev"
-	} else {
-		searchTag = "bsfimage:runtime"
-	}
+	searchTag = ociArtifactName
 
 	var selectedFrom string
 	var selectedIndex int
