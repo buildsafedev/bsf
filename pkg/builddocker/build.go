@@ -1,11 +1,9 @@
 package builddocker
 
 import (
-	"bufio"
 	"fmt"
 	"html/template"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -42,71 +40,6 @@ func GenerateDockerfile(w io.Writer, env hcl2nix.OCIArtifact, platform string) e
 	}
 
 	return nil
-}
-
-// ModifyDockerfile modifies the Dockerfile with the specified tag
-func ModifyDockerfile(file *os.File, ociArgument string, tag string) ([]string, error) {
-	lines, err := readDockerFile(file)
-	if err != nil {
-		return nil, err
-	}
-
-	reslines, err := editDockerfile(lines, ociArgument, tag)
-	if err != nil {
-		return nil, err
-	}
-
-	return reslines, nil
-}
-
-func readDockerFile(file *os.File) ([]string, error) {
-	scanner := bufio.NewScanner(file)
-	lines := []string{}
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading Dockerfile: %v", err)
-	}
-	return lines, nil
-}
-
-func editDockerfile(lines []string, ociArtifactName, tag string) ([]string, error) {
-	var searchTag string
-	searchTag = ociArtifactName
-
-	var selectedFrom string
-	var selectedIndex int
-	for i, line := range lines {
-		if strings.Contains(line, searchTag) {
-			selectedFrom = line
-			selectedIndex = i
-			break
-		}
-	}
-
-	if selectedFrom == "" {
-		return nil, fmt.Errorf("no FROM command found with tag %s", searchTag)
-	}
-
-	fromParts := strings.Fields(selectedFrom)
-	if len(fromParts) < 2 {
-		return nil, fmt.Errorf("invalid FROM command format")
-	}
-
-	var newFrom string
-	if strings.Contains(fromParts[1], ":") {
-		imageParts := strings.Split(fromParts[1], ":")
-		newFrom = fmt.Sprintf("FROM %s:%s", imageParts[0], tag)
-	} else {
-		newFrom = fmt.Sprintf("FROM %s:%s", fromParts[1], tag)
-	}
-	for _, part := range fromParts[2:] {
-		newFrom = fmt.Sprintf("%s %s", newFrom, part)
-	}
-
-	lines[selectedIndex] = newFrom
-	return lines, nil
 }
 
 func convertExportCfgToDockerfileCfg(env hcl2nix.OCIArtifact, platform string) dockerfileCfg {

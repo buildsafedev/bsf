@@ -21,8 +21,8 @@ import (
 )
 
 var (
-	platform, output, tag, path, destcreds                string
-	push, loadDocker, loadPodman, devDeps, dfSwap, digest bool
+	platform, output, tag, destcreds              string
+	push, loadDocker, loadPodman, devDeps, digest bool
 )
 
 var supportedPlatforms = []string{"linux/amd64", "linux/arm64"}
@@ -33,10 +33,8 @@ func init() {
 	OCICmd.Flags().BoolVarP(&loadDocker, "load-docker", "", false, "Load the image into docker daemon")
 	OCICmd.Flags().BoolVarP(&loadPodman, "load-podman", "", false, "Load the image into podman")
 	OCICmd.Flags().BoolVarP(&push, "push", "", false, "Push the image to the registry")
+	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "New tag for the image")
 	OCICmd.Flags().BoolVarP(&devDeps, "dev", "", false, "Build base image for Dev Dependencies")
-	OCICmd.Flags().BoolVarP(&dfSwap, "df-swap", "", false, "Modify base images in Dockerfile")
-	OCICmd.Flags().StringVarP(&tag, "tag", "t", "", "The tag that will be replaced with original tag in Dockerfile")
-	OCICmd.Flags().StringVar(&path, "path", "", "The path to Dockerfile")
 	OCICmd.Flags().BoolVar(&digest, "digest", false, "push image by digest")
 	OCICmd.Flags().StringVar(&destcreds, "dest-creds", "", "Authenticate to the registry")
 }
@@ -73,34 +71,13 @@ var OCICmd = &cobra.Command{
 
 		platform = p
 
-		if tag != "" && !dfSwap {
+		if tag != "" {
 			newName, err := getNewName(artifact, tag)
 			if err != nil {
 				fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
 				os.Exit(1)
 			}
 			artifact.Name = newName
-		}
-
-		var ociArtifactName string
-
-		for _, ociArtifact := range conf.OCIArtifact {
-			if ociArtifact.Artifact == args[0] {
-				prefix := strings.Split(ociArtifact.Name, ":")[0]
-				ociArtifactName = prefix
-			}
-		}
-
-		if dfSwap {
-			if tag != "" {
-				if err = modifyDockerfileWithTag(path, tag, ociArtifactName); err != nil {
-					fmt.Println(styles.ErrorStyle.Render("error: ", err.Error()))
-					os.Exit(1)
-				}
-				fmt.Println(styles.SucessStyle.Render("dockerfile succesfully updated with tag:", tag))
-			} else {
-				fmt.Println(styles.HintStyle.Render("hint:", "use --tag flag to define a tag"))
-			}
 		}
 
 		sc, fh, err := binit.GetBSFInitializers()
@@ -282,33 +259,6 @@ func ProcessPlatformAndConfig(conf *hcl2nix.Config, plat string, envName string)
 	}
 
 	return artifact, plat, nil
-}
-
-func modifyDockerfileWithTag(path, tag, ociArtifactName string) error {
-	var dockerfilePath string
-	if path != "" {
-		dockerfilePath = path + "/Dockerfile"
-	} else {
-		dockerfilePath = "./Dockerfile"
-	}
-
-	file, err := os.Open(dockerfilePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	resLines, err := builddocker.ModifyDockerfile(file, ociArtifactName, tag)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(dockerfilePath, []byte(strings.Join(resLines, "\n")), 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func getNewName(artifact hcl2nix.OCIArtifact, tag string) (string, error) {
