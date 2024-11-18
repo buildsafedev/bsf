@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -36,6 +37,7 @@ func convFPR2Rows(versions *buildsafev1.FetchPackagesResponse) []table.Row {
 			pkg.SpdxId,
 			free,
 			pkg.Homepage,
+			time.Unix(int64(pkg.EpochSeconds), 0).Format("2006-01-02 15"),
 		})
 	}
 	return items
@@ -50,6 +52,7 @@ func initVersionTable(searchList list.Model, versions *buildsafev1.FetchPackages
 		{Title: "License", Width: frameWidth / cols},
 		{Title: "Free", Width: frameWidth / cols},
 		{Title: "Homepage", Width: frameWidth * 2 / cols},
+		{Title: "Date", Width: frameWidth / cols},
 	}
 
 	rows := convFPR2Rows(versions)
