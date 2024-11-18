@@ -1,5 +1,10 @@
 package strings
 
+import (
+	"sort"
+	"strings"
+)
+
 type parse func(string) string
 
 // SliceToSet converts a slice of strings to a set of strings
@@ -41,6 +46,10 @@ func PreferNewSliceElements(existing []string, new []string, parseFunc parse) []
 		}
 		finalEle = append(finalEle, v)
 	}
+
+	sort.Slice(finalEle, func(i, j int) bool {
+		return strings.Split(finalEle[i], "@")[0] < strings.Split(finalEle[j], "@")[0]
+	})
 
 	return finalEle
 }
