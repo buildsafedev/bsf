@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/buildsafedev/bsf/pkg/hcl2nix"
@@ -64,8 +65,8 @@ func generateEmptyConf(imageName string, addCommonDeps bool, commonDepsType stri
 	}
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: devDeps,
-			Runtime:     commonRTDeps,
+			Development: sortPackages(devDeps),
+			Runtime:     sortPackages(commonRTDeps),
 		},
 		OCIArtifact: []hcl2nix.OCIArtifact{
 			{
@@ -109,8 +110,8 @@ func genRustCargoConf() (hcl2nix.Config, error) {
 	rustDevDeps := append(commonDevDeps, rustDeps...)
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: rustDevDeps,
-			Runtime:     commonRTDeps,
+			Development: sortPackages(rustDevDeps),
+			Runtime:     sortPackages(commonRTDeps),
 		},
 		RustApp: &hcl2nix.RustApp{
 			WorkspaceSrc: "./.",
@@ -126,8 +127,8 @@ func genPythonPoetryConf() hcl2nix.Config {
 	poetryDevDeps := append(commonDevDeps, pythonDeps...)
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: poetryDevDeps,
-			Runtime:     commonRTDeps,
+			Development: sortPackages(poetryDevDeps),
+			Runtime:     sortPackages(commonRTDeps),
 		},
 		PoetryApp: &hcl2nix.PoetryApp{
 			ProjectDir:   "./.",
@@ -157,9 +158,9 @@ func genGoModuleConf(pd *langdetect.ProjectDetails) hcl2nix.Config {
 	goDevDeps := append(commonDevDeps, goDeps...)
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: goDevDeps,
+			Development: sortPackages(goDevDeps),
 			// todo: maybe we should dynamically inject the latest version of such runtime packages(cacert)?
-			Runtime: commonRTDeps,
+			Runtime: sortPackages(commonRTDeps),
 		},
 		GoModule: &hcl2nix.GoModule{
 			Name:       name,
@@ -188,12 +189,19 @@ func genJsNpmConf() (hcl2nix.Config, error) {
 	nodeDevDeps := append(commonDevDeps, jsNpmDeps...)
 	return hcl2nix.Config{
 		Packages: hcl2nix.Packages{
-			Development: nodeDevDeps,
-			Runtime:     commonRTDeps,
+			Development: sortPackages(nodeDevDeps),
+			Runtime:     sortPackages(commonRTDeps),
 		},
 		JsNpmApp: &hcl2nix.JsNpmApp{
 			PackageName: name,
 			PackageRoot: "./.",
 		},
 	}, nil
+}
+
+func sortPackages(packages []string) []string {
+	sort.Slice(packages, func(i, j int) bool {
+		return strings.Split(packages[i], "@")[0] < strings.Split(packages[j], "@")[0]
+	})
+	return packages
 }
