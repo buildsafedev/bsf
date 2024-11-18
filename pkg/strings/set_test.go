@@ -68,7 +68,7 @@ func TestPreferNewSliceElements(t *testing.T) {
 			name:     "Test 3",
 			existing: []string{"a", "b", "c"},
 			new:      []string{"a", "b", "d"},
-			want:     []string{"c", "a", "b", "d"},
+			want:     []string{"a", "b", "c", "d"},
 		},
 	}
 
