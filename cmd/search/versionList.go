@@ -37,7 +37,7 @@ func convFPR2Rows(versions *buildsafev1.FetchPackagesResponse) []table.Row {
 			pkg.SpdxId,
 			free,
 			pkg.Homepage,
-			time.Unix(int64(pkg.EpochSeconds), 0).Format("2006-01-02 15"),
+			time.Unix(int64(pkg.EpochSeconds), 0).Format("2006-01-02 15:04"),
 		})
 	}
 	return items
