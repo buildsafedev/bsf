@@ -17,6 +17,10 @@ import (
 	"github.com/buildsafedev/bsf/pkg/clients/search"
 )
 
+const (
+	totalCols = 6
+)
+
 type versionListModel struct {
 	pkgList      list.Model
 	versionTable table.Model
@@ -45,14 +49,13 @@ func convFPR2Rows(versions *buildsafev1.FetchPackagesResponse) []table.Row {
 
 // initVersionTable initializes the version table
 func initVersionTable(searchList list.Model, versions *buildsafev1.FetchPackagesResponse) *versionListModel {
-	cols := 6
 	columns := []table.Column{
-		{Title: "Name", Width: frameWidth / cols},
-		{Title: "Version", Width: frameWidth / cols},
-		{Title: "License", Width: frameWidth / cols},
-		{Title: "Free", Width: frameWidth / cols},
-		{Title: "Homepage", Width: frameWidth * 2 / cols},
-		{Title: "Date", Width: frameWidth / cols},
+		{Title: "Name", Width: frameWidth / totalCols},
+		{Title: "Version", Width: frameWidth / totalCols},
+		{Title: "License", Width: frameWidth / totalCols},
+		{Title: "Free", Width: frameWidth / totalCols},
+		{Title: "Homepage", Width: frameWidth * 2 / totalCols},
+		{Title: "Date", Width: frameWidth / totalCols},
 	}
 
 	rows := convFPR2Rows(versions)
@@ -112,7 +115,7 @@ func (m versionListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				break
 			}
 			row := m.versionTable.SelectedRow()
-			if len(row) != 5 {
+			if len(row) != totalCols {
 				// TODO: return errMsg
 				return m, tea.Quit
 			}
