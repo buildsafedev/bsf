@@ -27,8 +27,8 @@ require (
 	github.com/tidwall/gjson v1.17.1
 	golang.org/x/mod v0.17.0
 	golang.org/x/oauth2 v0.21.0
-	golang.org/x/sync v0.7.0
-	golang.org/x/term v0.21.0
+	golang.org/x/sync v0.10.0
+	golang.org/x/term v0.27.0
 	google.golang.org/grpc v1.64.1
 	google.golang.org/protobuf v1.34.2
 	oras.land/oras-go/v2 v2.5.0
@@ -123,10 +123,10 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/zclconf/go-cty v1.13.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/crypto v0.24.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240610135401-a8a62080eff3 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240617180043-68d350f18fd4 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
