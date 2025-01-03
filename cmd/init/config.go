@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	commonDevDeps = []string{"coreutils-full@9.5", "bash@5.2.15"}
+	commonDevDeps = []string{"toybox@1.36.0", "coreutils@9.5", "bash@5.2.15"}
 	commonRTDeps  = []string{"cacert@3.95"}
 	rustDeps      = []string{"cargo@1.82.0"}
 	pythonDeps    = []string{"python3@3.13.0", "poetry@1.8.4"}
